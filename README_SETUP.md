@@ -1,19 +1,19 @@
 # Smart AI — connected backend starter
 
-This bundle keeps the existing dark black/purple/blue interface and adds a real backend integration path. It is **not yet a deployed or fully tested production app**: you must create your own service accounts, add secrets, deploy the functions, and test them. Never put your OpenAI API key or Supabase service-role key in `index.html`.
+This bundle keeps the existing dark black/purple/blue interface and adds a real backend integration path. The main interface is hosted by GitHub Pages; the AI Edge Function must be deployed separately to Supabase. It is **not yet a deployed or fully tested production app**: you must create your own service accounts, add secrets, deploy the functions, and test them. Never put your OpenAI API key or Supabase service-role key in `index.html`.
 
 ## Included
 - `index.html` — mobile-first UI; Supabase email sign-up/sign-in wiring and secure AI endpoint call.
 - `manifest.json`, `service-worker.js` — web app metadata/cache.
 - `supabase/schema.sql` — user-scoped chat-message and opt-in preference tables with row-level security.
 - `supabase/functions/smart-assistant/index.ts` — authenticated AI chat, image understanding, optional web search, saves messages.
-- `supabase/functions/generate-image/index.ts` — authenticated image-generation endpoint.
+
 
 ## Do this from your Android phone
 
 ### 1. Create the online database/backend
 1. Open the official Supabase website: https://supabase.com and create a project. Save its database password privately.
-2. Open **SQL Editor** in your project, paste all of `supabase/schema.sql`, and run it.
+2. Open **SQL Editor** in your project, paste all of `supabase/schema.sql`, and run it. If sign-up displays “Database error saving new user”, run `supabase/repair_auth.sql` too.
 3. Open **Project Settings → API** and copy the Project URL and publishable/anon key.
 4. In `index.html`, The `index.html` in this personalized bundle is already filled with your Supabase Project URL and publishable key. Do not replace them unless you create a different Supabase project. This public key can be in the browser; never use the service-role key here.
 5. In **Authentication → Providers**, enable Email. Choose whether email confirmation is required and configure the site URL/redirect URLs for your hosted app.
@@ -26,7 +26,7 @@ This bundle keeps the existing dark black/purple/blue interface and adds a real 
 ### 3. Deploy the functions
 Supabase's dashboard or CLI can deploy Edge Functions. The project files are in `supabase/functions/`.
 - Deploy `smart-assistant` from `supabase/functions/smart-assistant/index.ts`.
-- Deploy `generate-image` from `supabase/functions/generate-image/index.ts`.
+
 - Ensure the functions have `SUPABASE_URL` and `SUPABASE_ANON_KEY` environment values (Supabase provides these to functions in standard projects) plus `OPENAI_API_KEY`.
 
 Official guides: https://supabase.com/docs/guides/functions and https://supabase.com/docs/guides/auth
@@ -55,4 +55,4 @@ Upload `index.html`, `manifest.json`, and `service-worker.js` to a static HTTPS 
 ## Your project details
 - Project URL: `https://ruczzcnrkgnoftghoapr.supabase.co`
 - The browser app contains only the publishable key you supplied. Never add a service-role key or OpenAI API key to the HTML.
-- The database SQL you already ran creates `profiles`, `conversations`, `messages`, and `user_preferences`. The chat function in this bundle saves to `conversations` and `messages`.
+- The database SQL you already ran creates `profiles`, `conversations`, `messages`, and `user_preferences`. The chat function saves to `conversations` and `messages`. The correct deployable function source is `supabase/functions/smart-assistant/index.ts`; the root `index.ts` is retained as a legacy copy.
