@@ -95,7 +95,7 @@ let currentMessages=[],selectedImage=null,busy=false;
 // Fill these after creating your Supabase project. The anon key is public; never put a service-role or AI key here.
 const SUPABASE_URL = "https://ruczzcnrkgnoftghoapr.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_MDDtaCJhxZ2LX5-1_f7gEw_E0GtkQt6";
-const API_ENDPOINT = SUPABASE_URL + "/functions/v1/smart-assistant";
+const API_ENDPOINT = SUPABASE_URL + "/functions/v1/smart-responder";
 const supabaseReady = Boolean(window.supabase && SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.startsWith('sb_publishable_'));
 const sb = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
