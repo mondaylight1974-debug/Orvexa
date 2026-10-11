@@ -1,0 +1,4 @@
+project_id = "ruczzcnrkgnoftghoapr"
+
+[functions.smart-assistant]
+verify_jwt = true
