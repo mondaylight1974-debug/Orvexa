@@ -1,0 +1,11 @@
+{
+  "name": "Smart AI",
+  "short_name": "Smart AI",
+  "description": "Your personal AI companion",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080910",
+  "theme_color": "#080910",
+  "icons": []
+}
