@@ -127,12 +127,51 @@ async function accountAction(action){
  if(!sb){toast('Supabase connection is not configured.');return;}
  const email=$('email').value.trim(),password=$('password').value;
  if(!email||password.length<8){toast('Enter a valid email and a password of at least 8 characters.');return;}
- const result=action==='signup'?await sb.auth.signUp({email,password}):await sb.auth.signInWithPassword({email,password});
- if(result.error){toast(result.error.message);return;}
- if(action==='signup'&&!result.data.session){toast('Account created. Check your email to confirm it, then sign in.');return;}
- toast(action==='signup'?'Account created and signed in.':'You are signed in.');updateAccountStatus();
+ const buttons=document.querySelectorAll('#profilePage .btn-row button');
+ buttons.forEach(b=>b.disabled=true);
+ try{
+   let result;
+   if(action==='signup'){
+     result=await sb.auth.signUp({email,password,options:{data:{full_name:email.split('@')[0]}}});
+   }else{
+     result=await sb.auth.signInWithPassword({email,password});
+   }
+   if(result.error)throw result.error;
+   if(action==='signup'&&!result.data.session){
+     toast('Account created. Check your email to confirm it, then return here and sign in.');
+     return;
+   }
+   toast(action==='signup'?'Account created and signed in.':'You are signed in.');
+   await updateAccountStatus();
+ }catch(error){
+   console.error('Smart AI account error:',error);
+   const message=String(error&&error.message||'');
+   if(/database error saving new user/i.test(message)){
+     toast('Supabase database signup error. The user-profile trigger needs repair; see the repair_auth.sql file in the GitHub repository.');
+   }else if(/invalid login credentials/i.test(message)){
+     toast('Email or password is incorrect. If you just created an account, confirm your email first.');
+   }else if(/email not confirmed/i.test(message)){
+     toast('Please open the confirmation email from Supabase before signing in.');
+   }else if(/failed to fetch|network/i.test(message)){
+     toast('Cannot reach Supabase. Check your internet connection and Supabase project status.');
+   }else{
+     toast(message||'Account request failed. Please try again.');
+   }
+ }finally{
+   buttons.forEach(b=>b.disabled=false);
+ }
 }
-async function updateAccountStatus(){if(!sb){$('accountStatus').textContent='Setup required · connect your Supabase project';return;}const {data}=await sb.auth.getSession();$('accountStatus').textContent=data.session?'Signed in · '+data.session.user.email:'Not signed in · create an account or sign in';}
+async function updateAccountStatus(){
+ if(!sb){$('accountStatus').textContent='Setup required · connect your Supabase project';return;}
+ try{
+   const {data,error}=await sb.auth.getSession();
+   if(error)throw error;
+   $('accountStatus').textContent=data.session?'Signed in · '+data.session.user.email:'Not signed in · create an account or sign in';
+ }catch(error){
+   console.error('Smart AI session check failed:',error);
+   $('accountStatus').textContent='Could not check account status · check your connection';
+ }
+}
 $('prompt').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,110)+'px';});
 $('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
 if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
