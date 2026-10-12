@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080910">
-<meta name="description" content="Smart AI — your personal AI companion for ideas, learning, writing and creating.">
-<title>Smart AI</title>
+<meta name="description" content="Smart Assistant — your personal AI companion for ideas, learning, writing and creating.">
+<title>Smart Assistant</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--bg:#080910;--panel:#101321;--panel2:#171a2b;--line:#282b43;--text:#f6f6ff;--muted:#9b9fba;--purple:#9575ff;--blue:#4f8cff;--cyan:#5de4ff;--green:#65e6b3}
@@ -114,7 +114,7 @@ try{
    const data=await resp.json();if(!resp.ok)throw new Error(data.error||'AI request failed');addMessage('assistant',data.reply||'I could not create a response this time.');
  }
  selectedImage=null;$('imagePreview').style.display='none';
-}catch(e){const reason=String(e&&e.message||'');let help='I could not reach the AI service.';if(reason.includes('sign in'))help='Your message was added, but Smart AI needs you to sign in before it can reply. Open Profile, create an account or sign in, then try again.';else if(reason.includes('Supabase'))help='The chat service is not configured yet. The website buttons can work, but AI replies need the Supabase backend and AI function deployed.';else if(reason)help='Smart AI could not reply: '+reason;addMessage('assistant',help);}
+}catch(e){const reason=String(e&&e.message||'');let help='I could not reach the AI service.';if(reason.includes('sign in'))help='Your message was added, but Smart Assistant needs you to sign in before it can reply. Open Profile, create an account or sign in, then try again.';else if(reason.includes('Supabase'))help='The chat service is not configured yet. The website buttons can work, but AI replies need the Supabase backend and AI function deployed.';else if(reason)help='Smart Assistant could not reply: '+reason;addMessage('assistant',help);}
 finally{busy=false;const t=$('thinking');if(t)t.remove();}}
 function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(''+name+'Page').classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('composerArea').style.display=name==='chat'?'block':'none';if(name==='history')renderHistory();if(name==='profile')updateAccountStatus();$('main').scrollTop=0;}
 function renderHistory(){const root=$('historyList');if(!root)return;let h=[];try{h=JSON.parse(localStorage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!h.length){root.innerHTML='<div class="card" style="text-align:center;padding:30px"><div style="font-size:36px;margin-bottom:10px">◷</div><h3>Your story starts here</h3><p class="muted">Start a chat and save it when you begin a new conversation.</p><button class="primary" onclick="showPage(\'chat\');newChat()">Start a chat</button></div>';return;}h.forEach((item,i)=>{const b=document.createElement('button');b.className='history-item';b.innerHTML='<strong>'+escapeHtml(item.title)+'</strong><small>'+new Date(item.time).toLocaleString()+' · '+item.messages.length+' messages</small>';b.onclick=()=>{currentMessages=item.messages;$('messages').innerHTML='';currentMessages.forEach(renderMessage);showPage('chat');saveCurrent();};root.appendChild(b);});}
@@ -144,7 +144,7 @@ async function accountAction(action){
    toast(action==='signup'?'Account created and signed in.':'You are signed in.');
    await updateAccountStatus();
  }catch(error){
-   console.error('Smart AI account error:',error);
+   console.error('Smart Assistant account error:',error);
    const message=String(error&&error.message||'');
    if(/database error saving new user/i.test(message)){
      toast('Supabase database signup error. The user-profile trigger needs repair; see the repair_auth.sql file in the GitHub repository.');
@@ -168,7 +168,7 @@ async function updateAccountStatus(){
    if(error)throw error;
    $('accountStatus').textContent=data.session?'Signed in · '+data.session.user.email:'Not signed in · create an account or sign in';
  }catch(error){
-   console.error('Smart AI session check failed:',error);
+   console.error('Smart Assistant session check failed:',error);
    $('accountStatus').textContent='Could not check account status · check your connection';
  }
 }
