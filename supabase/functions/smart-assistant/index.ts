@@ -81,8 +81,17 @@ Deno.serve(async (req) => {
     if (groqKey) {
       const messages: any[] = [{ role: 'system', content: instructions }];
       for (const item of history) messages.push({ role: item.role, content: item.content });
-      messages.push({ role: 'user', content: message || 'Please help me with the attached image.' });
-      const model = Deno.env.get('GROQ_MODEL') || 'openai/gpt-oss-120b';
+      let userContent: any = message || 'Please help me with the attached image.';
+      let model = Deno.env.get('GROQ_MODEL') || 'openai/gpt-oss-120b';
+      if (typeof body.image === 'string' && /^data:image\/(png|jpeg|jpg|webp);base64,/.test(body.image)) {
+        // Use Groq's multimodal model for image questions; keep the normal model for text-only chat.
+        model = Deno.env.get('GROQ_VISION_MODEL') || 'qwen/qwen3.8-27b';
+        userContent = [
+          { type: 'text', text: message || 'Please describe this image and help me understand it.' },
+          { type: 'image_url', image_url: { url: body.image } }
+        ];
+      }
+      messages.push({ role: 'user', content: userContent });
       const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
@@ -91,7 +100,6 @@ Deno.serve(async (req) => {
       const result = await ai.json();
       if (!ai.ok) return json({ error: result?.error?.message || 'Groq request failed. Check the API key, model access, and usage limits.' }, 502);
       reply = result?.choices?.[0]?.message?.content?.trim() || '';
-      if (body.image && reply) reply += '\n\nNote: Image understanding is not enabled for the current Groq chat model yet.';
     } else if (geminiKey) {
       const contents: any[] = [];
       for (const item of history) contents.push({ role: item.role === 'assistant' ? 'model' : 'user', parts: [{ text: item.content }] });
