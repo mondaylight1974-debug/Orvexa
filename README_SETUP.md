@@ -40,7 +40,7 @@ Upload `index.html`, `manifest.json`, and `service-worker.js` to a static HTTPS 
 - Browser speech input/output are supported where the browser provides SpeechRecognition and speechSynthesis. The new AI voice-call mode listens, sends speech to the chat endpoint, speaks the reply, and listens again. This is browser-based voice conversation, not a phone-network call or a low-latency real-time audio model; it depends on the AI endpoint working.
 - The History page now loads cloud conversations for signed-in users, and the chat endpoint can append turns to a conversation ID. The updated Edge Function must be redeployed to Supabase for cloud history and image generation/editing changes to take effect.
 - The memory table is opt-in-ready, but preference controls and memory retrieval/save logic are not wired yet.
-- Personal memory retrieval/save and consent controls, subscription payments/premium enforcement, account deletion/privacy workflow, rate limits, abuse controls, and full security testing are not included. Do not charge users or publicly launch before implementing and testing these.
+- Subscription payments/premium enforcement, account deletion/privacy workflow, rate limits, abuse controls, and full security testing are not included. Do not charge users or publicly launch before implementing and testing these.
 - This is not an APK yet. After HTTPS hosting works, package the hosted app with a trusted Android wrapper/cloud build. Test the resulting APK on your phone. A separate iOS build is needed for iPhone distribution.
 
 ## Security checklist before public release
