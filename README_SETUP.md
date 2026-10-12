@@ -6,7 +6,7 @@ This bundle keeps the existing dark black/purple/blue interface and adds a real 
 - `index.html` — mobile-first UI; Supabase email sign-up/sign-in wiring and secure AI endpoint call.
 - `manifest.json`, `service-worker.js` — web app metadata/cache.
 - `supabase/schema.sql` — user-scoped chat-message and opt-in preference tables with row-level security.
-- `supabase/functions/smart-assistant/index.ts` — authenticated AI chat, image understanding, optional web search, saves messages.
+- `supabase/functions/smart-assistant/index.ts` — authenticated AI chat, image understanding, optional web search, image generation/editing endpoints, and cloud conversation saving.
 
 
 ## Do this from your Android phone
@@ -25,7 +25,7 @@ This bundle keeps the existing dark black/purple/blue interface and adds a real 
 
 ### 3. Deploy the functions
 Supabase's dashboard or CLI can deploy Edge Functions. The project files are in `supabase/functions/`.
-- Deploy `smart-assistant` from `supabase/functions/smart-assistant/index.ts`.
+- Deploy `smart-assistant` from `supabase/functions/smart-assistant/index.ts` again whenever its source changes. The latest source adds image generation/editing and conversation continuity.
 
 - Ensure the functions have `SUPABASE_URL` and `SUPABASE_ANON_KEY` environment values (Supabase provides these to functions in standard projects) plus `OPENAI_API_KEY`.
 
@@ -35,12 +35,12 @@ Official guides: https://supabase.com/docs/guides/functions and https://supabase
 Upload `index.html`, `manifest.json`, and `service-worker.js` to a static HTTPS host. Open the hosted URL on your phone and test sign-up, email confirmation, sign-in, chat, and image upload. Browsers require HTTPS for many microphone/PWA capabilities.
 
 ## Important current limits
-- The main chat endpoint is wired to a real AI backend after you configure it. Image understanding uses an image selected in the chat and a vision-capable model.
-- Image generation has a deployed endpoint scaffold but the current UI still needs a generator screen/button wired to that endpoint.
-- Browser speech input and speech output depend on device/browser support; this is not yet a continuous real-time voice agent.
-- Database tables are included, but chat history UI currently primarily uses device-local history. Cloud history loading/sync still needs to be added.
+- The main chat endpoint is wired to the AI provider. Image understanding uses an image selected in chat and a vision-capable model.
+- The Discover page now includes an Image Studio for image generation and editing an uploaded photo. These actions require an active image-capable API key, model access, and available provider credits.
+- Browser speech input/output are supported where the browser provides SpeechRecognition and speechSynthesis. The new AI voice-call mode listens, sends speech to the chat endpoint, speaks the reply, and listens again. This is browser-based voice conversation, not a phone-network call or a low-latency real-time audio model; it depends on the AI endpoint working.
+- The History page now loads cloud conversations for signed-in users, and the chat endpoint can append turns to a conversation ID. The updated Edge Function must be redeployed to Supabase for cloud history and image generation/editing changes to take effect.
 - The memory table is opt-in-ready, but preference controls and memory retrieval/save logic are not wired yet.
-- Subscription payments, premium enforcement, account deletion/privacy workflow, rate limits, abuse controls, and full security testing are not included. Do not charge users or publicly launch before implementing and testing these.
+- Personal memory retrieval/save and consent controls, subscription payments/premium enforcement, account deletion/privacy workflow, rate limits, abuse controls, and full security testing are not included. Do not charge users or publicly launch before implementing and testing these.
 - This is not an APK yet. After HTTPS hosting works, package the hosted app with a trusted Android wrapper/cloud build. Test the resulting APK on your phone. A separate iOS build is needed for iPhone distribution.
 
 ## Security checklist before public release
