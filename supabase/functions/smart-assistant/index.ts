@@ -68,9 +68,15 @@ Deno.serve(async (req) => {
     }
     const history = Array.isArray(body.history) ? body.history.slice(-10).filter((m: any) => ['user','assistant'].includes(m.role) && typeof m.content === 'string').map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) })) : [];
     const input = [...history, { role: 'user', content }];
+    let instructions = 'You are Smart AI, a helpful, honest, warm general-purpose assistant. Answer clearly. Never claim to have performed an action you did not perform. If the user asks for current facts and web search is available, use it. Do not claim to generate an image unless image generation actually ran.';
+    const { data: preferences } = await sb.from('user_preferences').select('memory_enabled,memory_text')
+      .eq('user_id', user.id).maybeSingle();
+    if (preferences?.memory_enabled && typeof preferences.memory_text === 'string' && preferences.memory_text.trim()) {
+      instructions += '\n\nUser-approved memory for personalization (use only when relevant): ' + preferences.memory_text.slice(0, 4000);
+    }
     const ai = await fetch('https://api.openai.com/v1/responses', {
       method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions: 'You are Smart AI, a helpful, honest, warm general-purpose assistant. Answer clearly. Never claim to have performed an action you did not perform. If the user asks for current facts and web search is available, use it. Do not claim to generate an image unless image generation actually ran.', input, tools: [{ type: 'web_search' }], max_output_tokens: 1600 })
+      body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions, input, tools: [{ type: 'web_search' }], max_output_tokens: 1600 })
     });
     const result = await ai.json();
     if (!ai.ok) return json({ error: result?.error?.message || 'AI provider request failed. Check provider billing and model access.' }, 502);
