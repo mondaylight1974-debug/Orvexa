@@ -21,6 +21,22 @@ Deno.serve(async (req) => {
   if (authError || !user) return json({ error: 'Your session is invalid. Please sign in again.' }, 401);
   try {
     const body = await req.json();
+    // Image generation is handled server-side so provider keys never reach the browser.
+    if (body.action === 'generate_image') {
+      const prompt = String(body.prompt || '').trim();
+      if (!prompt) return json({ error: 'Describe the image you want to create.' }, 400);
+      if (prompt.length > 4000) return json({ error: 'Please keep image descriptions under 4,000 characters.' }, 413);
+      const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', output_format: 'png' })
+      });
+      const imageResult = await imageResponse.json();
+      if (!imageResponse.ok) return json({ error: imageResult?.error?.message || 'Image generation failed. Check image-model access and API credits.' }, 502);
+      const base64 = imageResult?.data?.[0]?.b64_json;
+      if (!base64) return json({ error: 'The image provider returned no image. Please try another description.' }, 502);
+      return json({ image: `data:image/png;base64,${base64}` });
+    }
     const message = String(body.message || '').trim();
     if (!message && !body.image) return json({ error: 'Write a message or attach an image.' }, 400);
     if (message.length > 12000) return json({ error: 'Please keep each message under 12,000 characters.' }, 413);
