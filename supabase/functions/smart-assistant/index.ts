@@ -84,7 +84,8 @@ Deno.serve(async (req) => {
       instructions += '\n\nUser-approved memory for personalization (use only when relevant): ' + preferences.memory_text.slice(0, 4000);
     }
     let reply = '';
-    if (groqKey) {
+    // Prefer an alternate provider when its key is configured, so an exhausted Groq quota does not block chat.
+    if (groqKey && !geminiKey && !openaiKey) {
       const messages: any[] = [{ role: 'system', content: instructions }];
       for (const item of history) messages.push({ role: item.role, content: item.content });
       let userContent: any = message || 'Please help me with the attached image.';
