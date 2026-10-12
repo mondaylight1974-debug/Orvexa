@@ -21,6 +21,42 @@ Deno.serve(async (req) => {
   if (authError || !user) return json({ error: 'Your session is invalid. Please sign in again.' }, 401);
   try {
     const body = await req.json();
+    // Image generation and editing stay server-side so provider keys never reach the browser.
+    if (body.action === 'generate_image' || body.action === 'edit_image') {
+      const prompt = String(body.prompt || '').trim();
+      if (!prompt) return json({ error: 'Describe the image you want to create or edit.' }, 400);
+      if (prompt.length > 4000) return json({ error: 'Please keep image descriptions under 4,000 characters.' }, 413);
+      let imageResponse: Response;
+      if (body.action === 'edit_image') {
+        if (typeof body.image !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(body.image)) {
+          return json({ error: 'Choose a PNG, JPEG, or WebP image to edit first.' }, 400);
+        }
+        if (body.image.length > 11_000_000) return json({ error: 'Image is too large. Choose a smaller image.' }, 413);
+        const match = body.image.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
+        if (!match) return json({ error: 'The selected image format is not supported.' }, 400);
+        const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+        const ext = match[1] === 'image/jpeg' ? 'jpg' : match[1].split('/')[1];
+        const form = new FormData();
+        form.append('model', Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1');
+        form.append('prompt', prompt);
+        form.append('size', '1024x1024');
+        form.append('image', new Blob([bytes], { type: match[1] }), `upload.${ext}`);
+        imageResponse = await fetch('https://api.openai.com/v1/images/edits', {
+          method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, body: form
+        });
+      } else {
+        imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', output_format: 'png' })
+        });
+      }
+      const imageResult = await imageResponse.json();
+      if (!imageResponse.ok) return json({ error: imageResult?.error?.message || 'Image generation/editing failed. Check image-model access and API credits.' }, 502);
+      const base64 = imageResult?.data?.[0]?.b64_json;
+      if (!base64) return json({ error: 'The image provider returned no image. Please try again.' }, 502);
+      return json({ image: `data:image/png;base64,${base64}` });
+    }
     const message = String(body.message || '').trim();
     if (!message && !body.image) return json({ error: 'Write a message or attach an image.' }, 400);
     if (message.length > 12000) return json({ error: 'Please keep each message under 12,000 characters.' }, 413);
@@ -40,18 +76,32 @@ Deno.serve(async (req) => {
     if (!ai.ok) return json({ error: result?.error?.message || 'AI provider request failed. Check provider billing and model access.' }, 502);
     const reply = (result.output || []).flatMap((item: any) => item.type === 'message' ? (item.content || []).filter((c: any) => c.type === 'output_text').map((c: any) => c.text) : []).join('\n').trim();
     if (!reply) return json({ error: 'Smart AI returned an empty response. Please try again.' }, 502);
-    // Save the exchange to the conversations/messages tables created by the supplied SQL.
+    // Keep a single cloud conversation across turns. The supplied ID is always scoped to the signed-in user.
     const title = (message || 'Image question').replace(/\s+/g, ' ').slice(0, 80) || 'New conversation';
-    const { data: conversation, error: conversationError } = await sb.from('conversations')
-      .insert({ user_id: user.id, title })
-      .select('id').single();
-    if (!conversationError && conversation?.id) {
-      await sb.from('messages').insert([
+    let conversation: { id: string } | null = null;
+    const requestedId = typeof body.conversationId === 'string' ? body.conversationId : '';
+    if (requestedId) {
+      const { data } = await sb.from('conversations').select('id')
+        .eq('id', requestedId).eq('user_id', user.id).maybeSingle();
+      if (data?.id) {
+        conversation = data;
+        await sb.from('conversations').update({ updated_at: new Date().toISOString() })
+          .eq('id', data.id).eq('user_id', user.id);
+      }
+    }
+    if (!conversation) {
+      const { data, error } = await sb.from('conversations')
+        .insert({ user_id: user.id, title }).select('id').single();
+      if (!error && data?.id) conversation = data;
+    }
+    if (conversation?.id) {
+      const { error: saveError } = await sb.from('messages').insert([
         { conversation_id: conversation.id, user_id: user.id, role: 'user', content: message || '[Image attached]' },
         { conversation_id: conversation.id, user_id: user.id, role: 'assistant', content: reply },
       ]);
+      if (saveError) console.error('Smart AI cloud history save failed:', saveError.message);
     }
-    return json({ reply });
+    return json({ reply, conversationId: conversation?.id || null });
   } catch (e) {
     console.error('smart-assistant error', e);
     return json({ error: 'Something went wrong. Please try again.' }, 500);
