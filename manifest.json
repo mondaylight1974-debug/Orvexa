@@ -1,6 +1,6 @@
 {
-  "name": "Smart AI",
-  "short_name": "Smart AI",
+  "name": "Smart Assistant",
+  "short_name": "Smart Assistant",
   "description": "Your personal AI companion",
   "start_url": "./index.html",
   "display": "standalone",
