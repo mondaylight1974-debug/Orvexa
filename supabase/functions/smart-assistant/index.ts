@@ -40,18 +40,32 @@ Deno.serve(async (req) => {
     if (!ai.ok) return json({ error: result?.error?.message || 'AI provider request failed. Check provider billing and model access.' }, 502);
     const reply = (result.output || []).flatMap((item: any) => item.type === 'message' ? (item.content || []).filter((c: any) => c.type === 'output_text').map((c: any) => c.text) : []).join('\n').trim();
     if (!reply) return json({ error: 'Smart AI returned an empty response. Please try again.' }, 502);
-    // Save the exchange to the conversations/messages tables created by the supplied SQL.
+    // Keep a single cloud conversation across turns. The supplied ID is always scoped to the signed-in user.
     const title = (message || 'Image question').replace(/\s+/g, ' ').slice(0, 80) || 'New conversation';
-    const { data: conversation, error: conversationError } = await sb.from('conversations')
-      .insert({ user_id: user.id, title })
-      .select('id').single();
-    if (!conversationError && conversation?.id) {
-      await sb.from('messages').insert([
+    let conversation: { id: string } | null = null;
+    const requestedId = typeof body.conversationId === 'string' ? body.conversationId : '';
+    if (requestedId) {
+      const { data } = await sb.from('conversations').select('id')
+        .eq('id', requestedId).eq('user_id', user.id).maybeSingle();
+      if (data?.id) {
+        conversation = data;
+        await sb.from('conversations').update({ updated_at: new Date().toISOString() })
+          .eq('id', data.id).eq('user_id', user.id);
+      }
+    }
+    if (!conversation) {
+      const { data, error } = await sb.from('conversations')
+        .insert({ user_id: user.id, title }).select('id').single();
+      if (!error && data?.id) conversation = data;
+    }
+    if (conversation?.id) {
+      const { error: saveError } = await sb.from('messages').insert([
         { conversation_id: conversation.id, user_id: user.id, role: 'user', content: message || '[Image attached]' },
         { conversation_id: conversation.id, user_id: user.id, role: 'assistant', content: reply },
       ]);
+      if (saveError) console.error('Smart AI cloud history save failed:', saveError.message);
     }
-    return json({ reply });
+    return json({ reply, conversationId: conversation?.id || null });
   } catch (e) {
     console.error('smart-assistant error', e);
     return json({ error: 'Something went wrong. Please try again.' }, 500);
