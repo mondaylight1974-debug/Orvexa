@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       const model = Deno.env.get('GROQ_MODEL') || 'openai/gpt-oss-20b';
       const messages: any[] = [{ role: 'system', content: instructions }];
       for (const item of history) messages.push({ role: item.role, content: item.content });
-      const imageAttached = typeof body.image === 'string' && /^data:image\\/(png|jpeg|jpg|webp);base64,/.test(body.image);
+      const imageAttached = typeof body.image === 'string' && body.image.startsWith('data:image/') && body.image.includes(';base64,');
       const userContent: any = imageAttached
         ? [{ type: 'text', text: message || 'Please describe this image and help me understand it.' }, { type: 'image_url', image_url: { url: body.image } }]
         : (message || 'Please help me with the attached image.');
