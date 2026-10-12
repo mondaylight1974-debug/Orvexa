@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages, max_tokens: 1600, temperature: 0.7, ...(model.startsWith('openai/gpt-oss-') && !userContent?.some?.((part: any) => part.type === 'image_url') ? { tools: [{ type: 'browser_search' }], citation_options: 'enabled' } : {}) })
+        body: JSON.stringify({ model, messages, max_tokens: 1600, temperature: 0.7, ...(model.startsWith('openai/gpt-oss-') && !userContent?.some?.((part: any) => part.type === 'image_url') ? { tools: [{ type: 'browser_search' }] } : {}) })
       });
       const result = await ai.json();
       if (!ai.ok) return json({ error: result?.error?.message || 'Groq request failed. Check the API key, model access, and usage limits.' }, 502);
