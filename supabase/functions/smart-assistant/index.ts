@@ -84,6 +84,27 @@ Deno.serve(async (req) => {
       instructions += '\n\nUser-approved memory for personalization (use only when relevant): ' + preferences.memory_text.slice(0, 4000);
     }
     let reply = '';
+    // Secondary-provider fallback: if the preferred provider fails, try Groq when configured.
+    async function tryGroqFallback(): Promise<string> {
+      if (!groqKey) return '';
+      const model = Deno.env.get('GROQ_MODEL') || 'openai/gpt-oss-20b';
+      const messages: any[] = [{ role: 'system', content: instructions }];
+      for (const item of history) messages.push({ role: item.role, content: item.content });
+      const imageAttached = typeof body.image === 'string' && /^data:image\\/(png|jpeg|jpg|webp);base64,/.test(body.image);
+      const userContent: any = imageAttached
+        ? [{ type: 'text', text: message || 'Please describe this image and help me understand it.' }, { type: 'image_url', image_url: { url: body.image } }]
+        : (message || 'Please help me with the attached image.');
+      messages.push({ role: 'user', content: userContent });
+      const selectedModel = imageAttached ? (Deno.env.get('GROQ_VISION_MODEL') || 'qwen/qwen3.8-27b') : model;
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: selectedModel, messages, max_tokens: 1000, temperature: 0.4, ...(selectedModel.startsWith('openai/gpt-oss-') && !imageAttached ? { tools: [{ type: 'browser_search' }] } : {}) })
+      });
+      const result = await response.json();
+      if (!response.ok) return '';
+      return result?.choices?.[0]?.message?.content?.trim() || '';
+    }
     // Prefer an alternate provider when its key is configured, so an exhausted Groq quota does not block chat.
     if (groqKey && !geminiKey && !openaiKey) {
       const messages: any[] = [{ role: 'system', content: instructions }];
@@ -135,16 +156,24 @@ Deno.serve(async (req) => {
         body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents, generationConfig: { maxOutputTokens: 1600, temperature: 0.7 } })
       });
       const result = await ai.json();
-      if (!ai.ok) return json({ error: result?.error?.message || 'Gemini request failed. Check the API key and quota.' }, 502);
-      reply = (result?.candidates?.[0]?.content?.parts || []).map((p: any) => typeof p.text === 'string' ? p.text : '').join('\n').trim();
+      if (!ai.ok) {
+        reply = await tryGroqFallback();
+        if (!reply) return json({ error: result?.error?.message || 'Gemini failed and no configured backup provider could reply. Check provider keys and quotas.' }, 502);
+      } else {
+        reply = (result?.candidates?.[0]?.content?.parts || []).map((p: any) => typeof p.text === 'string' ? p.text : '').join('\n').trim();
+      }
     } else if (openaiKey) {
       const ai = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { Authorization: `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions, input, tools: [{ type: 'web_search' }], max_output_tokens: 1600 })
       });
       const result = await ai.json();
-      if (!ai.ok) return json({ error: result?.error?.message || 'OpenAI request failed. Check the API key and quota.' }, 502);
-      reply = (result.output || []).flatMap((item: any) => item.type === 'message' ? (item.content || []).filter((c: any) => c.type === 'output_text').map((c: any) => c.text) : []).join('\n').trim();
+      if (!ai.ok) {
+        reply = await tryGroqFallback();
+        if (!reply) return json({ error: result?.error?.message || 'OpenAI failed and no configured backup provider could reply. Check provider keys and quotas.' }, 502);
+      } else {
+        reply = (result.output || []).flatMap((item: any) => item.type === 'message' ? (item.content || []).filter((c: any) => c.type === 'output_text').map((c: any) => c.text) : []).join('\n').trim();
+      }
     }
     if (!reply) return json({ error: 'Smart AI returned an empty response. Please try again.' }, 502);
     // Keep a single cloud conversation across turns. The supplied ID is always scoped to the signed-in user.
