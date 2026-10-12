@@ -1,4 +1,4 @@
-const CACHE='smart-ai-static-v3';
+const CACHE='smart-ai-static-v4';
 const ASSETS=['./','./index.html','./manifest.json'];
 
 self.addEventListener('install',event=>{
