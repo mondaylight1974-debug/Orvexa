@@ -21,20 +21,40 @@ Deno.serve(async (req) => {
   if (authError || !user) return json({ error: 'Your session is invalid. Please sign in again.' }, 401);
   try {
     const body = await req.json();
-    // Image generation is handled server-side so provider keys never reach the browser.
-    if (body.action === 'generate_image') {
+    // Image generation and editing stay server-side so provider keys never reach the browser.
+    if (body.action === 'generate_image' || body.action === 'edit_image') {
       const prompt = String(body.prompt || '').trim();
-      if (!prompt) return json({ error: 'Describe the image you want to create.' }, 400);
+      if (!prompt) return json({ error: 'Describe the image you want to create or edit.' }, 400);
       if (prompt.length > 4000) return json({ error: 'Please keep image descriptions under 4,000 characters.' }, 413);
-      const imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', output_format: 'png' })
-      });
+      let imageResponse: Response;
+      if (body.action === 'edit_image') {
+        if (typeof body.image !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(body.image)) {
+          return json({ error: 'Choose a PNG, JPEG, or WebP image to edit first.' }, 400);
+        }
+        if (body.image.length > 11_000_000) return json({ error: 'Image is too large. Choose a smaller image.' }, 413);
+        const match = body.image.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
+        if (!match) return json({ error: 'The selected image format is not supported.' }, 400);
+        const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+        const ext = match[1] === 'image/jpeg' ? 'jpg' : match[1].split('/')[1];
+        const form = new FormData();
+        form.append('model', Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1');
+        form.append('prompt', prompt);
+        form.append('size', '1024x1024');
+        form.append('image', new Blob([bytes], { type: match[1] }), `upload.${ext}`);
+        imageResponse = await fetch('https://api.openai.com/v1/images/edits', {
+          method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, body: form
+        });
+      } else {
+        imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', output_format: 'png' })
+        });
+      }
       const imageResult = await imageResponse.json();
-      if (!imageResponse.ok) return json({ error: imageResult?.error?.message || 'Image generation failed. Check image-model access and API credits.' }, 502);
+      if (!imageResponse.ok) return json({ error: imageResult?.error?.message || 'Image generation/editing failed. Check image-model access and API credits.' }, 502);
       const base64 = imageResult?.data?.[0]?.b64_json;
-      if (!base64) return json({ error: 'The image provider returned no image. Please try another description.' }, 502);
+      if (!base64) return json({ error: 'The image provider returned no image. Please try again.' }, 502);
       return json({ image: `data:image/png;base64,${base64}` });
     }
     const message = String(body.message || '').trim();
