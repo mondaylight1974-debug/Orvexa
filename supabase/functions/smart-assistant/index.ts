@@ -23,10 +23,16 @@ Deno.serve(async (req) => {
   if (authError || !user) return json({ error: 'Your session is invalid. Please sign in again.' }, 401);
   try {
     const body = await req.json();
+    // Direct image requests from chat should create/edit an image, not return instructions.
+    const chatText = typeof body.message === 'string' ? body.message.trim() : '';
+    const asksForImage = /\b(generate|create|draw|make|produce)\b.{0,45}\b(image|picture|illustration|artwork|photo)\b|\b(image|picture|illustration|artwork)\b.{0,35}\b(generate|create|draw|make)\b/i.test(chatText);
+    const asksToEdit = /\b(edit|change|modify|remove|replace|retouch|redesign)\b/i.test(chatText) && typeof body.image === 'string' && body.image.startsWith('data:image/');
+    if (!body.action && asksToEdit) body.action = 'edit_image';
+    else if (!body.action && asksForImage) body.action = 'generate_image';
     // Image generation and editing stay server-side so provider keys never reach the browser.
     if (body.action === 'generate_image' || body.action === 'edit_image') {
       if (!openaiKey) return json({ error: 'Image generation and editing need an OPENAI_API_KEY with image access and available credits. Gemini chat can work separately.' }, 503);
-      const prompt = String(body.prompt || '').trim();
+      const prompt = String(body.prompt || body.message || '').trim();
       if (!prompt) return json({ error: 'Describe the image you want to create or edit.' }, 400);
       if (prompt.length > 4000) return json({ error: 'Please keep image descriptions under 4,000 characters.' }, 413);
       let imageResponse: Response;
