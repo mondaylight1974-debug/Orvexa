@@ -10,10 +10,11 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: 'POST required' }, 405);
-  const apiKey = Deno.env.get('OPENAI_API_KEY');
+  const openaiKey = Deno.env.get('OPENAI_API_KEY');
+  const geminiKey = Deno.env.get('GEMINI_API_KEY');
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  if (!apiKey || !supabaseUrl || !anonKey) return json({ error: 'Backend setup incomplete. Add OPENAI_API_KEY and Supabase environment settings.' }, 503);
+  if ((!openaiKey && !geminiKey) || !supabaseUrl || !anonKey) return json({ error: 'Backend setup incomplete. Add GEMINI_API_KEY (for chat) or OPENAI_API_KEY, plus Supabase environment settings.' }, 503);
   const auth = req.headers.get('Authorization') || '';
   if (!auth.startsWith('Bearer ')) return json({ error: 'Please sign in to use Smart AI.' }, 401);
   const sb = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: auth } } });
@@ -23,6 +24,7 @@ Deno.serve(async (req) => {
     const body = await req.json();
     // Image generation and editing stay server-side so provider keys never reach the browser.
     if (body.action === 'generate_image' || body.action === 'edit_image') {
+      if (!openaiKey) return json({ error: 'Image generation and editing need an OPENAI_API_KEY with image access and available credits. Gemini chat can work separately.' }, 503);
       const prompt = String(body.prompt || '').trim();
       if (!prompt) return json({ error: 'Describe the image you want to create or edit.' }, 400);
       if (prompt.length > 4000) return json({ error: 'Please keep image descriptions under 4,000 characters.' }, 413);
@@ -42,12 +44,12 @@ Deno.serve(async (req) => {
         form.append('size', '1024x1024');
         form.append('image', new Blob([bytes], { type: match[1] }), `upload.${ext}`);
         imageResponse = await fetch('https://api.openai.com/v1/images/edits', {
-          method: 'POST', headers: { Authorization: `Bearer ${apiKey}` }, body: form
+          method: 'POST', headers: { Authorization: `Bearer ${openaiKey}` }, body: form
         });
       } else {
         imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
           method: 'POST',
-          headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+          headers: { Authorization: `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({ model: Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', output_format: 'png' })
         });
       }
@@ -74,13 +76,35 @@ Deno.serve(async (req) => {
     if (preferences?.memory_enabled && typeof preferences.memory_text === 'string' && preferences.memory_text.trim()) {
       instructions += '\n\nUser-approved memory for personalization (use only when relevant): ' + preferences.memory_text.slice(0, 4000);
     }
-    const ai = await fetch('https://api.openai.com/v1/responses', {
-      method: 'POST', headers: { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions, input, tools: [{ type: 'web_search' }], max_output_tokens: 1600 })
-    });
-    const result = await ai.json();
-    if (!ai.ok) return json({ error: result?.error?.message || 'AI provider request failed. Check provider billing and model access.' }, 502);
-    const reply = (result.output || []).flatMap((item: any) => item.type === 'message' ? (item.content || []).filter((c: any) => c.type === 'output_text').map((c: any) => c.text) : []).join('\n').trim();
+    let reply = '';
+    if (geminiKey) {
+      const contents: any[] = [];
+      for (const item of history) contents.push({ role: item.role === 'assistant' ? 'model' : 'user', parts: [{ text: item.content }] });
+      const parts: any[] = [];
+      if (message) parts.push({ text: message });
+      if (typeof body.image === 'string' && body.image.startsWith('data:image/')) {
+        const match = body.image.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+        if (match) parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
+      }
+      contents.push({ role: 'user', parts });
+      const model = Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash';
+      const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+        method: 'POST',
+        headers: { 'x-goog-api-key': geminiKey, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents, generationConfig: { maxOutputTokens: 1600, temperature: 0.7 } })
+      });
+      const result = await ai.json();
+      if (!ai.ok) return json({ error: result?.error?.message || 'Gemini request failed. Check the API key and quota.' }, 502);
+      reply = (result?.candidates?.[0]?.content?.parts || []).map((p: any) => typeof p.text === 'string' ? p.text : '').join('\n').trim();
+    } else if (openaiKey) {
+      const ai = await fetch('https://api.openai.com/v1/responses', {
+        method: 'POST', headers: { Authorization: `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions, input, tools: [{ type: 'web_search' }], max_output_tokens: 1600 })
+      });
+      const result = await ai.json();
+      if (!ai.ok) return json({ error: result?.error?.message || 'OpenAI request failed. Check the API key and quota.' }, 502);
+      reply = (result.output || []).flatMap((item: any) => item.type === 'message' ? (item.content || []).filter((c: any) => c.type === 'output_text').map((c: any) => c.text) : []).join('\n').trim();
+    }
     if (!reply) return json({ error: 'Smart AI returned an empty response. Please try again.' }, 502);
     // Keep a single cloud conversation across turns. The supplied ID is always scoped to the signed-in user.
     const title = (message || 'Image question').replace(/\s+/g, ' ').slice(0, 80) || 'New conversation';
