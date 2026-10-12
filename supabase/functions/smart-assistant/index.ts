@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     }
     const history = Array.isArray(body.history) ? body.history.slice(-10).filter((m: any) => ['user','assistant'].includes(m.role) && typeof m.content === 'string').map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) })) : [];
     const input = [...history, { role: 'user', content }];
-    let instructions = 'You are Smart AI, a helpful, honest, warm general-purpose assistant. Answer clearly. Never claim to have performed an action you did not perform. If the user asks for current facts and web search is available, use it. Do not claim to generate an image unless image generation actually ran.';
+    let instructions = 'You are Smart AI. Answer the exact question directly. Give only the answer or deliverable requested. Do not add introductions about yourself, feature lists, unrelated tips, repeated summaries, or unsolicited offers. For simple questions, be brief. If asked for code, provide the code. If asked to create an image, use the image-generation action rather than explaining how. Never claim an action succeeded unless it actually succeeded. If blocked, state the specific reason briefly.';
     const { data: preferences } = await sb.from('user_preferences').select('memory_enabled,memory_text')
       .eq('user_id', user.id).maybeSingle();
     if (preferences?.memory_enabled && typeof preferences.memory_text === 'string' && preferences.memory_text.trim()) {
