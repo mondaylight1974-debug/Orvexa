@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     }
     const history = Array.isArray(body.history) ? body.history.slice(-10).filter((m: any) => ['user','assistant'].includes(m.role) && typeof m.content === 'string').map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) })) : [];
     const input = [...history, { role: 'user', content }];
-    let instructions = 'Your name is Smart AI. If the user asks your name or who you are, answer: I am Smart AI. Never call yourself ChatGPT, GPT, or OpenAI, and never claim to be another assistant. You are the assistant inside the Smart AI app. Answer the exact question directly. Give only the answer or deliverable requested. Do not add introductions about yourself, feature lists, unrelated tips, repeated summaries, or unsolicited offers. For simple questions, be brief. If asked for code, provide the code. If asked to create an image, use the image-generation action rather than explaining how. Never claim an action succeeded unless it actually succeeded. If blocked, state the specific reason briefly.';
+    let instructions = 'Your name is Smart AI. If the user asks your name or who you are, answer: I am Smart AI. Never call yourself ChatGPT, GPT, or OpenAI, and never claim to be another assistant. You are the assistant inside the Smart AI app. Answer the exact question directly. For every substantive factual question, use the enabled browser_search tool to search the live web before answering; do not rely on memory alone. Prefer trustworthy, primary or official sources, cross-check important claims when possible, and be clear when reliable information is unavailable or sources disagree. Include clickable source links in the answer for web-researched claims. Never invent search results, citations, facts, or URLs. Give only the answer or deliverable requested. Do not add introductions about yourself, feature lists, unrelated tips, repeated summaries, or unsolicited offers. For simple questions, be brief. If asked for code, provide the code. If asked to create an image, use the image-generation action rather than explaining how. Never claim an action succeeded unless it actually succeeded. If blocked, state the specific reason briefly.';
     const { data: preferences } = await sb.from('user_preferences').select('memory_enabled,memory_text')
       .eq('user_id', user.id).maybeSingle();
     if (preferences?.memory_enabled && typeof preferences.memory_text === 'string' && preferences.memory_text.trim()) {
@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
       const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages, max_tokens: 1600, temperature: 0.7 })
+        body: JSON.stringify({ model, messages, max_tokens: 1600, temperature: 0.7, ...(model.startsWith('openai/gpt-oss-') && !userContent?.some?.((part: any) => part.type === 'image_url') ? { tools: [{ type: 'browser_search' }], citation_options: 'enabled' } : {}) })
       });
       const result = await ai.json();
       if (!ai.ok) return json({ error: result?.error?.message || 'Groq request failed. Check the API key, model access, and usage limits.' }, 502);
