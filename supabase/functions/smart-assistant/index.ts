@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       const messages: any[] = [{ role: 'system', content: instructions }];
       for (const item of history) messages.push({ role: item.role, content: item.content });
       messages.push({ role: 'user', content: message || 'Please help me with the attached image.' });
-      const model = Deno.env.get('GROQ_MODEL') || 'llama-3.3-70b-versatile';
+      const model = Deno.env.get('GROQ_MODEL') || 'openai/gpt-oss-120b';
       const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
