@@ -12,9 +12,10 @@ Deno.serve(async (req) => {
   if (req.method !== 'POST') return json({ error: 'POST required' }, 405);
   const openaiKey = Deno.env.get('OPENAI_API_KEY');
   const geminiKey = Deno.env.get('GEMINI_API_KEY');
+  const groqKey = Deno.env.get('GROQ_API_KEY');
   const supabaseUrl = Deno.env.get('SUPABASE_URL');
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
-  if ((!openaiKey && !geminiKey) || !supabaseUrl || !anonKey) return json({ error: 'Backend setup incomplete. Add GEMINI_API_KEY (for chat) or OPENAI_API_KEY, plus Supabase environment settings.' }, 503);
+  if ((!openaiKey && !geminiKey && !groqKey) || !supabaseUrl || !anonKey) return json({ error: 'Backend setup incomplete. Add GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY, plus Supabase environment settings.' }, 503);
   const auth = req.headers.get('Authorization') || '';
   if (!auth.startsWith('Bearer ')) return json({ error: 'Please sign in to use Smart AI.' }, 401);
   const sb = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: auth } } });
@@ -77,7 +78,21 @@ Deno.serve(async (req) => {
       instructions += '\n\nUser-approved memory for personalization (use only when relevant): ' + preferences.memory_text.slice(0, 4000);
     }
     let reply = '';
-    if (geminiKey) {
+    if (groqKey) {
+      const messages: any[] = [{ role: 'system', content: instructions }];
+      for (const item of history) messages.push({ role: item.role, content: item.content });
+      messages.push({ role: 'user', content: message || 'Please help me with the attached image.' });
+      const model = Deno.env.get('GROQ_MODEL') || 'llama-3.3-70b-versatile';
+      const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model, messages, max_tokens: 1600, temperature: 0.7 })
+      });
+      const result = await ai.json();
+      if (!ai.ok) return json({ error: result?.error?.message || 'Groq request failed. Check the API key, model access, and usage limits.' }, 502);
+      reply = result?.choices?.[0]?.message?.content?.trim() || '';
+      if (body.image && reply) reply += '\n\nNote: Image understanding is not enabled for the current Groq chat model yet.';
+    } else if (geminiKey) {
       const contents: any[] = [];
       for (const item of history) contents.push({ role: item.role === 'assistant' ? 'model' : 'user', parts: [{ text: item.content }] });
       const parts: any[] = [];
