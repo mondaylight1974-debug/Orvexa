@@ -232,6 +232,29 @@ h1 .glow{background:linear-gradient(100deg,#fff 0%,#c4b5fd 43%,#76d9ff 100%);-we
  .quick,.feature,.send{transition:none}
 }
 
+
+/* Focused, professional ChatGPT-style home screen */
+.welcome-panel{max-width:760px;margin:clamp(45px,12vh,115px) auto 0;text-align:center;padding:20px 10px 24px;transition:opacity .2s ease,transform .2s ease}
+.welcome-mark{width:48px;height:48px;display:grid;place-items:center;margin:0 auto 17px;border:1px solid #3e4773;border-radius:17px;background:linear-gradient(145deg,#29244f,#172b4b);color:#c7baff;font-size:28px;box-shadow:0 8px 34px #6c73ff1a}
+.welcome-eyebrow{font-size:10px;letter-spacing:3px;font-weight:750;color:#a9b4de}
+.welcome-panel h1{font-size:clamp(34px,7vw,52px);line-height:1.08;letter-spacing:-1.8px;margin:15px 0 12px;font-weight:700}
+.welcome-panel h1 .glow{background:linear-gradient(95deg,#c5b8ff,#92b5ff 60%,#8de6f4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.welcome-panel p{font-size:14px;color:#a5acc5;margin:0 auto;line-height:1.7}
+.suggestions-head{max-width:760px;margin:18px auto 12px}
+.quick-grid{max-width:760px;margin:0 auto;gap:10px}
+.quick{min-height:76px;padding:14px 16px;border-radius:15px;background:linear-gradient(145deg,#171b2c,#111521);border-color:#2a3150}
+.quick .emoji{display:inline-block;font-size:16px;filter:saturate(.7)}
+.quick strong{font-size:12px;margin-top:7px}
+.quick small{font-size:11px}
+#chatPage.has-conversation .welcome-panel,#chatPage.has-conversation .suggestions-head,#chatPage.has-conversation .quick-grid{display:none}
+#chatPage.has-conversation .messages{margin-top:10px}
+#chatPage:not(.has-conversation) .messages:empty{display:none}
+#chatPage:not(.has-conversation) .section-head:not(.suggestions-head){display:none}
+#chatPage:not(.has-conversation){min-height:100%;display:flex;flex-direction:column}
+#chatPage:not(.has-conversation) .quick-grid{margin-bottom:22px}
+#chatPage:not(.has-conversation) .messages{margin-top:auto}
+@media(max-width:480px){.welcome-panel{margin-top:clamp(38px,10vh,85px);padding-bottom:18px}.welcome-mark{width:44px;height:44px;border-radius:15px}.welcome-panel h1{font-size:36px}.welcome-panel p{font-size:13px}.quick{min-height:72px;padding:12px}}
+
 </style>
 </head>
 <body>
@@ -256,8 +279,8 @@ h1 .glow{background:linear-gradient(100deg,#fff 0%,#c4b5fd 43%,#76d9ff 100%);-we
   </aside>
   <main id="main">
     <section class="page active" id="chatPage">
-      <div class="hero"><div class="status"><span class="dot"></span> SMART AI IS HERE FOR YOU</div><h1>Ideas become<br><span class="glow">possibilities.</span></h1><p>Think it. Ask it. Create it. Your personal AI assistant for everyday life.</p><div class="pills"><span class="pill">✦ Smart answers</span><span class="pill">◉ Creative tools</span><span class="pill">⌁ Voice ready</span></div></div>
-      <div class="section-head"><h2>What can I help with?</h2><button class="small-link" onclick="newChat()">＋ New chat</button></div>
+      <div class="welcome-panel"><div class="welcome-mark" aria-hidden="true">✳</div><div class="welcome-eyebrow">SMART AI</div><h1>What can I help<br><span class="glow">you with?</span></h1><p>Ask anything. Get a clear, direct answer.</p></div>
+      <div class="section-head suggestions-head"><h2>Try asking</h2><button class="small-link" onclick="newChat()">＋ New chat</button></div>
       <div class="quick-grid">
         <button class="quick" onclick="quickPrompt('Help me write a great message. Ask me what it is for.')"><span class="emoji">✍️</span><strong>Write something</strong><small>Messages, letters, CVs</small><span class="arrow">↗</span></button>
         <button class="quick" onclick="quickPrompt('Give me creative ideas for a project.')"><span class="emoji">💡</span><strong>Brainstorm ideas</strong><small>Think beyond the usual</small><span class="arrow">↗</span></button>
@@ -375,7 +398,7 @@ h1 .glow{background:linear-gradient(100deg,#fff 0%,#c4b5fd 43%,#76d9ff 100%);-we
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const $=id=>document.getElementById(id);
-const WELCOME="Hi, I'm Smart — your AI assistant. Ask me a question, share an idea, or tell me what you want to create.";
+const WELCOME="Hi! What can I help you with?";
 let currentMessages=[],selectedImage=null,busy=false,callMode=false,callMuted=false,callRecognition=null,currentConversationId=localStorage.getItem('smart-conversation-id')||null;
 // Fill these after creating your Supabase project. The anon key is public; never put a service-role or AI key here.
 const SUPABASE_URL = "https://ruczzcnrkgnoftghoapr.supabase.co";
@@ -385,9 +408,10 @@ const supabaseReady = Boolean(window.supabase && SUPABASE_URL.startsWith('https:
 const sb = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function renderMessage(m){const d=document.createElement('article');d.className='msg '+m.role;const role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'YOU':'✦ SMART';const text=document.createElement('div');text.className='msg-text';text.textContent=String(m.content||'');d.append(role,text);if(m.role==='assistant'){const actions=document.createElement('div');actions.className='msg-actions';const listen=document.createElement('button');listen.type='button';listen.className='text-action';listen.textContent='🔊 Speak';listen.setAttribute('aria-label','Speak this Smart AI answer');listen.addEventListener('click',()=>speak(String(m.content||'')));const copy=document.createElement('button');copy.type='button';copy.className='text-action';copy.textContent='Copy';copy.setAttribute('aria-label','Copy this Smart AI answer');copy.addEventListener('click',()=>copyText(String(m.content||'')));actions.append(listen,copy);d.appendChild(actions);}$('messages').appendChild(d);}
-function addMessage(role,content){const m={role,content,time:new Date().toISOString()};currentMessages.push(m);renderMessage(m);saveCurrent();$('main').scrollTop=$('main').scrollHeight;return m;}
+function updateChatLayout(){const page=$('chatPage');if(page)page.classList.toggle('has-conversation',currentMessages.some(m=>m.role==='user'));}
+function addMessage(role,content){const m={role,content,time:new Date().toISOString()};currentMessages.push(m);renderMessage(m);updateChatLayout();saveCurrent();$('main').scrollTop=$('main').scrollHeight;return m;}
 function saveCurrent(){try{localStorage.setItem('smart-current',JSON.stringify(currentMessages));if(currentConversationId)localStorage.setItem('smart-conversation-id',currentConversationId);else localStorage.removeItem('smart-conversation-id');}catch(e){}}
-function loadCurrent(){try{const saved=JSON.parse(localStorage.getItem('smart-current')||'[]');if(saved.length){currentMessages=saved;currentMessages.forEach(renderMessage);return;}}catch(e){}currentMessages=[{role:'assistant',content:WELCOME,time:new Date().toISOString()}];currentMessages.forEach(renderMessage);saveCurrent();}
+function loadCurrent(){try{const saved=JSON.parse(localStorage.getItem('smart-current')||'[]');if(saved.length){currentMessages=saved;currentMessages.forEach(renderMessage);updateChatLayout();return;}}catch(e){}currentMessages=[{role:'assistant',content:WELCOME,time:new Date().toISOString()}];currentMessages.forEach(renderMessage);updateChatLayout();saveCurrent();}
 function quickPrompt(text){showPage('chat');$('prompt').value=text;$('prompt').focus();}
 function newChat(){if(currentMessages.some(m=>m.role==='user')){let h=JSON.parse(localStorage.getItem('smart-history')||'[]');h.unshift({title:(currentMessages.find(m=>m.role==='user')||{}).content||'Conversation',messages:currentMessages,time:new Date().toISOString()});localStorage.setItem('smart-history',JSON.stringify(h.slice(0,30)));}currentConversationId=null;currentMessages=[];$('messages').innerHTML='';addMessage('assistant','New chat started. What can I help you with?');renderHistory();}
 function clearChat(){if(confirm('Clear this conversation?')){currentMessages=[];$('messages').innerHTML='';addMessage('assistant','Chat cleared. What would you like to explore next?');}}
