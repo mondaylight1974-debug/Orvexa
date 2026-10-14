@@ -263,6 +263,48 @@ h1 .glow{background:linear-gradient(100deg,#fff 0%,#c4b5fd 43%,#76d9ff 100%);-we
 .drawer-history-empty{padding:9px 12px;color:#7f89a7;font-size:12px;line-height:1.5}
 .drawer-chat-history:empty{display:none}
 
+
+/* Light mode: user-selected theme, remembered on this device */
+body[data-theme="light"]{--bg:#f5f6fb;--panel:#ffffff;--panel2:#eef0f8;--line:#dfe2ee;--text:#202338;--muted:#697087;--purple:#7252df;--blue:#356ee8;--cyan:#2568b9;--green:#16885e;background:#f5f6fb;color:var(--text)}
+body[data-theme="light"] .topbar{background:#ffffffed;border-bottom-color:#e0e3ee}
+body[data-theme="light"] .icon-btn{background:#f0f1f8;border-color:#dfe2ee;color:#34364d}
+body[data-theme="light"] main{scrollbar-color:#c4c8d8 transparent}
+body[data-theme="light"] .hero{background:linear-gradient(125deg,#f1edff,#edf4ff 56%,#fff);border-color:#dcd6f7;box-shadow:0 14px 45px #27335c12}
+body[data-theme="light"] .hero p,body[data-theme="light"] .account-hero p{color:#626982}
+body[data-theme="light"] .pill{color:#4b3c83;background:#ece8ff;border-color:#d9d1ff}
+body[data-theme="light"] .quick,body[data-theme="light"] .feature{background:linear-gradient(145deg,#fff,#f5f6fc);border-color:#e0e3ee}
+body[data-theme="light"] .msg{background:#fff;border-color:#e0e3ee;color:#202338}
+body[data-theme="light"] .msg.user{background:linear-gradient(120deg,#eee9ff,#e8f1ff);border-color:#d7d5f3}
+body[data-theme="light"] .composer-area{background:#fffffff2;border-top-color:#e0e3ee}
+body[data-theme="light"] .composer{background:#fff;border-color:#d7dbea;box-shadow:0 8px 30px #27335c10}
+body[data-theme="light"] .input{color:#202338}
+body[data-theme="light"] .input::placeholder{color:#8b91a5}
+body[data-theme="light"] .tool{color:#5f6680}
+body[data-theme="light"] .tool:active{background:#eef0f8}
+body[data-theme="light"] .nav{background:#fff;border-top-color:#e0e3ee}
+body[data-theme="light"] .nav button{color:#777e94}
+body[data-theme="light"] .nav button.active{color:#6547d3}
+body[data-theme="light"] .app-drawer{background:#fff;border-right-color:#e0e3ee;box-shadow:20px 0 70px #1c24401c}
+body[data-theme="light"] .drawer-head{border-bottom-color:#e4e6ef}
+body[data-theme="light"] .drawer-link{color:#42465e}
+body[data-theme="light"] .drawer-link:hover,body[data-theme="light"] .drawer-history-item:hover{background:#f0effb;border-color:#dedaf6;color:#292143}
+body[data-theme="light"] .drawer-history-item{color:#42465e}
+body[data-theme="light"] .drawer-history-empty{color:#777e94}
+body[data-theme="light"] .drawer-label{color:#8389a0}
+body[data-theme="light"] .drawer-footer{border-top-color:#e4e6ef;color:#777e94}
+body[data-theme="light"] .account-hero{background:radial-gradient(ellipse at 50% 35%,#eeebff 0%,#f8f9ff 48%,#fff 100%);border-color:#ded8f7}
+body[data-theme="light"] .account-welcome{color:#51428b}
+body[data-theme="light"] .field,body[data-theme="light"] input,body[data-theme="light"] textarea{color:#202338}
+body[data-theme="light"] .field{background:#fff;border-color:#dfe2ee}
+body[data-theme="light"] .primary{background:#29243f;color:#fff}
+body[data-theme="light"] .secondary{background:#f0f1f8;border-color:#dfe2ee;color:#33364e}
+body[data-theme="light"] .toast{background:#fff;border-color:#dfe2ee;color:#202338;box-shadow:0 10px 30px #1c24401a}
+body[data-theme="light"] .history-item{background:#fff;border-color:#e0e3ee;color:#202338}
+body[data-theme="light"] .page-desc{color:#697087}
+body[data-theme="light"] .welcome-panel p{color:#697087}
+body[data-theme="light"] .disclaimer{color:#858ba0}
+body[data-theme="light"] .drawer-link.active{background:#efedff;color:#6044d0}
+
 </style>
 </head>
 <body>
@@ -277,7 +319,8 @@ h1 .glow{background:linear-gradient(100deg,#fff 0%,#c4b5fd 43%,#76d9ff 100%);-we
   <aside class="app-drawer" id="appDrawer" aria-label="Main menu" aria-hidden="true">
     <div class="drawer-head"><div class="drawer-brand"><span>✦</span> Smart AI</div><button class="icon-btn drawer-close" onclick="closeMenu()" aria-label="Close menu">×</button></div>
     <button class="drawer-new" onclick="closeMenu();newChat()"><span>＋</span> New chat</button>
-    <div class="drawer-label">RECENT CHATS</div>
+    <button class="drawer-link theme-toggle" id="themeToggle" onclick="toggleTheme()"><span id="themeIcon">☼</span> <span id="themeLabel">Switch to light mode</span></button>
+    <div class="drawer-label">CHAT HISTORY</div>
     <div id="drawerChatHistory" class="drawer-chat-history" aria-label="Previous chats"></div>
     <button class="drawer-link" onclick="closeMenu();showPage('history')"><span>◷</span> View all chats</button>
     <div class="drawer-label">WORKSPACE</div>
@@ -510,6 +553,11 @@ async function updateAccountStatus(){
    $('accountStatus').textContent='Could not check account status · check your connection';
  }
 }
+
+function applyTheme(theme){const light=theme==='light';document.body.dataset.theme=light?'light':'dark';try{localStorage.setItem('smart-theme',light?'light':'dark')}catch(e){}const label=$('themeLabel'),icon=$('themeIcon');if(label)label.textContent=light?'Switch to dark mode':'Switch to light mode';if(icon)icon.textContent=light?'☾':'☼';const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',light?'#f5f6fb':'#080910');}
+function toggleTheme(){applyTheme(document.body.dataset.theme==='light'?'dark':'light');}
+try{applyTheme(localStorage.getItem('smart-theme')==='light'?'light':'dark')}catch(e){applyTheme('dark')}
+
 $('prompt').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,110)+'px';});
 $('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
 if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
