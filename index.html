@@ -32,14 +32,127 @@ h1{font-size:clamp(33px,8vw,49px);line-height:1.02;letter-spacing:-2px;margin:20
 .toast{position:absolute;bottom:145px;left:16px;right:16px;background:#28233e;border:1px solid #554a83;padding:12px 14px;border-radius:14px;font-size:12px;display:none;z-index:10;box-shadow:0 10px 30px #0008}
 @keyframes spin{to{transform:rotate(360deg)}}@keyframes appear{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}.voice-screen{position:fixed;inset:0;z-index:30;display:none;flex-direction:column;align-items:center;justify-content:space-between;padding:calc(env(safe-area-inset-top) + 22px) 24px calc(env(safe-area-inset-bottom) + 25px);background:radial-gradient(ellipse at 50% 42%,#1b1740 0%,#0b0c18 42%,#05060b 100%);color:#f6f6ff}.voice-screen.open{display:flex}.voice-head{width:100%;display:flex;align-items:center;justify-content:space-between}.voice-back,.voice-small{border:1px solid #32334f;background:#141525;border-radius:50%;width:44px;height:44px;display:grid;place-items:center;font-size:18px}.voice-title{text-align:center;font-size:12px;font-weight:800;letter-spacing:2px;color:#d8d3ff}.voice-center{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;flex:1;width:100%;min-height:0}.voice-orb-wrap{width:min(62vw,245px);height:min(62vw,245px);display:grid;place-items:center;position:relative;margin-bottom:34px}.voice-orbit{position:absolute;inset:0;border:1px solid #8d7cff42;border-radius:50%;animation:voicePulse 3s ease-in-out infinite}.voice-orbit:nth-child(2){inset:17px;border-color:#5de4ff35;animation-delay:.5s}.voice-orbit:nth-child(3){inset:35px;border-color:#a58bff50;animation-delay:1s}.voice-orb{width:48%;height:48%;border-radius:50%;background:radial-gradient(circle at 35% 25%,#d8faff 0%,#7c82ff 20%,#7148d8 47%,#101f54 78%);box-shadow:0 0 28px #8d70ffb0,0 0 80px #5c62ff55,inset -12px -15px 25px #06081d;animation:orbFloat 4s ease-in-out infinite}.voice-screen.listening .voice-orb{box-shadow:0 0 36px #72dcffcc,0 0 100px #6862ff88,inset -12px -15px 25px #06081d;animation:orbListen 1.6s ease-in-out infinite}.voice-screen.speaking .voice-orb{box-shadow:0 0 36px #c19affcc,0 0 100px #8b5dff88,inset -12px -15px 25px #06081d;animation:orbListen .85s ease-in-out infinite}.voice-name{font-size:29px;font-weight:850;letter-spacing:-1px}.voice-state{margin-top:10px;color:#b4b5d1;font-size:13px}.voice-transcript{max-width:430px;min-height:44px;margin-top:20px;color:#c9c5ed;font-size:13px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}.voice-bars{height:32px;display:flex;align-items:center;gap:4px;margin-top:20px}.voice-bars i{display:block;width:4px;height:8px;border-radius:9px;background:linear-gradient(#74e8ff,#9b7cff);opacity:.8}.voice-screen.listening .voice-bars i{animation:voiceBar .75s ease-in-out infinite alternate}.voice-bars i:nth-child(3n){animation-delay:.2s}.voice-bars i:nth-child(2n){animation-delay:.4s}.voice-controls{display:flex;align-items:center;justify-content:center;gap:22px;width:100%}.voice-control{min-width:70px;display:flex;flex-direction:column;align-items:center;gap:8px;border:0;background:transparent;color:#d6d6ec;font-size:11px}.voice-control .circle{height:58px;width:58px;display:grid;place-items:center;border:1px solid #3b3c5a;border-radius:50%;background:#1b1c2d;font-size:22px}.voice-control.end .circle{background:#e14d68;border-color:#e14d68;color:white}.voice-control.active .circle{border-color:#7c9fff;box-shadow:0 0 20px #766aff55}@keyframes voicePulse{0%,100%{transform:scale(.94);opacity:.48}50%{transform:scale(1.05);opacity:1}}@keyframes orbFloat{0%,100%{transform:translateY(0) scale(.98)}50%{transform:translateY(-5px) scale(1.03)}}@keyframes orbListen{0%,100%{transform:scale(.95)}50%{transform:scale(1.08)}}@keyframes voiceBar{from{height:5px}to{height:28px}}
 @media(min-width:650px){main{padding:24px 28px}.hero{padding:29px}.quick-grid,.features{grid-template-columns:repeat(3,minmax(0,1fr))}.quick{min-height:110px}.composer-area{padding-left:25px;padding-right:25px}}
+
+/* Modern, understated ChatGPT-inspired interface */
+:root{--bg:#101010;--panel:#181818;--panel2:#222;--line:#303030;--text:#f5f5f5;--muted:#a0a0a0;--purple:#a78bfa;--blue:#7c9cff;--cyan:#b5b5b5;--green:#65e6b3}
+body{background:#101010}
+.app{max-width:none;width:100%;background:#101010}
+.topbar{height:62px;padding:0 18px;background:#101010;border-bottom:1px solid #252525;gap:13px}
+.logo{display:none}
+.brand-lockup{display:flex;align-items:center;gap:11px}
+.brand{font-size:19px;font-weight:650;letter-spacing:-.5px;color:#f4f4f4}
+.brand span{color:inherit}
+.tagline{font-size:9px;letter-spacing:1.2px;color:#858585}
+.icon-btn{width:38px;height:38px;border-radius:11px;background:transparent;border:1px solid transparent;color:#ddd;font-size:18px}
+.icon-btn:hover,.tool:hover{background:#242424}
+.menu-trigger{font-size:20px}
+.model-pill{border:1px solid #333;background:#191919;border-radius:20px;padding:8px 12px;color:#d8d8d8;font-size:12px;display:flex;gap:12px;align-items:center}
+.model-pill span{color:#888}
+.profile-button-avatar{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-size:18px;color:#ddd;background:#292929;border:1px solid #454545;box-shadow:none}
+main{padding:24px 18px 24px;scrollbar-color:#424242 transparent}
+.hero{border:0;border-radius:0;padding:32px 4px 12px;background:transparent;box-shadow:none;max-width:740px;margin:0 auto}
+.hero:after{display:none}
+.status{font-size:10px;letter-spacing:1.2px;color:#a7a7a7}
+.dot{width:6px;height:6px;box-shadow:none;background:#8d8d8d}
+h1{font-size:clamp(31px,6vw,42px);line-height:1.12;letter-spacing:-1.6px;margin:18px 0 10px;font-weight:650}
+h1 .glow{background:none;color:#f5f5f5}
+.hero p{font-size:14px;color:#a4a4a4;max-width:500px}
+.pills{margin-top:16px;gap:7px}
+.pill{font-size:11px;padding:7px 10px;border-radius:20px;color:#c7c7c7;background:#191919;border:1px solid #303030}
+.section-head{max-width:740px;margin:26px auto 12px}
+.section-head h2{font-size:13px;color:#d6d6d6;font-weight:550}
+.small-link{color:#c8c8c8;font-size:12px}
+.quick-grid{max-width:740px;margin:0 auto;gap:9px}
+.quick{min-height:75px;padding:13px 14px;border-radius:14px;background:#171717;border:1px solid #2c2c2c;box-shadow:none}
+.quick:hover,.feature:hover,.history-item:hover{background:#202020;border-color:#424242}
+.quick .emoji{display:none}
+.quick strong{font-size:12px;font-weight:600;margin-top:2px;color:#ededed}
+.quick small{font-size:11px;color:#929292}
+.quick .arrow{color:#858585}
+.messages{max-width:740px;margin:24px auto 0;gap:18px}
+.msg{border:0;border-radius:0;padding:12px 0;background:transparent;animation:appear .15s ease}
+.msg.user{margin-left:auto;max-width:88%;padding:12px 16px;border:1px solid #303030;border-radius:20px;background:#252525}
+.role{font-size:10px;letter-spacing:.6px;color:#c0c0c0;margin-bottom:7px}
+.msg.user .role{color:#e3e3e3}
+.msg-text{font-size:15px;line-height:1.75;color:#ececec}
+.msg-actions{gap:14px}
+.text-action{color:#bcbcbc;font-size:11px}
+.thinking{font-size:12px;color:#aaa;padding:8px 0}
+.spinner{border-color:#414141;border-top-color:#ddd}
+.composer-area{padding:12px max(16px,calc((100vw - 780px)/2)) calc(9px + env(safe-area-inset-bottom));background:#101010;border-top:1px solid #252525;backdrop-filter:none}
+.composer{gap:7px;padding:7px 8px 7px 11px;border-radius:26px;border:1px solid #414141;background:#1b1b1b;box-shadow:none}
+.tool{width:38px;height:38px;border-radius:50%;color:#c6c6c6;font-size:21px}
+.input{font-size:15px;min-height:40px;padding:11px 4px 8px;color:#f3f3f3}
+.input::placeholder{color:#8a8a8a}
+.send{height:39px;width:39px;border-radius:50%;background:#f0f0f0;color:#171717;box-shadow:none;font-size:22px}
+.send:hover{background:#d6d6d6}
+.voice-launch svg{width:21px;height:21px;display:block}
+.disclaimer{font-size:10px;color:#777;margin:8px 0 0}
+.nav{display:none}
+.page-title{font-size:30px;font-weight:650;letter-spacing:-.8px}
+.eyebrow{color:#a9a9a9;font-size:10px;letter-spacing:1.5px}
+.page-desc{color:#a0a0a0}
+.feature{border-radius:15px;background:#171717;border-color:#2c2c2c}
+.feature .emoji{filter:grayscale(1);font-size:20px}
+.feature strong{font-weight:600}
+.feature .open{color:#ccc}
+.card,.history-item{background:#171717;border-color:#303030;border-radius:15px}
+.primary{background:#eee;color:#171717}
+.secondary{background:#252525;border:1px solid #393939;color:#e4e4e4}
+.field{background:#111;border-color:#393939;border-radius:12px}
+.toast{background:#242424;border-color:#484848;box-shadow:0 10px 30px #0008}
+.app-drawer{position:fixed;z-index:50;inset:0 auto 0 0;width:min(300px,86vw);padding:17px 13px 16px;background:#171717;border-right:1px solid #303030;display:flex;flex-direction:column;transform:translateX(-102%);transition:transform .22s ease;box-shadow:20px 0 70px #0007}
+.app-drawer.open{transform:translateX(0)}
+.drawer-scrim{position:fixed;inset:0;z-index:49;background:#0009;opacity:0;visibility:hidden;transition:opacity .2s ease}
+.drawer-scrim.open{opacity:1;visibility:visible}
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:1px 4px 19px;border-bottom:1px solid #2c2c2c}
+.drawer-brand{font-size:17px;font-weight:650;display:flex;align-items:center;gap:10px}
+.drawer-brand span{display:grid;place-items:center;width:27px;height:27px;border-radius:8px;background:#292929;color:#eee}
+.drawer-close{font-size:25px}
+.drawer-new{display:flex;align-items:center;gap:10px;width:100%;padding:12px 13px;margin:16px 0 22px;text-align:left;background:#222;border:1px solid #393939;border-radius:11px;font-size:13px;color:#eee}
+.drawer-new span{font-size:18px}
+.drawer-label{padding:0 11px 8px;font-size:10px;letter-spacing:1.1px;color:#818181}
+.drawer-link{display:flex;align-items:center;gap:12px;width:100%;padding:12px 11px;border:0;border-radius:9px;background:transparent;text-align:left;color:#c8c8c8;font-size:13px}
+.drawer-link>span{width:18px;text-align:center;color:#a6a6a6;font-size:17px}
+.drawer-link:hover,.drawer-link.active{background:#292929;color:#fff}
+.drawer-footer{margin-top:auto;padding:16px 10px 5px;border-top:1px solid #2c2c2c;color:#8e8e8e;font-size:11px;line-height:1.7}
+.drawer-footer span{color:#c9c9c9}
+.voice-screen{background:radial-gradient(ellipse at 50% 43%,#242424 0%,#101010 45%,#080808 100%)}
+.voice-title{color:#d6d6d6}
+.voice-orbit{border-color:#77777735}
+.voice-orbit:nth-child(2){border-color:#aaaaaa2a}
+.voice-orbit:nth-child(3){border-color:#bbbbbb38}
+.voice-orb{background:radial-gradient(circle at 35% 25%,#f4f4f4 0%,#aaa 20%,#555 48%,#101010 78%);box-shadow:0 0 28px #aaa5,0 0 80px #8883,inset -12px -15px 25px #060606}
+.voice-screen.listening .voice-orb,.voice-screen.speaking .voice-orb{box-shadow:0 0 36px #ddd8,0 0 100px #aaa5,inset -12px -15px 25px #060606}
+.voice-bars i{background:linear-gradient(#eee,#777)}
+.voice-control .circle{background:#222;border-color:#444}
+.voice-control.end .circle{background:#d94b4b;border-color:#d94b4b}
+@media(min-width:650px){main{padding:26px 32px}.hero{padding:45px 4px 12px}.quick-grid,.features{grid-template-columns:repeat(2,minmax(0,1fr))}.composer-area{padding-left:max(24px,calc((100vw - 780px)/2));padding-right:max(24px,calc((100vw - 780px)/2))}}
+@media(max-width:480px){.topbar{height:58px;padding:0 10px;gap:8px}.brand{font-size:17px}.tagline{display:none}.model-pill{padding:7px 9px;font-size:11px}.profile-button{width:34px;height:34px}.hero{padding-top:30px}.status{font-size:9px}.quick-grid{gap:7px}.quick{min-height:69px;padding:11px}.quick strong{font-size:11px}.quick small{font-size:10px}.composer-area{padding-left:10px;padding-right:10px}.composer{gap:3px;padding:6px}.tool{width:34px;height:36px}.input{font-size:14px}.send{width:36px;height:36px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
 </style>
 </head>
 <body>
 <div class="app">
   <header class="topbar">
-    <div class="logo">✦</div><div><div class="brand">smart<span>.</span></div><div class="tagline">YOUR AI COMPANION</div></div>
-    <div class="spacer"></div><button class="icon-btn profile-button" aria-label="Profile" onclick="showPage('profile')"><span class="profile-button-avatar" aria-hidden="true">👤</span></button>
+    <button class="icon-btn menu-trigger" aria-label="Open menu" title="Menu" onclick="toggleMenu()">☰</button>
+    <div class="brand-lockup"><div class="brand">Smart AI</div><div class="tagline">PERSONAL ASSISTANT</div></div>
+    <div class="spacer"></div><button class="model-pill" type="button" aria-label="Current assistant">Smart <span>⌄</span></button>
+    <button class="icon-btn profile-button" aria-label="Profile" onclick="showPage('profile')"><span class="profile-button-avatar" aria-hidden="true">◉</span></button>
   </header>
+  <div class="drawer-scrim" id="drawerScrim" onclick="closeMenu()" aria-hidden="true"></div>
+  <aside class="app-drawer" id="appDrawer" aria-label="Main menu" aria-hidden="true">
+    <div class="drawer-head"><div class="drawer-brand"><span>✦</span> Smart AI</div><button class="icon-btn drawer-close" onclick="closeMenu()" aria-label="Close menu">×</button></div>
+    <button class="drawer-new" onclick="closeMenu();showPage('chat');newChat()"><span>＋</span> New chat</button>
+    <div class="drawer-label">WORKSPACE</div>
+    <button class="drawer-link active" data-page="chat" onclick="closeMenu();showPage('chat')"><span>◉</span> Chat</button>
+    <button class="drawer-link" data-page="discover" onclick="closeMenu();showPage('discover')"><span>⌘</span> Explore tools</button>
+    <button class="drawer-link" data-page="history" onclick="closeMenu();showPage('history')"><span>◷</span> Chat history</button>
+    <div class="drawer-label">ACCOUNT</div>
+    <button class="drawer-link" data-page="profile" onclick="closeMenu();showPage('profile')"><span>○</span> Profile & settings</button>
+    <div class="drawer-footer">Private space for your ideas.<br><span>Smart AI</span></div>
+  </aside>
   <main id="main">
     <section class="page active" id="chatPage">
       <div class="hero"><div class="status"><span class="dot"></span> SMART AI IS HERE FOR YOU</div><h1>Ideas become<br><span class="glow">possibilities.</span></h1><p>Think it. Ask it. Create it. Your personal AI assistant for everyday life.</p><div class="pills"><span class="pill">✦ Smart answers</span><span class="pill">◉ Creative tools</span><span class="pill">⌁ Voice ready</span></div></div>
@@ -116,7 +229,7 @@ h1{font-size:clamp(33px,8vw,49px);line-height:1.02;letter-spacing:-2px;margin:20
   </main>
   <div class="composer-area" id="composerArea">
     <div class="preview" id="imagePreview"></div>
-    <div class="composer"><button class="tool" aria-label="Add image" onclick="document.getElementById('imageInput').click()">＋</button><textarea id="prompt" class="input" rows="1" placeholder="Ask Smart anything…" aria-label="Message"></textarea><button class="tool" aria-label="Send a voice note" title="Speak a voice note and get a spoken reply" onclick="startVoiceNote()">🎙</button><button class="tool" id="callButton" aria-label="Start AI voice call" title="Start AI voice call" onclick="toggleVoiceCall()">📞</button><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
+    <div class="composer"><button class="tool" aria-label="Add image" onclick="document.getElementById('imageInput').click()">＋</button><textarea id="prompt" class="input" rows="1" placeholder="Ask Smart anything…" aria-label="Message"></textarea><button class="tool" aria-label="Send a voice note" title="Speak a voice note and get a spoken reply" onclick="startVoiceNote()">🎙</button><button class="tool voice-launch" id="callButton" aria-label="Start voice conversation" title="Start a voice conversation" onclick="toggleVoiceCall()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
     <div class="disclaimer">Smart AI prioritizes accuracy and checks reliable sources when available.</div>
   </div>
   <input type="file" id="imageInput" accept="image/*" hidden>
@@ -171,12 +284,14 @@ try{
  selectedImage=null;$('imagePreview').style.display='none';
 }catch(e){const reason=String(e&&e.message||'');let help='I could not reach the AI service.';if(reason.includes('sign in'))help='Your message was added, but Smart Assistant needs you to sign in before it can reply. Open Profile, create an account or sign in, then try again.';else if(reason.includes('Supabase'))help='The chat service is not configured yet. The website buttons can work, but AI replies need the Supabase backend and AI function deployed.';else if(reason)help='Smart Assistant could not reply: '+reason;addMessage('assistant',help);}
 finally{busy=false;const t=$('thinking');if(t)t.remove();}}
-function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(''+name+'Page').classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('composerArea').style.display=name==='chat'?'block':'none';if(name==='history')renderHistory();if(name==='profile'){updateAccountStatus();loadMemorySettings();}$('main').scrollTop=0;}
+function toggleMenu(){const d=$('appDrawer'),s=$('drawerScrim');if(!d||!s)return;const open=!d.classList.contains('open');d.classList.toggle('open',open);s.classList.toggle('open',open);d.setAttribute('aria-hidden',String(!open));s.setAttribute('aria-hidden',String(!open));}
+function closeMenu(){const d=$('appDrawer'),s=$('drawerScrim');if(!d||!s)return;d.classList.remove('open');s.classList.remove('open');d.setAttribute('aria-hidden','true');s.setAttribute('aria-hidden','true');}
+function showPage(name){closeMenu();document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(''+name+'Page').classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('composerArea').style.display=name==='chat'?'block':'none';if(name==='history')renderHistory();if(name==='profile'){updateAccountStatus();loadMemorySettings();}$('main').scrollTop=0;}
 function renderHistory(){const root=$('historyList');if(!root)return;let h=[];try{h=JSON.parse(localStorage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!h.length){root.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:30px;margin-bottom:8px">◷</div><h3>Your story starts here</h3><p class="muted">Your saved chats will appear here.</p><button class="primary" onclick="showPage(\'chat\');newChat()">Start a chat</button></div>';}h.forEach(item=>{const b=document.createElement('button');b.className='history-item';b.innerHTML='<strong>'+escapeHtml(item.title)+'</strong><small>On this device · '+new Date(item.time).toLocaleString()+' · '+item.messages.length+' messages</small>';b.onclick=()=>{currentConversationId=null;currentMessages=item.messages;$('messages').innerHTML='';currentMessages.forEach(renderMessage);showPage('chat');saveCurrent();};root.appendChild(b);});loadCloudHistory(root);}
 async function loadCloudHistory(root){if(!sb)return;try{const {data:{session}}=await sb.auth.getSession();if(!session)return;const {data,error}=await sb.from('conversations').select('id,title,created_at,updated_at,messages(id,role,content,created_at)').eq('user_id',session.user.id).order('updated_at',{ascending:false}).limit(30);if(error)throw error;if(!data||!data.length)return;const heading=document.createElement('div');heading.className='section-head';heading.innerHTML='<h2>☁️ Synced conversations</h2>';root.appendChild(heading);data.forEach(item=>{const msgs=(item.messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));if(!msgs.length)return;const b=document.createElement('button');b.className='history-item';b.innerHTML='<strong>'+escapeHtml(item.title||'Conversation')+'</strong><small>☁️ Synced · '+new Date(item.updated_at||item.created_at).toLocaleString()+' · '+msgs.length+' messages</small>';b.onclick=()=>{currentConversationId=item.id;currentMessages=msgs.map(m=>({role:m.role,content:m.content,time:m.created_at}));$('messages').innerHTML='';currentMessages.forEach(renderMessage);showPage('chat');saveCurrent();};root.appendChild(b);});}catch(e){console.warn('Cloud history is not available:',e.message);}}
 function speak(text,onend){if(!('speechSynthesis'in window)||typeof SpeechSynthesisUtterance==='undefined'){toast('Your browser does not support spoken answers. Open Smart AI in Chrome and try again.');if(onend)onend();return;}const value=String(text||'').trim();if(!value){toast('There is no answer to speak yet.');if(onend)onend();return;}try{window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(value);utterance.lang='en-US';utterance.rate=1;utterance.onstart=()=>{if(callMode)setVoiceState('speaking','Smart is speaking… tap the orb to interrupt');};utterance.onend=()=>{if(onend)onend();};utterance.onerror=()=>{if(onend)onend();};window.speechSynthesis.speak(utterance);if(window.speechSynthesis.paused)window.speechSynthesis.resume();}catch(e){toast('Could not speak this answer. Try opening Smart AI in Chrome.');if(onend)onend();}}
 function setVoiceState(state,text){const screen=$('voiceScreen');if(!screen)return;screen.classList.remove('listening','speaking');if(state)screen.classList.add(state);$('voiceState').textContent=text||'Ready';}
-function toggleVoiceCall(){if(callMode){callMode=false;if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}if('speechSynthesis'in window)speechSynthesis.cancel();const b=$('callButton');if(b)b.textContent='📞';if(b)b.setAttribute('aria-label','Start AI voice call');const screen=$('voiceScreen');if(screen){screen.classList.remove('open','listening','speaking');screen.setAttribute('aria-hidden','true');}toast('Voice call ended.');return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('Live voice calls need speech recognition in this browser. Try Chrome and allow microphone access.');return;}if(!('speechSynthesis'in window)){toast('This browser cannot speak replies aloud.');return;}callMode=true;const b=$('callButton');if(b)b.textContent='⏹';if(b)b.setAttribute('aria-label','End AI voice call');const screen=$('voiceScreen');screen.classList.add('open');screen.setAttribute('aria-hidden','false');setVoiceState('listening','Listening… speak naturally');$('voiceTranscript').textContent='Talk naturally. Smart will listen and reply aloud.';voiceCallListen();}
+function toggleVoiceCall(){if(callMode){callMode=false;if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}if('speechSynthesis'in window)speechSynthesis.cancel();const b=$('callButton');if(b)b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';if(b)b.setAttribute('aria-label','Start AI voice call');const screen=$('voiceScreen');if(screen){screen.classList.remove('open','listening','speaking');screen.setAttribute('aria-hidden','true');}toast('Voice call ended.');return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('Live voice calls need speech recognition in this browser. Try Chrome and allow microphone access.');return;}if(!('speechSynthesis'in window)){toast('This browser cannot speak replies aloud.');return;}callMode=true;const b=$('callButton');if(b)b.textContent='■';if(b)b.setAttribute('aria-label','End AI voice call');const screen=$('voiceScreen');screen.classList.add('open');screen.setAttribute('aria-hidden','false');setVoiceState('listening','Listening… speak naturally');$('voiceTranscript').textContent='Talk naturally. Smart will listen and reply aloud.';voiceCallListen();}
 function toggleVoiceMute(){if(!callMode)return;callMuted=!callMuted;const b=$('voiceMuteButton');b.classList.toggle('active',callMuted);$('voiceMuteLabel').textContent=callMuted?'Unmute mic':'Mute mic';const circle=b.querySelector('.circle');circle.textContent=callMuted?'🔇':'🎙';if(callMuted){if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}setVoiceState('', 'Microphone muted');}else{setVoiceState('listening','Listening… speak naturally');voiceCallListen();}}
 function interruptVoiceReply(){if(!callMode)return;if('speechSynthesis'in window)speechSynthesis.cancel();if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}if(!callMuted){setVoiceState('listening','Listening… speak now');setTimeout(voiceCallListen,180);}else setVoiceState('', 'Microphone muted');}
 function voiceCallListen(){if(!callMode||callMuted||busy)return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;const r=new SR();callRecognition=r;r.lang='en-NG';r.interimResults=false;r.maxAlternatives=1;r.onresult=async e=>{const said=(e.results&&e.results[0]&&e.results[0][0]&&e.results[0][0].transcript||'').trim();r.onend=null;try{r.stop();}catch(err){}callRecognition=null;if(!said){if(callMode&&!callMuted)setTimeout(voiceCallListen,400);return;}$('voiceTranscript').textContent='You: '+said;setVoiceState('', 'Thinking…');try{await sendMessage(said);const last=[...currentMessages].reverse().find(m=>m.role==='assistant');if(callMode&&last){$('voiceTranscript').textContent='Smart: '+last.content;setVoiceState('speaking','Smart is speaking… tap the orb to interrupt');speak(last.content,()=>{if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}});}else if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}}catch(err){if(callMode&&!callMuted)setTimeout(voiceCallListen,1000);}};r.onerror=e=>{callRecognition=null;if(callMode&&!callMuted){setVoiceState('listening','I could not hear you. Try again.');toast(e.error==='not-allowed'?'Allow microphone access to use AI voice call.':'I could not hear you. Please speak again.');setTimeout(voiceCallListen,1200);}};r.onend=()=>{if(callRecognition===r)callRecognition=null;};try{setVoiceState('listening','Listening… speak naturally');r.start();}catch(e){callRecognition=null;if(callMode&&!callMuted)setTimeout(voiceCallListen,900);}}
