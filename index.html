@@ -305,6 +305,11 @@ body[data-theme="light"] .welcome-panel p{color:#697087}
 body[data-theme="light"] .disclaimer{color:#858ba0}
 body[data-theme="light"] .drawer-link.active{background:#efedff;color:#6044d0}
 
+.map-search-row{display:flex;align-items:center;gap:8px}.map-search-row .field{flex:1;min-width:0;margin-top:0}.map-search-row .primary{flex-shrink:0;margin-top:0}.map-frame-wrap{width:100%;height:330px;overflow:hidden;border:1px solid var(--line);border-radius:15px;background:var(--panel2)}.map-frame-wrap iframe{display:block;width:100%;height:100%;border:0}.map-search-row .primary{padding:12px 16px}
+@media(max-width:420px){.map-search-row{align-items:stretch}.map-search-row .primary{padding:10px 12px}.map-frame-wrap{height:290px}}
+body[data-theme="light"] .map-frame-wrap{border-color:#dfe2ee}
+
+
 
 /* Refined ChatGPT-style light mode: readable black text throughout */
 body[data-theme="light"],body[data-theme="light"] .app{color:#111827}
@@ -373,6 +378,7 @@ body[data-theme="light"] .welcome-panel h1 .glow{color:#4338ca;-webkit-text-fill
     <section class="page" id="discoverPage">
       <div class="eyebrow">EXPLORE SMART</div><div class="page-title">What can we<br>do today?</div><p class="page-desc">A toolkit for thinking, creating, learning and getting things done.</p>
       <div class="features">
+        <button class="feature" onclick="openMap()"><span class="emoji">🗺️</span><strong>Maps & directions</strong><p>Search places or view your current location on a map.</p><span class="open">Open map ↗</span></button>
         <button class="feature" onclick="document.getElementById('imageStudio').scrollIntoView({behavior:'smooth',block:'start'})"><span class="emoji">🎨</span><strong>Image studio</strong><p>Create an image from your own description.</p><span class="open">Open ↗</span></button>
         <button class="feature" onclick="quickPrompt('Help me create a document. Ask what kind of document I need.')"><span class="emoji">📄</span><strong>Document helper</strong><p>Draft letters, CVs, plans, reports and more.</p><span class="open">Open ↗</span></button>
         <button class="feature" onclick="toggleVoiceCall()"><span class="emoji">📞</span><strong>AI voice call</strong><p>Talk to Smart aloud and hear replies hands-free, where browser speech is supported.</p><span class="open">Start call ↗</span></button>
@@ -403,6 +409,18 @@ body[data-theme="light"] .welcome-panel h1 .glow{color:#4338ca;-webkit-text-fill
         <button class="feature" onclick="quickPrompt('Help me understand an accessibility or everyday technology problem. Give clear, manageable steps and ask what device or situation I am using if that matters.')"><span class="emoji">♿</span><strong>Everyday assistance</strong><p>Accessible explanations and step-by-step guidance.</p><span class="open">Get assistance ↗</span></button>
       </div>
       <div class="card" style="margin-top:14px"><h3>Capability status</h3><p class="muted">Smart can guide you through these tasks using its connected AI service. Live web research, file parsing, image generation, real-time voice, external app actions, and automated task execution each need their own working integrations and tests. Smart will not claim a tool worked unless it has actually succeeded.</p></div>
+      <div class="card" id="mapStudio" style="margin-top:14px">
+        <h3>🗺️ Smart Maps</h3>
+        <p class="muted">Search an address, business, city, or landmark. You can also choose to share your device location to center the map. Your location is only requested when you tap the button.</p>
+        <form class="map-search-row" onsubmit="event.preventDefault();searchMap();">
+          <input class="field" id="mapSearchInput" type="search" autocomplete="street-address" placeholder="Search a place or address…" aria-label="Search a place or address">
+          <button class="primary" type="submit">Search</button>
+        </form>
+        <div class="btn-row"><button class="secondary" type="button" onclick="locateOnMap()">📍 Use my location</button><button class="secondary" type="button" onclick="openMapDirections()">↗ Open directions</button></div>
+        <p class="muted" id="mapStatus" aria-live="polite">Map ready. Search for a place to begin.</p>
+        <div class="map-frame-wrap"><iframe id="mapFrame" title="Interactive map" loading="lazy" referrerpolicy="no-referrer-when-downgrade" src="https://www.google.com/maps?q=Port%20Harcourt%2C%20Nigeria&output=embed" allowfullscreen></iframe></div>
+        <p class="muted" style="margin-top:10px">Map results are provided by Google Maps. For turn-by-turn navigation, open directions in your maps app.</p>
+      </div>
       <div class="card" id="imageStudio" style="margin-top:14px"><h3>🎨 Smart Image Studio</h3><p class="muted">Describe the picture you want Smart AI to create. Image generation needs a working image API key and available provider credits.</p><textarea class="field" id="imagePrompt" rows="3" placeholder="Example: A futuristic city at sunset, glowing purple and blue lights, cinematic style…"></textarea><div class="btn-row"><button class="primary" id="generateImageButton" onclick="generateImage()">Generate image</button><button class="secondary" onclick="document.getElementById('imageInput').click()">Choose photo to edit</button><button class="secondary" id="editImageButton" onclick="editImage()">Edit chosen photo</button></div><p class="muted" id="imageStatus" aria-live="polite"></p><div id="imageOutput"></div></div>
     </section>
     <section class="page" id="historyPage">
@@ -505,6 +523,13 @@ function addMessage(role,content){const m={role,content,time:new Date().toISOStr
 function saveCurrent(){try{storage.setItem('smart-current',JSON.stringify(currentMessages));if(currentConversationId)storage.setItem('smart-conversation-id',currentConversationId);else storage.removeItem('smart-conversation-id');}catch(e){}}
 function loadCurrent(){try{const saved=JSON.parse(storage.getItem('smart-current')||'[]');if(saved.length){currentMessages=saved;currentMessages.forEach(renderMessage);updateChatLayout();return;}}catch(e){}currentMessages=[{role:'assistant',content:WELCOME,time:new Date().toISOString()}];currentMessages.forEach(renderMessage);updateChatLayout();saveCurrent();}
 function quickPrompt(text){showPage('chat');$('prompt').value=text;$('prompt').focus();}
+
+function openMap(){showPage('discover');setTimeout(()=>{const panel=$('mapStudio');if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'});const input=$('mapSearchInput');if(input)input.focus({preventScroll:true});},80);}
+function setMapLocation(query,coords){const q=String(query||'').trim();if(!q){toast('Enter a place or address first.');return;}const frame=$('mapFrame'),status=$('mapStatus');if(frame)frame.src='https://www.google.com/maps?q='+encodeURIComponent(q)+'&output=embed';if(status)status.textContent=coords?'Map centered on your current location.':'Showing map results for: '+q;const search=$('mapSearchInput');if(search&&!coords)search.value=q;}
+function searchMap(){const input=$('mapSearchInput');if(input)setMapLocation(input.value);}
+function locateOnMap(){const status=$('mapStatus');if(!navigator.geolocation){if(status)status.textContent='This browser does not support location. Search for a place instead.';return;}if(status)status.textContent='Requesting location permission…';navigator.geolocation.getCurrentPosition(pos=>{const q=pos.coords.latitude.toFixed(6)+','+pos.coords.longitude.toFixed(6);setMapLocation(q,true);if(status)status.textContent='Showing your current location. Your browser shared coordinates only after you tapped this button.';},err=>{if(status)status.textContent=err.code===1?'Location permission was denied. You can still search for any place.':'Could not get your location. Check device location settings or search for a place.';},{enableHighAccuracy:true,timeout:12000,maximumAge:60000});}
+function openMapDirections(){const input=$('mapSearchInput'),q=input&&input.value.trim();const frame=$('mapFrame');let dest=q;if(!dest&&frame){try{dest=new URL(frame.src).searchParams.get('q')||'Port Harcourt, Nigeria';}catch(e){dest='Port Harcourt, Nigeria';}}window.open('https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(dest||'Port Harcourt, Nigeria'),'_blank','noopener');}
+
 function archiveCurrentChat(){if(!currentMessages.some(m=>m.role==='user'))return;const first=currentMessages.find(m=>m.role==='user');const title=String(first.content||'Conversation').replace(/\s+/g,' ').trim().slice(0,72)||'Conversation';let list=[];try{list=JSON.parse(storage.getItem('smart-history')||'[]')}catch(e){}if(currentConversationId&&list.some(x=>x.id===currentConversationId))return;list=list.filter(x=>!(x.id&&x.id===currentConversationId));list.unshift({id:currentConversationId||('local-'+Date.now()),title,messages:currentMessages.slice(),time:new Date().toISOString()});try{storage.setItem('smart-history',JSON.stringify(list.slice(0,50)))}catch(e){}}
 function newChat(){archiveCurrentChat();currentConversationId=null;currentMessages=[];$('messages').innerHTML='';addMessage('assistant','Hi! What can I help you with?');showPage('chat');updateChatLayout();renderHistory();renderDrawerHistory();$('prompt').focus();}
 function clearChat(){if(confirm('Clear this conversation?')){currentMessages=[];$('messages').innerHTML='';addMessage('assistant','Chat cleared. What would you like to explore next?');}}
