@@ -1,4 +1,4 @@
-# Smart AI — connected backend starter
+# Orvexa AI — connected backend starter
 
 This bundle keeps the existing dark black/purple/blue interface and adds a real backend integration path. The main interface is hosted by GitHub Pages; the AI Edge Function must be deployed separately to Supabase. It is **not yet a deployed or fully tested production app**: you must create your own service accounts, add secrets, deploy the functions, and test them. Never put your OpenAI API key or Supabase service-role key in `index.html`.
 
