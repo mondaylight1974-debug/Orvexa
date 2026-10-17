@@ -1,4 +1,4 @@
-name: Deploy Smart AI Edge Function
+name: Deploy Orvexa AI Edge Function
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
         with:
           version: latest
 
-      - name: Deploy Smart AI function
+      - name: Deploy Orvexa AI function
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: supabase functions deploy smart-assistant --project-ref ruczzcnrkgnoftghoapr --use-api
