@@ -31,84 +31,40 @@ Deno.serve(async (req) => {
     else if (!body.action && asksForImage) body.action = 'generate_image';
     // Image generation and editing stay server-side so provider keys never reach the browser.
     if (body.action === 'generate_image' || body.action === 'edit_image') {
-      const isEdit = body.action === 'edit_image';
+      if (!openaiKey) return json({ error: 'Image generation and editing need an OPENAI_API_KEY with image access and available credits. Gemini chat can work separately.' }, 503);
       const prompt = String(body.prompt || body.message || '').trim();
       if (!prompt) return json({ error: 'Describe the image you want to create or edit.' }, 400);
       if (prompt.length > 4000) return json({ error: 'Please keep image descriptions under 4,000 characters.' }, 413);
-      let sourceImage: { mimeType: string; data: string } | null = null;
-      if (isEdit) {
-        if (typeof body.image !== 'string') return json({ error: 'Choose a PNG, JPEG, or WebP image to edit first.' }, 400);
+      let imageResponse: Response;
+      if (body.action === 'edit_image') {
+        if (typeof body.image !== 'string' || !/^data:image\/(png|jpeg|webp);base64,/.test(body.image)) {
+          return json({ error: 'Choose a PNG, JPEG, or WebP image to edit first.' }, 400);
+        }
         if (body.image.length > 11_000_000) return json({ error: 'Image is too large. Choose a smaller image.' }, 413);
         const match = body.image.match(/^data:(image\/(?:png|jpeg|webp));base64,(.+)$/);
-        if (!match) return json({ error: 'The selected image format is not supported. Use PNG, JPEG, or WebP.' }, 400);
-        sourceImage = { mimeType: match[1], data: match[2] };
+        if (!match) return json({ error: 'The selected image format is not supported.' }, 400);
+        const bytes = Uint8Array.from(atob(match[2]), (c) => c.charCodeAt(0));
+        const ext = match[1] === 'image/jpeg' ? 'jpg' : match[1].split('/')[1];
+        const form = new FormData();
+        form.append('model', Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1');
+        form.append('prompt', prompt);
+        form.append('size', '1024x1024');
+        form.append('image', new Blob([bytes], { type: match[1] }), `upload.${ext}`);
+        imageResponse = await fetch('https://api.openai.com/v1/images/edits', {
+          method: 'POST', headers: { Authorization: `Bearer ${openaiKey}` }, body: form
+        });
+      } else {
+        imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', output_format: 'png' })
+        });
       }
-
-      // Prefer OpenAI when configured. If it is unavailable or out of credits, try Gemini image generation.
-      let providerError = '';
-      if (openaiKey) {
-        try {
-          let imageResponse: Response;
-          if (isEdit && sourceImage) {
-            const bytes = Uint8Array.from(atob(sourceImage.data), (ch) => ch.charCodeAt(0));
-            const ext = sourceImage.mimeType === 'image/jpeg' ? 'jpg' : sourceImage.mimeType.split('/')[1];
-            const form = new FormData();
-            form.append('model', Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1');
-            form.append('prompt', prompt);
-            form.append('size', '1024x1024');
-            form.append('image', new Blob([bytes], { type: sourceImage.mimeType }), `upload.${ext}`);
-            imageResponse = await fetch('https://api.openai.com/v1/images/edits', {
-              method: 'POST', headers: { Authorization: `Bearer ${openaiKey}` }, body: form
-            });
-          } else {
-            imageResponse = await fetch('https://api.openai.com/v1/images/generations', {
-              method: 'POST',
-              headers: { Authorization: `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
-              body: JSON.stringify({ model: Deno.env.get('OPENAI_IMAGE_MODEL') || 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', output_format: 'png' })
-            });
-          }
-          const result = await imageResponse.json();
-          if (imageResponse.ok && result?.data?.[0]?.b64_json) {
-            return json({ image: `data:image/png;base64,${result.data[0].b64_json}`, provider: 'openai' });
-          }
-          providerError = result?.error?.message || 'OpenAI image generation is unavailable.';
-        } catch (err) {
-          providerError = String(err instanceof Error ? err.message : err);
-        }
-      }
-
-      if (geminiKey) {
-        try {
-          const parts: any[] = [{ text: prompt }];
-          if (sourceImage) parts.push({ inlineData: sourceImage });
-          const model = Deno.env.get('GEMINI_IMAGE_MODEL') || 'gemini-3.1-flash-image';
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-            method: 'POST',
-            headers: { 'x-goog-api-key': geminiKey, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ role: 'user', parts }],
-              generationConfig: { responseModalities: ['TEXT', 'IMAGE'] }
-            })
-          });
-          const result = await response.json();
-          if (response.ok) {
-            const returnedParts = result?.candidates?.[0]?.content?.parts || [];
-            const generated = returnedParts.find((part: any) => part?.inlineData?.data && String(part?.inlineData?.mimeType || '').startsWith('image/'));
-            if (generated) {
-              return json({ image: `data:${generated.inlineData.mimeType};base64,${generated.inlineData.data}`, provider: 'gemini' });
-            }
-            providerError = 'Gemini responded without an image. Check image-model access and try again.';
-          } else {
-            providerError = result?.error?.message || 'Gemini image generation is unavailable.';
-          }
-        } catch (err) {
-          providerError = String(err instanceof Error ? err.message : err);
-        }
-      }
-      if (!openaiKey && !geminiKey) {
-        return json({ error: 'Image generation needs an OPENAI_API_KEY or GEMINI_API_KEY with image-model access. Add the key as a Supabase Edge Function secret.' }, 503);
-      }
-      return json({ error: providerError || 'Image generation failed. Check provider access and usage limits.' }, 502);
+      const imageResult = await imageResponse.json();
+      if (!imageResponse.ok) return json({ error: imageResult?.error?.message || 'Image generation/editing failed. Check image-model access and API credits.' }, 502);
+      const base64 = imageResult?.data?.[0]?.b64_json;
+      if (!base64) return json({ error: 'The image provider returned no image. Please try again.' }, 502);
+      return json({ image: `data:image/png;base64,${base64}` });
     }
     const message = String(body.message || '').trim();
     if (!message && !body.image) return json({ error: 'Write a message or attach an image.' }, 400);
@@ -193,16 +149,10 @@ Deno.serve(async (req) => {
       }
       contents.push({ role: 'user', parts });
       const model = Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash';
-      const wantsLiveSearch = /\\b(latest|current|today|tonight|this week|recent|news|price|weather|forecast|exchange rate|search the web|research|sources|verify online|right now)\\b/i.test(message);
       const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
         headers: { 'x-goog-api-key': geminiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: instructions }] },
-          contents,
-          generationConfig: { maxOutputTokens: 1600, temperature: 0.7 },
-          ...(wantsLiveSearch ? { tools: [{ googleSearch: {} }] } : {})
-        })
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents, generationConfig: { maxOutputTokens: 1600, temperature: 0.7 } })
       });
       const result = await ai.json();
       if (!ai.ok) {
@@ -210,9 +160,6 @@ Deno.serve(async (req) => {
         if (!reply) return json({ error: result?.error?.message || 'Gemini failed and no configured backup provider could reply. Check provider keys and quotas.' }, 502);
       } else {
         reply = (result?.candidates?.[0]?.content?.parts || []).map((p: any) => typeof p.text === 'string' ? p.text : '').join('\n').trim();
-        const grounding = result?.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-        const sources = grounding.map((chunk: any) => chunk?.web).filter((web: any) => web?.uri).slice(0, 5);
-        if (sources.length) reply += '\n\nSources:\n' + sources.map((source: any) => '- ' + String(source.title || 'Source') + ': ' + String(source.uri)).join('\n');
       }
     } else if (openaiKey) {
       const ai = await fetch('https://api.openai.com/v1/responses', {
