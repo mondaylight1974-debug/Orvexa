@@ -547,7 +547,7 @@ function renderMessage(m){const d=document.createElement('article');d.className=
 function updateChatLayout(){const page=$('chatPage');if(page)page.classList.toggle('has-conversation',currentMessages.some(m=>m.role==='user'));}
 const MAX_CHAT_PAGE_CHARS=14000; // Content-based page size, not a daily message quota.
 function chatContentLength(){return currentMessages.reduce((total,m)=>total+String(m.content||'').length,0);}
-function isChatPageFull(){return chatContentLength()>=MAX_CHAT_PAGE_CHARS;}
+function isChatPageFull(){const card=$('pageLimitCard');return chatContentLength()>=MAX_CHAT_PAGE_CHARS||Boolean(card&&card.classList.contains('visible'));}
 function updatePageLimitNotice(force){const card=$('pageLimitCard');if(!card)return;const used=chatContentLength(),full=Boolean(force)||used>=MAX_CHAT_PAGE_CHARS;card.classList.toggle('visible',full);card.setAttribute('aria-hidden',String(!full));const meter=$('pageLimitMeter');if(meter)meter.textContent='Conversation size: '+used.toLocaleString()+' characters · New pages are free.';}
 function addMessage(role,content){const m={role,content,time:new Date().toISOString()};currentMessages.push(m);renderMessage(m);updateChatLayout();saveCurrent();updatePageLimitNotice();$('main').scrollTop=$('main').scrollHeight;return m;}
 function saveCurrent(){try{storage.setItem('smart-current',JSON.stringify(currentMessages));if(currentConversationId)storage.setItem('smart-conversation-id',currentConversationId);else storage.removeItem('smart-conversation-id');}catch(e){}}
