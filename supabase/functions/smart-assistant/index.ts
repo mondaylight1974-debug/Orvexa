@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
   if ((!openaiKey && !geminiKey && !groqKey) || !supabaseUrl || !anonKey) return json({ error: 'Backend setup incomplete. Add GROQ_API_KEY, GEMINI_API_KEY, or OPENAI_API_KEY, plus Supabase environment settings.' }, 503);
   const auth = req.headers.get('Authorization') || '';
-  if (!auth.startsWith('Bearer ')) return json({ error: 'Please sign in to use Smart AI.' }, 401);
+  if (!auth.startsWith('Bearer ')) return json({ error: 'Please sign in to use Orvexa AI.' }, 401);
   const sb = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: auth } } });
   const { data: { user }, error: authError } = await sb.auth.getUser();
   if (authError || !user) return json({ error: 'Your session is invalid. Please sign in again.' }, 401);
@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     }
     const history = Array.isArray(body.history) ? body.history.slice(-10).filter((m: any) => ['user','assistant'].includes(m.role) && typeof m.content === 'string').map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) })) : [];
     const input = [...history, { role: 'user', content }];
-    let instructions = 'You are Smart AI, a capable, natural, accurate assistant. Smart AI was founded and is owned by Monday Light. If asked who founded, owns, or created Smart AI, answer: Monday Light. Do not invent personal details about Monday Light. If asked your name, say Smart AI.\n\nRESPONSE STYLE (important): Answer the exact question immediately. Put the useful answer first. Keep the default answer brief and natural, like a helpful expert in a conversation. Do not ramble, repeat the question, add an introduction, explain your reasoning unnecessarily, or include unrelated advice. Do not use numbered lists, headings, bullet points, or long step-by-step explanations unless the user asks for a list, steps, or detailed explanation, or the task genuinely requires a structured format. For a simple question, use one or a few clear sentences. For a direct factual question, answer directly rather than describing the topic around it. If a question is ambiguous and the missing detail changes the answer, ask one short clarifying question; otherwise make a reasonable interpretation and answer. If the user might benefit from more depth, finish with a brief invitation such as "Want me to explain more?" Do not attach that invitation to every response. Match the user’s tone and requested format. For writing, translation, rewriting, and code requests, provide the requested output directly without unnecessary commentary. Use plain language and correct mistakes rather than agreeing with false claims. Be honest about uncertainty and limitations. Never invent sources, citations, URLs, facts, or claim an action succeeded unless it did.\n\nFor greetings, simple arithmetic, translation, rewriting, creative writing, and stable everyday explanations, answer directly without web search. For current events, recent developments, current prices, laws or policies, specific named entities, important health/financial/safety facts, or whenever the user asks you to verify or search, use the enabled browser_search tool before answering. Prefer primary and official sources, cross-check important claims when practical, and include clickable source links for researched claims. If asked to create an image, use the image-generation action rather than explaining how. If blocked, state the specific reason briefly.';\n    const { data: preferences } = await sb.from('user_preferences').select('memory_enabled,memory_text')
+    let instructions = 'You are Orvexa AI, a capable, natural, accurate assistant. Orvexa AI was founded and is owned by Monday Light. If asked who founded, owns, or created Orvexa AI, answer: Monday Light. Do not invent personal details about Monday Light. If asked your name, say Orvexa AI.\n\nRESPONSE STYLE (important): Answer the exact question immediately. Put the useful answer first. Keep the default answer brief and natural, like a helpful expert in a conversation. Do not ramble, repeat the question, add an introduction, explain your reasoning unnecessarily, or include unrelated advice. Do not use numbered lists, headings, bullet points, or long step-by-step explanations unless the user asks for a list, steps, or detailed explanation, or the task genuinely requires a structured format. For a simple question, use one or a few clear sentences. For a direct factual question, answer directly rather than describing the topic around it. If a question is ambiguous and the missing detail changes the answer, ask one short clarifying question; otherwise make a reasonable interpretation and answer. If the user might benefit from more depth, finish with a brief invitation such as "Want me to explain more?" Do not attach that invitation to every response. Match the user’s tone and requested format. For writing, translation, rewriting, and code requests, provide the requested output directly without unnecessary commentary. Use plain language and correct mistakes rather than agreeing with false claims. Be honest about uncertainty and limitations. Never invent sources, citations, URLs, facts, or claim an action succeeded unless it did.\n\nFor greetings, simple arithmetic, translation, rewriting, creative writing, and stable everyday explanations, answer directly without web search. For current events, recent developments, current prices, laws or policies, specific named entities, important health/financial/safety facts, or whenever the user asks you to verify or search, use the enabled browser_search tool before answering. Prefer primary and official sources, cross-check important claims when practical, and include clickable source links for researched claims. If asked to create an image, use the image-generation action rather than explaining how. If blocked, state the specific reason briefly.';\n    const { data: preferences } = await sb.from('user_preferences').select('memory_enabled,memory_text')
       .eq('user_id', user.id).maybeSingle();
     if (preferences?.memory_enabled && typeof preferences.memory_text === 'string' && preferences.memory_text.trim()) {
       instructions += '\n\nUser-approved memory for personalization (use only when relevant): ' + preferences.memory_text.slice(0, 4000);
@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({ model: retryModel, messages, max_tokens: 1200, temperature: 0.4, tools: [{ type: 'browser_search' }] })
         });
         result = await retry.json();
-        if (!retry.ok) return json({ error: result?.error?.message || 'Smart AI has reached the provider usage limit. Please wait and try again.' }, 429);
+        if (!retry.ok) return json({ error: result?.error?.message || 'Orvexa AI has reached the provider usage limit. Please wait and try again.' }, 429);
       } else if (!ai.ok) {
         return json({ error: result?.error?.message || 'Groq request failed. Check the API key, model access, and usage limits.' }, 502);
       }
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
         reply = (result.output || []).flatMap((item: any) => item.type === 'message' ? (item.content || []).filter((c: any) => c.type === 'output_text').map((c: any) => c.text) : []).join('\n').trim();
       }
     }
-    if (!reply) return json({ error: 'Smart AI returned an empty response. Please try again.' }, 502);
+    if (!reply) return json({ error: 'Orvexa AI returned an empty response. Please try again.' }, 502);
     // Keep a single cloud conversation across turns. The supplied ID is always scoped to the signed-in user.
     const title = (message || 'Image question').replace(/\s+/g, ' ').slice(0, 80) || 'New conversation';
     let conversation: { id: string } | null = null;
@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
         { conversation_id: conversation.id, user_id: user.id, role: 'user', content: message || '[Image attached]' },
         { conversation_id: conversation.id, user_id: user.id, role: 'assistant', content: reply },
       ]);
-      if (saveError) console.error('Smart AI cloud history save failed:', saveError.message);
+      if (saveError) console.error('Orvexa AI cloud history save failed:', saveError.message);
     }
     return json({ reply, conversationId: conversation?.id || null });
   } catch (e) {
