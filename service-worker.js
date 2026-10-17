@@ -1,5 +1,5 @@
-const CACHE='smart-ai-static-v15';
-const ASSETS=['./','./index.html','./404.html','./manifest.json'];
+const CACHE='smart-ai-static-v16';
+const ASSETS=['./','./index.html','./404.html','./manifest.json','./smart-ai-icon.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
