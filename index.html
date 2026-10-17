@@ -599,7 +599,7 @@ async function smartApi(payload){
   if(!session){showPage('profile');throw new Error('Please sign in first.');}
   const response=await fetch(API_ENDPOINT,{
     method:'POST',
-    headers:{'Content-Type':'application/json','Authorization:'+'Bearer '+session.access_token,'apikey':SUPABASE_ANON_KEY},
+    headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token,'apikey':SUPABASE_ANON_KEY},
     body:JSON.stringify(payload)
   });
   let data={};
