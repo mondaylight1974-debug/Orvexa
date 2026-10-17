@@ -479,6 +479,18 @@ body[data-theme="light"] .welcome-panel h1 .glow{color:#4338ca;-webkit-text-fill
 <script>
 const $=id=>document.getElementById(id);
 const WELCOME="Hi! What can I help you with?";
+// Safe storage fallback: browsers with blocked/private storage should still run the interface.
+const localStorage=(()=>{
+  const memory=new Map();
+  let native=null;
+  try{native=window.localStorage;const test='__smart_storage_test__';native.setItem(test,'1');native.removeItem(test);}catch(e){native=null;}
+  return {
+    getItem(key){try{return native?native.getItem(key):(memory.has(String(key))?memory.get(String(key)):null);}catch(e){return memory.has(String(key))?memory.get(String(key)):null;}},
+    setItem(key,value){try{if(native){native.setItem(key,String(value));return;}}catch(e){}memory.set(String(key),String(value));},
+    removeItem(key){try{if(native){native.removeItem(key);return;}}catch(e){}memory.delete(String(key));},
+    clear(){try{if(native)native.clear();}catch(e){}memory.clear();}
+  };
+})();
 let currentMessages=[],selectedImage=null,busy=false,callMode=false,callMuted=false,callRecognition=null,currentConversationId=localStorage.getItem('smart-conversation-id')||null;
 // Fill these after creating your Supabase project. The anon key is public; never put a service-role or AI key here.
 const SUPABASE_URL = "https://ruczzcnrkgnoftghoapr.supabase.co";
@@ -509,7 +521,7 @@ try{
 finally{busy=false;const t=$('thinking');if(t)t.remove();}}
 function toggleMenu(){const d=$('appDrawer'),s=$('drawerScrim');if(!d||!s)return;const open=!d.classList.contains('open');d.classList.toggle('open',open);s.classList.toggle('open',open);d.setAttribute('aria-hidden',String(!open));s.setAttribute('aria-hidden',String(!open));}
 function closeMenu(){const d=$('appDrawer'),s=$('drawerScrim');if(!d||!s)return;d.classList.remove('open');s.classList.remove('open');d.setAttribute('aria-hidden','true');s.setAttribute('aria-hidden','true');}
-function showPage(name){closeMenu();document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));$(''+name+'Page').classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));$('composerArea').style.display=name==='chat'?'block':'none';if(name==='history')renderHistory();if(name==='profile'){updateAccountStatus();loadMemorySettings();}if(name==='chat')updateChatLayout();$('main').scrollTop=0;}
+function showPage(name){const target=$(String(name)+'Page');if(!target){toast('That section is not available yet.');return;}closeMenu();document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));target.classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));const composer=$('composerArea');if(composer)composer.style.display=name==='chat'?'block':'none';if(name==='history')renderHistory();if(name==='profile'){if(typeof updateAccountStatus==='function')updateAccountStatus();if(typeof loadMemorySettings==='function')loadMemorySettings();}if(name==='chat')updateChatLayout();const main=$('main');if(main)main.scrollTop=0;}
 function openSavedChat(item){currentConversationId=item.id&&String(item.id).startsWith('local-')?null:(item.id||null);currentMessages=Array.isArray(item.messages)?item.messages.map(m=>({role:m.role,content:m.content,time:m.time||m.created_at||item.time})):[];$('messages').innerHTML='';currentMessages.forEach(renderMessage);if(!currentMessages.length)currentMessages=[{role:'assistant',content:WELCOME,time:new Date().toISOString()}],currentMessages.forEach(renderMessage);saveCurrent();updateChatLayout();showPage('chat');}
 function renderHistory(){const root=$('historyList');if(!root)return;let local=[];try{local=JSON.parse(localStorage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!local.length){root.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:30px;margin-bottom:8px">◷</div><h3>No previous chats yet</h3><p class="muted">Your conversations will appear here as you use Smart AI.</p><button class="primary" onclick="newChat()">Start a chat</button></div>';}local.forEach(item=>{const b=document.createElement('button');b.className='history-item';const title=document.createElement('strong');title.textContent=item.title||'Conversation';const meta=document.createElement('small');meta.textContent='On this device · '+new Date(item.time||Date.now()).toLocaleString()+' · '+(item.messages||[]).length+' messages';b.append(title,meta);b.onclick=()=>openSavedChat(item);root.appendChild(b);});loadCloudHistory(root);renderDrawerHistory();}
 function renderDrawerHistory(){const root=$('drawerChatHistory');if(!root)return;let list=[];try{list=JSON.parse(localStorage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!list.length){const empty=document.createElement('div');empty.className='drawer-history-empty';empty.textContent='Your previous chats will appear here';root.appendChild(empty);}list.slice(0,12).forEach(item=>{const b=document.createElement('button');b.type='button';b.className='drawer-history-item';b.textContent=item.title||'Conversation';b.title=item.title||'Conversation';b.onclick=()=>{closeMenu();openSavedChat(item)};root.appendChild(b);});loadCloudDrawerHistory(root);}
