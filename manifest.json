@@ -1,6 +1,6 @@
 {
-  "name": "Smart AI",
-  "short_name": "Smart AI",
+  "name": "Orvexa AI",
+  "short_name": "Orvexa",
   "description": "Your personal AI assistant for learning, writing, voice, images, and everyday tasks.",
   "start_url": "./",
   "display": "standalone",
