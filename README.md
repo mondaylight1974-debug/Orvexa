@@ -1,2 +1,2 @@
 # Smartt
-Smart AI Assistant App
+Orvexa AI Assistant App
