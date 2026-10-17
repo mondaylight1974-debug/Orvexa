@@ -15,7 +15,7 @@ Deno.serve(async (req) => {
   const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
   if (!apiKey || !supabaseUrl || !anonKey) return json({ error: 'Backend setup incomplete. Add OPENAI_API_KEY and Supabase environment settings.' }, 503);
   const auth = req.headers.get('Authorization') || '';
-  if (!auth.startsWith('Bearer ')) return json({ error: 'Please sign in to use Smart AI.' }, 401);
+  if (!auth.startsWith('Bearer ')) return json({ error: 'Please sign in to use Orvexa AI.' }, 401);
   const sb = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: auth } } });
   const { data: { user }, error: authError } = await sb.auth.getUser();
   if (authError || !user) return json({ error: 'Your session is invalid. Please sign in again.' }, 401);
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
     }
     const history = Array.isArray(body.history) ? body.history.slice(-10).filter((m: any) => ['user','assistant'].includes(m.role) && typeof m.content === 'string').map((m: any) => ({ role: m.role, content: m.content.slice(0, 4000) })) : [];
     const input = [...history, { role: 'user', content }];
-    let instructions = 'You are Smart AI, a helpful, honest, warm general-purpose assistant. Answer clearly. Never claim to have performed an action you did not perform. If the user asks for current facts and web search is available, use it. Do not claim to generate an image unless image generation actually ran.';
+    let instructions = 'You are Orvexa AI, a helpful, honest, warm general-purpose assistant. Answer clearly. Never claim to have performed an action you did not perform. If the user asks for current facts and web search is available, use it. Do not claim to generate an image unless image generation actually ran.';
     const { data: preferences } = await sb.from('user_preferences').select('memory_enabled,memory_text')
       .eq('user_id', user.id).maybeSingle();
     if (preferences?.memory_enabled && typeof preferences.memory_text === 'string' && preferences.memory_text.trim()) {
@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
     const result = await ai.json();
     if (!ai.ok) return json({ error: result?.error?.message || 'AI provider request failed. Check provider billing and model access.' }, 502);
     const reply = (result.output || []).flatMap((item: any) => item.type === 'message' ? (item.content || []).filter((c: any) => c.type === 'output_text').map((c: any) => c.text) : []).join('\n').trim();
-    if (!reply) return json({ error: 'Smart AI returned an empty response. Please try again.' }, 502);
+    if (!reply) return json({ error: 'Orvexa AI returned an empty response. Please try again.' }, 502);
     // Keep a single cloud conversation across turns. The supplied ID is always scoped to the signed-in user.
     const title = (message || 'Image question').replace(/\s+/g, ' ').slice(0, 80) || 'New conversation';
     let conversation: { id: string } | null = null;
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
         { conversation_id: conversation.id, user_id: user.id, role: 'user', content: message || '[Image attached]' },
         { conversation_id: conversation.id, user_id: user.id, role: 'assistant', content: reply },
       ]);
-      if (saveError) console.error('Smart AI cloud history save failed:', saveError.message);
+      if (saveError) console.error('Orvexa AI cloud history save failed:', saveError.message);
     }
     return json({ reply, conversationId: conversation?.id || null });
   } catch (e) {
