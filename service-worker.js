@@ -1,5 +1,5 @@
-const CACHE='smart-ai-static-v19';
-const ASSETS=['./','./index.html','./404.html','./manifest.json','./smart-ai-icon.svg'];
+const CACHE='orvexa-static-v20';
+const ASSETS=['./','./index.html','./404.html','./manifest.json','./orvexa-icon.svg'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
@@ -8,7 +8,7 @@ self.addEventListener('install',event=>{
 self.addEventListener('activate',event=>{
   event.waitUntil(
     caches.keys()
-      .then(keys=>Promise.all(keys.filter(key=>key.startsWith('smart-ai-static-')&&key!==CACHE).map(key=>caches.delete(key))))
+      .then(keys=>Promise.all(keys.filter(key=>key.startsWith('orvexa-static-')&&key!==CACHE).map(key=>caches.delete(key))))
       .then(()=>self.clients.claim())
   );
 });
