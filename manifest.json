@@ -9,7 +9,7 @@
   "theme_color": "#080910",
   "icons": [
     {
-      "src": "./smart-ai-icon.svg",
+      "src": "./orvexa-icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
