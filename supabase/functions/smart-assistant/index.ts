@@ -193,10 +193,16 @@ Deno.serve(async (req) => {
       }
       contents.push({ role: 'user', parts });
       const model = Deno.env.get('GEMINI_MODEL') || 'gemini-3.8-flash';
+      const wantsLiveSearch = /\\b(latest|current|today|tonight|this week|recent|news|price|weather|forecast|exchange rate|search the web|research|sources|verify online|right now)\\b/i.test(message);
       const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
         headers: { 'x-goog-api-key': geminiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents, generationConfig: { maxOutputTokens: 1600, temperature: 0.7 } })
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: instructions }] },
+          contents,
+          generationConfig: { maxOutputTokens: 1600, temperature: 0.7 },
+          ...(wantsLiveSearch ? { tools: [{ googleSearch: {} }] } : {})
+        })
       });
       const result = await ai.json();
       if (!ai.ok) {
@@ -204,6 +210,9 @@ Deno.serve(async (req) => {
         if (!reply) return json({ error: result?.error?.message || 'Gemini failed and no configured backup provider could reply. Check provider keys and quotas.' }, 502);
       } else {
         reply = (result?.candidates?.[0]?.content?.parts || []).map((p: any) => typeof p.text === 'string' ? p.text : '').join('\n').trim();
+        const grounding = result?.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+        const sources = grounding.map((chunk: any) => chunk?.web).filter((web: any) => web?.uri).slice(0, 5);
+        if (sources.length) reply += '\n\nSources:\n' + sources.map((source: any) => '- ' + String(source.title || 'Source') + ': ' + String(source.uri)).join('\n');
       }
     } else if (openaiKey) {
       const ai = await fetch('https://api.openai.com/v1/responses', {
