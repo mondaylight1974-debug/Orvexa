@@ -2,10 +2,18 @@
   "name": "Smart AI",
   "short_name": "Smart AI",
   "description": "Your personal AI assistant for learning, writing, voice, images, and everyday tasks.",
-  "start_url": "./index.html",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#080910",
   "theme_color": "#080910",
-  "icons": []
+  "icons": [
+    {
+      "src": "./smart-ai-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "./"
 }
