@@ -442,18 +442,17 @@ body[data-theme="light"] .welcome-panel h1 .glow{color:#4338ca;-webkit-text-fill
         <p>Sign in or create your account to make Smart AI your own.</p>
       </div>
       <div class="eyebrow">YOUR ACCOUNT</div><div class="page-title">Welcome back</div><p class="page-desc">Sign in to continue, or create an account to get started.</p>
-      <div class="card account-form-card"><div class="account-account-row"><div class="account-account-details"><h3>Sign in to Smart AI</h3><p class="muted" id="accountStatus">Not signed in · create an account or sign in</p></div></div><label for="email" class="muted">Email address</label><input class="field" id="email" type="email" placeholder="you@example.com" autocomplete="email"><label for="password" class="muted">Password</label><input class="field" id="password" type="password" placeholder="At least 8 characters" autocomplete="current-password"><div class="btn-row"><button class="primary" onclick="accountAction('signin')">Sign in</button><button class="secondary" onclick="accountAction('signup')">Create account</button></div><div class="btn-row"><button class="secondary" onclick="resetPassword()">Forgot password?</button><button class="secondary" onclick="signOutAccount()">Sign out</button></div><p class="muted">Your account is secured by Supabase. If email confirmation is enabled, check your inbox after creating an account.</p></div>
+      <div class="card account-form-card"><div class="account-account-row"><div class="account-account-details"><h3>Sign in to Smart AI</h3><p class="muted" id="accountStatus">Not signed in · create an account or sign in</p></div></div><label for="email" class="muted">Email address</label><input class="field" id="email" type="email" placeholder="you@example.com" autocomplete="email"><label for="password" class="muted">Password</label><input class="field" id="password" type="password" placeholder="At least 8 characters" autocomplete="current-password"><div class="btn-row"><button class="primary" onclick="accountAction('signin')">Sign in</button><button class="secondary" onclick="accountAction('signup')">Create account</button></div><p class="muted">Your account is secured by Supabase. If email confirmation is enabled, check your inbox after creating an account.</p></div>
       <div class="card"><h3>🧠 Personal memory</h3><p class="muted">Optional: let Smart AI use details you choose to save to personalize future answers. Keep sensitive information out of memory.</p><label style="display:flex;align-items:center;gap:9px;font-size:12px;margin-top:12px"><input type="checkbox" id="memoryEnabled" style="accent-color:var(--purple)"> Enable my saved memory</label><textarea class="field" id="memoryText" rows="4" placeholder="Things you want Smart AI to remember, such as your goals or preferred writing style…"></textarea><div class="btn-row"><button class="primary" id="saveMemoryButton" onclick="saveMemorySettings()">Save memory settings</button><button class="secondary" onclick="clearMemorySettings()">Clear memory</button></div><p class="muted" id="memoryStatus" aria-live="polite"></p></div>
       <div class="card"><h3>App features</h3><p class="muted">🔊 Spoken answers · Browser-supported<br>🎙️ Voice input and AI voice call · Browser-supported<br>☁️ Cloud chat history · Sign in and deploy the latest backend<br>🎨 Image generation/editing · Requires provider credits<br>💎 Premium plans · Payment integration is not active</p><button class="secondary" onclick="toast('Review your saved memory above. Account deletion and a full privacy workflow still need to be configured before public release.')">Privacy & security</button></div>
     </section>
   </main>
   <div class="composer-area" id="composerArea">
     <div class="preview" id="imagePreview"></div>
-    <div class="composer"><button class="tool" aria-label="Add image" title="Attach an image" onclick="document.getElementById('imageInput').click()">＋</button><button class="tool" aria-label="Add document" title="Attach a text, PDF, CSV, JSON, or DOCX document" onclick="document.getElementById('documentInput').click()">📄</button><textarea id="prompt" class="input" rows="1" placeholder="Ask Smart anything…" aria-label="Message"></textarea><button class="tool" aria-label="Send a voice note" title="Speak a voice note and get a spoken reply" onclick="startVoiceNote()">🎙</button><button class="tool voice-launch" id="callButton" aria-label="Start voice conversation" title="Start a voice conversation" onclick="toggleVoiceCall()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
+    <div class="composer"><button class="tool" aria-label="Add image" onclick="document.getElementById('imageInput').click()">＋</button><textarea id="prompt" class="input" rows="1" placeholder="Ask Smart anything…" aria-label="Message"></textarea><button class="tool" aria-label="Send a voice note" title="Speak a voice note and get a spoken reply" onclick="startVoiceNote()">🎙</button><button class="tool voice-launch" id="callButton" aria-label="Start voice conversation" title="Start a voice conversation" onclick="toggleVoiceCall()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
     <div class="disclaimer">Smart AI prioritizes accuracy and checks reliable sources when available.</div>
   </div>
   <input type="file" id="imageInput" accept="image/*" hidden>
-  <input type="file" id="documentInput" accept=".txt,.md,.csv,.json,.pdf,.docx,text/plain,text/markdown,text/csv,application/json,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
   <div class="toast" id="toast"></div>
   <section class="voice-screen" id="voiceScreen" aria-label="Smart AI voice call" aria-hidden="true">
     <div class="voice-head"><button class="voice-back" onclick="toggleVoiceCall()" aria-label="End voice call">⌄</button><div class="voice-title">SMART AI · VOICE</div><button class="voice-small" onclick="interruptVoiceReply()" aria-label="Interrupt spoken reply">Ⅱ</button></div>
@@ -488,7 +487,7 @@ const API_ENDPOINT = SUPABASE_URL + "/functions/v1/smart-assistant";
 const supabaseReady = Boolean(window.supabase && SUPABASE_URL.startsWith('https://') && SUPABASE_ANON_KEY.startsWith('sb_publishable_'));
 const sb = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function renderMessage(m){const d=document.createElement('article');d.className='msg '+m.role;const role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'YOU':'✦ SMART';const text=document.createElement('div');text.className='msg-text';const messageText=String(m.content||'');const urlRegex=new RegExp("https?://[^\\s<>\"']+","g");let lastIndex=0,match;while((match=urlRegex.exec(messageText))!==null){if(match.index>lastIndex)text.appendChild(document.createTextNode(messageText.slice(lastIndex,match.index)));const raw=match[0];let url=raw;while(/[.,!?;:)]$/.test(url)||url.endsWith(']'))url=url.slice(0,-1);const anchor=document.createElement('a');anchor.href=url;anchor.textContent=url;anchor.target='_blank';anchor.rel='noopener noreferrer';anchor.style.color='var(--link,var(--purple))';text.appendChild(anchor);if(url.length<raw.length)text.appendChild(document.createTextNode(raw.slice(url.length)));lastIndex=match.index+raw.length;}if(lastIndex<messageText.length)text.appendChild(document.createTextNode(messageText.slice(lastIndex)));d.append(role,text);if(m.role==='assistant'){const actions=document.createElement('div');actions.className='msg-actions';const listen=document.createElement('button');listen.type='button';listen.className='text-action';listen.textContent='🔊 Speak';listen.setAttribute('aria-label','Speak this Smart AI answer');listen.addEventListener('click',()=>speak(String(m.content||'')));const copy=document.createElement('button');copy.type='button';copy.className='text-action';copy.textContent='Copy';copy.setAttribute('aria-label','Copy this Smart AI answer');copy.addEventListener('click',()=>copyText(String(m.content||'')));actions.append(listen,copy);d.appendChild(actions);}$('messages').appendChild(d);}
+function renderMessage(m){const d=document.createElement('article');d.className='msg '+m.role;const role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'YOU':'✦ SMART';const text=document.createElement('div');text.className='msg-text';text.textContent=String(m.content||'');d.append(role,text);if(m.role==='assistant'){const actions=document.createElement('div');actions.className='msg-actions';const listen=document.createElement('button');listen.type='button';listen.className='text-action';listen.textContent='🔊 Speak';listen.setAttribute('aria-label','Speak this Smart AI answer');listen.addEventListener('click',()=>speak(String(m.content||'')));const copy=document.createElement('button');copy.type='button';copy.className='text-action';copy.textContent='Copy';copy.setAttribute('aria-label','Copy this Smart AI answer');copy.addEventListener('click',()=>copyText(String(m.content||'')));actions.append(listen,copy);d.appendChild(actions);}$('messages').appendChild(d);}
 function updateChatLayout(){const page=$('chatPage');if(page)page.classList.toggle('has-conversation',currentMessages.some(m=>m.role==='user'));}
 function addMessage(role,content){const m={role,content,time:new Date().toISOString()};currentMessages.push(m);renderMessage(m);updateChatLayout();saveCurrent();$('main').scrollTop=$('main').scrollHeight;return m;}
 function saveCurrent(){try{localStorage.setItem('smart-current',JSON.stringify(currentMessages));if(currentConversationId)localStorage.setItem('smart-conversation-id',currentConversationId);else localStorage.removeItem('smart-conversation-id');}catch(e){}}
@@ -590,113 +589,6 @@ $('prompt').addEventListener('input',e=>{e.target.style.height='auto';e.target.s
 $('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
 if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
 loadCurrent();renderHistory();renderDrawerHistory();
-
-/* Smart AI capability handlers: these use the existing authenticated Edge Function. */
-async function smartApi(payload){
-  if(!sb){throw new Error('Account service is not configured.');}
-  const {data:{session},error:sessionError}=await sb.auth.getSession();
-  if(sessionError) throw sessionError;
-  if(!session){showPage('profile');throw new Error('Please sign in first.');}
-  const response=await fetch(API_ENDPOINT,{
-    method:'POST',
-    headers:{'Content-Type':'application/json',Authorization:'Bearer '+session.access_token,'apikey':SUPABASE_ANON_KEY},
-    body:JSON.stringify(payload)
-  });
-  let data={};
-  try{data=await response.json();}catch(e){throw new Error('The AI service returned an unreadable response.');}
-  if(!response.ok) throw new Error(data.error||('AI request failed ('+response.status+').'));
-  return data;
-}
-function showImageResult(data, label){
-  if(!data||!data.image) throw new Error('The image service returned no image.');
-  const root=$('imageOutput');root.innerHTML='';
-  const img=document.createElement('img');img.src=data.image;img.alt=label||'Image created with Smart AI';
-  img.style.cssText='display:block;width:100%;max-width:620px;max-height:620px;object-fit:contain;border-radius:16px;border:1px solid var(--line);margin-top:12px';
-  const actions=document.createElement('div');actions.className='btn-row';
-  const save=document.createElement('a');save.href=data.image;save.download='smart-ai-image.png';save.className='primary';save.textContent='Save image';save.style.cssText='display:inline-flex;align-items:center;justify-content:center;text-decoration:none;padding:10px 16px;border-radius:12px';
-  actions.appendChild(save);root.append(img,actions);
-}
-async function generateImage(){
-  const prompt=$('imagePrompt').value.trim();
-  if(!prompt){$('imageStatus').textContent='Describe the image you want to create first.';$('imagePrompt').focus();return;}
-  const button=$('generateImageButton');button.disabled=true;$('imageStatus').textContent='Smart is preparing your image…';
-  try{
-    const data=await smartApi({action:'generate_image',prompt,message:prompt,history:[]});
-    showImageResult(data,'Image generated by Smart AI');$('imageStatus').textContent='Image created successfully. Save it to your device.';
-  }catch(e){$('imageStatus').textContent=String(e.message||'Image generation failed.');}
-  finally{button.disabled=false;}
-}
-async function editImage(){
-  if(!selectedImage){$('imageStatus').textContent='Choose a photo first, then describe the changes you want.';$('imageInput').click();return;}
-  const prompt=$('imagePrompt').value.trim();
-  if(!prompt){$('imageStatus').textContent='Describe how you want the photo edited first.';$('imagePrompt').focus();return;}
-  const button=$('editImageButton');button.disabled=true;$('imageStatus').textContent='Smart is editing your photo…';
-  try{
-    const data=await smartApi({action:'edit_image',prompt,message:prompt,image:selectedImage,history:[]});
-    showImageResult(data,'Image edited by Smart AI');$('imageStatus').textContent='Photo edited successfully. Save the result to your device.';
-  }catch(e){$('imageStatus').textContent=String(e.message||'Image editing failed.');}
-  finally{button.disabled=false;}
-}
-async function resetPassword(){
-  if(!sb){toast('Account service is not connected.');return;}
-  const email=$('email').value.trim();
-  if(!email){toast('Enter your account email first, then tap Forgot password.');$('email').focus();return;}
-  try{
-    const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
-    if(error)throw error;
-    toast('Password reset instructions sent if that email has an account. Check your inbox.');
-  }catch(e){toast(String(e.message||'Could not send password reset email.'));}
-}
-async function signOutAccount(){
-  if(!sb){toast('Account service is not connected.');return;}
-  try{
-    const {error}=await sb.auth.signOut();if(error)throw error;
-    currentConversationId=null;localStorage.removeItem('smart-conversation-id');
-    $('accountStatus').textContent='Signed out';
-    toast('You have signed out.');
-  }catch(e){toast(String(e.message||'Could not sign out.'));}
-}
-async function loadScriptOnce(src, test){
-  if(test())return;
-  await new Promise((resolve,reject)=>{
-    const old=document.querySelector('script[data-smart-loader="'+src+'"]');
-    if(old){old.addEventListener('load',resolve,{once:true});old.addEventListener('error',reject,{once:true});return;}
-    const s=document.createElement('script');s.src=src;s.async=true;s.dataset.smartLoader=src;s.onload=resolve;s.onerror=()=>reject(new Error('Could not load the document reader. Check your internet connection and try again.'));document.head.appendChild(s);
-  });
-}
-async function extractDocument(file){
-  const ext=(file.name.split('.').pop()||'').toLowerCase();
-  if(file.size>12*1024*1024)throw new Error('Please choose a document smaller than 12 MB.');
-  if(['txt','md','csv','json'].includes(ext))return await file.text();
-  if(ext==='pdf'){
-    await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js',()=>!!window.pdfjsLib);
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    const bytes=new Uint8Array(await file.arrayBuffer());const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;let out='';
-    for(let p=1;p<=Math.min(pdf.numPages,30);p++){const page=await pdf.getPage(p);const content=await page.getTextContent();out+='\n[Page '+p+']\n'+content.items.map(x=>x.str||'').join(' ');}
-    if(!out.trim())throw new Error('No selectable text was found in this PDF. Scanned PDFs need OCR, which is not enabled yet.');
-    return out;
-  }
-  if(ext==='docx'){
-    await loadScriptOnce('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js',()=>!!window.mammoth);
-    const result=await window.mammoth.extractRawText({arrayBuffer:await file.arrayBuffer()});return result.value||'';
-  }
-  throw new Error('This file type is not supported yet. Try TXT, Markdown, CSV, JSON, PDF, or DOCX.');
-}
-$('documentInput').addEventListener('change',async e=>{
-  const file=e.target.files&&e.target.files[0];e.target.value='';if(!file)return;
-  const button=document.querySelector('[aria-label="Add document"]');if(button)button.disabled=true;
-  try{
-    const content=await extractDocument(file);if(!content.trim())throw new Error('No readable text was found in this file.');
-    const excerpt=content.slice(0,10000);
-    const field=$('prompt');const prefix='Please analyze this uploaded document named "'+file.name.replace(/["\\]/g,'')+'". Answer based on its contents and tell me if the excerpt is incomplete.\n\nDOCUMENT CONTENT:\n';
-    field.value=(field.value.trim()?field.value.trim()+'\n\n':'')+prefix+excerpt;
-    if(content.length>10000)field.value+='\n\n[Document excerpt shortened because the file is long.]';
-    field.style.height='auto';field.style.height=Math.min(field.scrollHeight,110)+'px';field.focus();
-    toast('Document loaded. Review your question, then tap Send.');
-  }catch(err){toast(String(err.message||'Could not read this document.'));}
-  finally{if(button)button.disabled=false;}
-});
-
 </script>
 </body>
 </html>
