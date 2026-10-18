@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#080910">
 <meta name="description" content="Orvexa AI — your personal AI companion for ideas, learning, writing and creating.">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <title>Orvexa AI</title>
 <link rel="manifest" href="manifest.json">
 <style>
@@ -378,6 +379,7 @@ body[data-theme="light"] .msg-text .copy-code-button{background:#374151;border-c
 </style>
 </head>
 <body>
+<div id="runtimeErrorNotice" role="alert" hidden style="position:fixed;z-index:99999;left:10px;right:10px;top:10px;padding:14px;border-radius:12px;background:#7f1d1d;color:white;font:14px system-ui;overflow-wrap:anywhere"></div>
 <div class="app">
   <header class="topbar">
     <button class="icon-btn menu-trigger" aria-label="Open menu" title="Menu" onclick="toggleMenu()">☰</button>
@@ -765,7 +767,10 @@ try{applyTheme(storage.getItem('smart-theme')==='light'?'light':'dark')}catch(e)
 
 $('prompt').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,110)+'px';});
 $('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}});
-if('serviceWorker'in navigator && location.protocol.startsWith('http'))navigator.serviceWorker.register('./service-worker.js').catch(()=>{});
+// Force removal of stale app caches so this page always uses the latest deployed code.
+if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(reg=>reg.unregister())).catch(()=>{});}
+if('caches' in window){caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('orvexa-static-')).map(k=>caches.delete(k)))).catch(()=>{});}
+window.addEventListener('error',event=>{try{const box=document.getElementById('runtimeErrorNotice');if(box){box.hidden=false;box.textContent='Orvexa encountered a page error: '+String(event.message||'JavaScript error')+'. Please refresh this page.';}}catch(e){}});
 loadCurrent();renderHistory();renderDrawerHistory();
 </script>
 </body>
