@@ -376,6 +376,35 @@ body[data-theme="light"] .msg-text .copy-code-button{background:#374151;border-c
 .message-attachment{margin:4px 0 12px;max-width:min(100%,420px);overflow:hidden;border:1px solid #383838;background:#1b1b1b;border-radius:16px}.image-attachment img{display:block;width:auto;max-width:100%;max-height:340px;object-fit:contain;cursor:zoom-in;border-radius:14px}.attachment-filename{font-size:11px;color:#bcbcbc;padding:8px 10px;border-top:1px solid #303030;overflow-wrap:anywhere}.file-attachment{display:flex;align-items:center;gap:12px;padding:12px 14px;min-height:70px}.file-attachment-icon{width:44px;height:44px;flex-shrink:0;border-radius:11px;background:#303030;color:#f0f0f0;display:grid;place-items:center;font-size:10px;font-weight:800;letter-spacing:.5px}.file-attachment-info{min-width:0;display:flex;flex-direction:column;gap:5px}.file-attachment-info strong{font-size:12px;font-weight:600;overflow-wrap:anywhere}.file-attachment-info small{font-size:10px;color:#9c9c9c}.attachment-viewer{position:fixed;z-index:100;inset:0;background:#000e;display:flex;align-items:center;justify-content:center;padding:24px}.attachment-viewer img{max-width:100%;max-height:90dvh;object-fit:contain;border-radius:10px}.attachment-viewer-close{position:absolute;right:16px;top:16px;width:42px;height:42px;border-radius:50%;background:#252525;border:1px solid #555;color:white;font-size:20px}
 /* Keep generated code easy to copy and place code before explanatory text. */
 .msg.assistant .code-block{margin:12px 0;max-width:100%;overflow:hidden;border:1px solid #3a3a3a;border-radius:14px;background:#111}.msg.assistant .code-block pre{max-width:100%;overflow:auto;padding:14px;margin:0;white-space:pre;}.msg.assistant .code-block code{white-space:pre;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:13px;line-height:1.55}.msg.assistant .code-block-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;background:#222;border-bottom:1px solid #383838}
+
+/* Smooth, ChatGPT-inspired navigation drawer */
+.app-drawer{
+  width:min(320px,88vw);
+  padding-top:max(17px,env(safe-area-inset-top));
+  padding-bottom:max(16px,env(safe-area-inset-bottom));
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  will-change:transform;
+  transition:transform .32s cubic-bezier(.22,1,.36,1);
+  box-shadow:24px 0 64px rgba(0,0,0,.24);
+}
+.drawer-scrim{
+  background:rgba(8,10,18,.48);
+  -webkit-backdrop-filter:blur(2px);
+  backdrop-filter:blur(2px);
+  transition:opacity .28s ease,visibility .28s ease;
+}
+.drawer-new,.drawer-link,.drawer-history-item,.drawer-close{
+  transition:background-color .18s ease,color .18s ease,border-color .18s ease,transform .18s ease;
+  -webkit-tap-highlight-color:transparent;
+}
+.drawer-new:active,.drawer-link:active,.drawer-history-item:active{transform:scale(.985)}
+.app-drawer button:focus-visible{outline:2px solid #8b9cff;outline-offset:2px}
+body.menu-open{overflow:hidden;overscroll-behavior:none}
+@media(prefers-reduced-motion:reduce){
+  .app-drawer,.drawer-scrim,.drawer-new,.drawer-link,.drawer-history-item,.drawer-close{transition:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -655,8 +684,9 @@ try{
  selectedImage=null;selectedImagePreview='';selectedImageName='';selectedDocumentText='';selectedDocumentName='';updateAttachmentPreview();
 }catch(e){const reason=String(e&&e.message||'');let help='I could not reach the AI service.';if(reason.includes('sign in'))help='Your message was added, but Orvexa AI needs you to sign in before it can reply. Open Profile, create an account or sign in, then try again.';else if(reason.includes('Supabase'))help='The chat service is not configured yet. The website buttons can work, but AI replies need the Supabase backend and AI function deployed.';else if(reason)help='Orvexa AI could not reply: '+reason;addMessage('assistant',help);}
 finally{busy=false;const t=$('thinking');if(t)t.remove();}}
-function toggleMenu(){const d=$('appDrawer'),s=$('drawerScrim');if(!d||!s)return;const open=!d.classList.contains('open');d.classList.toggle('open',open);s.classList.toggle('open',open);d.setAttribute('aria-hidden',String(!open));s.setAttribute('aria-hidden',String(!open));}
-function closeMenu(){const d=$('appDrawer'),s=$('drawerScrim');if(!d||!s)return;d.classList.remove('open');s.classList.remove('open');d.setAttribute('aria-hidden','true');s.setAttribute('aria-hidden','true');}
+function toggleMenu(){const d=$('appDrawer'),s=$('drawerScrim'),trigger=document.querySelector('.menu-trigger');if(!d||!s)return;const open=!d.classList.contains('open');if(open){d.classList.add('open');s.classList.add('open');document.body.classList.add('menu-open');d.setAttribute('aria-hidden','false');s.setAttribute('aria-hidden','false');if(trigger)trigger.setAttribute('aria-expanded','true');window.setTimeout(()=>{const first=d.querySelector('button:not([disabled])');if(first&&d.classList.contains('open'))first.focus({preventScroll:true});},70);}else{closeMenu();}}
+function closeMenu(){const d=$('appDrawer'),s=$('drawerScrim'),trigger=document.querySelector('.menu-trigger');if(!d||!s)return;const wasOpen=d.classList.contains('open');d.classList.remove('open');s.classList.remove('open');document.body.classList.remove('menu-open');d.setAttribute('aria-hidden','true');s.setAttribute('aria-hidden','true');if(trigger)trigger.setAttribute('aria-expanded','false');if(wasOpen&&trigger)trigger.focus({preventScroll:true});}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('appDrawer')&&$('appDrawer').classList.contains('open'))closeMenu();});
 function showPage(name){const target=$(String(name)+'Page');if(!target){toast('That section is not available yet.');return;}closeMenu();document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));target.classList.add('active');document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.page===name));const composer=$('composerArea');if(composer)composer.style.display=name==='chat'?'block':'none';if(name==='history')renderHistory();if(name==='profile'){if(typeof updateAccountStatus==='function')updateAccountStatus();if(typeof loadMemorySettings==='function')loadMemorySettings();}if(name==='chat')updateChatLayout();const main=$('main');if(main)main.scrollTop=0;}
 function openSavedChat(item){currentConversationId=item.id&&String(item.id).startsWith('local-')?null:(item.id||null);try{if(item.id&&String(item.id).startsWith('local-'))storage.setItem('smart-current-archive-id',item.id);else storage.removeItem('smart-current-archive-id')}catch(e){}currentMessages=Array.isArray(item.messages)?item.messages.map(m=>({role:m.role,content:m.content,time:m.time||m.created_at||item.time})):[];$('messages').innerHTML='';currentMessages.forEach(renderMessage);if(!currentMessages.length)currentMessages=[{role:'assistant',content:WELCOME,time:new Date().toISOString()}],currentMessages.forEach(renderMessage);saveCurrent();updateChatLayout();updatePageLimitNotice();showPage('chat');}
 function renderHistory(){const root=$('historyList');if(!root)return;let local=[];try{local=JSON.parse(storage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!local.length){root.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:30px;margin-bottom:8px">◷</div><h3>No previous chats yet</h3><p class="muted">Your conversations will appear here as you use Orvexa AI.</p><button class="primary" onclick="newChat()">Start a chat</button></div>';}local.forEach(item=>{const b=document.createElement('button');b.className='history-item';const title=document.createElement('strong');title.textContent=item.title||'Conversation';const meta=document.createElement('small');meta.textContent='On this device · '+new Date(item.time||Date.now()).toLocaleString()+' · '+(item.messages||[]).length+' messages';b.append(title,meta);b.onclick=()=>openSavedChat(item);root.appendChild(b);});loadCloudHistory(root);renderDrawerHistory();}
