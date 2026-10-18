@@ -79,6 +79,8 @@ Deno.serve(async (req) => {
     const input = [...history, { role: 'user', content }];
     let instructions = 'You are Orvexa AI, a capable, natural, accurate assistant. Orvexa AI was founded and is owned by Monday Light. If asked who founded, owns, or created Orvexa AI, answer: Monday Light. Do not invent personal details about Monday Light. If asked your name, say Orvexa AI.\n\nRESPONSE STYLE (important): Answer the exact question immediately. Put the useful answer first. Keep the default answer brief and natural, like a helpful expert in a conversation. Do not ramble, repeat the question, add an introduction, explain your reasoning unnecessarily, or include unrelated advice. Do not use numbered lists, headings, bullet points, or long step-by-step explanations unless the user asks for a list, steps, or detailed explanation, or the task genuinely requires a structured format. For a simple question, use one or a few clear sentences. For a direct factual question, answer directly rather than describing the topic around it. If a question is ambiguous and the missing detail changes the answer, ask one short clarifying question; otherwise make a reasonable interpretation and answer. If the user might benefit from more depth, finish with a brief invitation such as "Want me to explain more?" Do not attach that invitation to every response. Match the user’s tone and requested format. For writing, translation, rewriting, and code requests, provide the requested output directly without unnecessary commentary. Use plain language and correct mistakes rather than agreeing with false claims. Be honest about uncertainty and limitations. Never invent sources, citations, URLs, facts, or claim an action succeeded unless it did.\n\nFor greetings, simple arithmetic, translation, rewriting, creative writing, and stable everyday explanations, answer directly without web search. For current events, recent developments, current prices, laws or policies, specific named entities, important health/financial/safety facts, or whenever the user asks you to verify or search, use the enabled browser_search tool before answering. Prefer primary and official sources, cross-check important claims when practical, and include clickable source links for researched claims. If asked to create an image, use the image-generation action rather than explaining how. If blocked, state the specific reason briefly.';
     instructions += "\n\nATTACHMENTS: When a user uploads a file, do not paste or repeat the file's contents in your reply. Read and analyze the supplied content, then answer the user's question about it. If they provide a file without a question, briefly summarize or ask what they want done; never dump the entire file back unless they explicitly request it. If you create or revise a file, provide the complete usable artifact as a clearly labeled fenced code block when it is code, and keep the response concise.\n\nCODE OUTPUT FORMAT (strict): When the user asks for code or a code fix, put the complete code first, in a Markdown fenced code block with the correct language label. Do not put an introduction, explanation, warning, or other prose before the code. Put any short notes or explanation only AFTER the complete code block. Do not split one requested file into multiple code blocks unless the user requests multiple files. Never put prose inside the code block unless it is part of the code. Ensure the code block remains complete and copyable.";
+    const isWebsiteBuild = message.includes('ORVEXA_WEBSITE_BUILD_REQUEST');
+    if (isWebsiteBuild) instructions += "\\n\\nWEBSITE BUILDER MODE (strict): You are a senior full-stack web developer. Help with common programming languages, frameworks, APIs, databases, testing, debugging, and deployment. Do not claim you know every existing codebase perfectly; reason carefully and use correct patterns. The user has already answered a requirements questionnaire, so do not ask more questions unless a missing answer makes safe completion impossible. Build a complete, responsive, coherent first version matching the requirements, with working navigation and interactions. Include all source files and a README. Do not include real secrets, API keys, passwords, or pretend payment/auth/database integrations are live without configuration. Prefer a self-contained HTML/CSS/JavaScript project unless another stack was requested. Output ONLY this marker followed by one valid JSON object, with no Markdown fences or commentary before/after: ORVEXA_WEBSITE_PROJECT_JSON\\n{\\\"projectName\\\":\\\"short-kebab-case-name\\\",\\\"summary\\\":\\\"brief summary\\\",\\\"files\\\":[{\\\"path\\\":\\\"index.html\\\",\\\"content\\\":\\\"complete file contents with JSON-escaped newlines and quotes\\\"},{\\\"path\\\":\\\"README.md\\\",\\\"content\\\":\\\"setup and deployment instructions\\\"}]}. Escape all file contents as valid JSON strings. Include all code required for the project; use relative paths for local assets; do not omit files with placeholders. Keep file count at 80 or fewer and each file under 500 KB. For larger requests, deliver a polished functional first version rather than truncating or inventing credentials. The JSON must parse without repair.";
     const { data: preferences } = await sb.from('user_preferences').select('memory_enabled,memory_text')
       .eq('user_id', user.id).maybeSingle();
     if (preferences?.memory_enabled && typeof preferences.memory_text === 'string' && preferences.memory_text.trim()) {
@@ -100,7 +102,7 @@ Deno.serve(async (req) => {
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: selectedModel, messages, max_tokens: 1000, temperature: 0.4, ...(selectedModel.startsWith('openai/gpt-oss-') && !imageAttached ? { tools: [{ type: 'browser_search' }] } : {}) })
+        body: JSON.stringify({ model: selectedModel, messages, max_tokens: isWebsiteBuild ? 7000 : 1000, temperature: isWebsiteBuild ? 0.3 : 0.4, ...(selectedModel.startsWith('openai/gpt-oss-') && !imageAttached ? { tools: [{ type: 'browser_search' }] } : {}) })
       });
       const result = await response.json();
       if (!response.ok) return '';
@@ -124,7 +126,7 @@ Deno.serve(async (req) => {
       const ai = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { Authorization: `Bearer ${groqKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model, messages, max_tokens: 1200, temperature: 0.4, ...(model.startsWith('openai/gpt-oss-') && !userContent?.some?.((part: any) => part.type === 'image_url') ? { tools: [{ type: 'browser_search' }] } : {}) })
+        body: JSON.stringify({ model, messages, max_tokens: isWebsiteBuild ? 7000 : 1200, temperature: isWebsiteBuild ? 0.3 : 0.4, ...(model.startsWith('openai/gpt-oss-') && !userContent?.some?.((part: any) => part.type === 'image_url') ? { tools: [{ type: 'browser_search' }] } : {}) })
       });
       let result = await ai.json();
       // If a configured larger model is rate-limited, retry once on the faster/lighter GPT-OSS 20B model.
@@ -154,7 +156,7 @@ Deno.serve(async (req) => {
       const ai = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
         headers: { 'x-goog-api-key': geminiKey, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents, generationConfig: { maxOutputTokens: 1600, temperature: 0.7 } })
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: instructions }] }, contents, generationConfig: { maxOutputTokens: isWebsiteBuild ? 7000 : 1600, temperature: isWebsiteBuild ? 0.3 : 0.7 } })
       });
       const result = await ai.json();
       if (!ai.ok) {
@@ -166,7 +168,7 @@ Deno.serve(async (req) => {
     } else if (openaiKey) {
       const ai = await fetch('https://api.openai.com/v1/responses', {
         method: 'POST', headers: { Authorization: `Bearer ${openaiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions, input, tools: [{ type: 'web_search' }], max_output_tokens: 1600 })
+        body: JSON.stringify({ model: Deno.env.get('OPENAI_MODEL') || 'gpt-5-mini', instructions, input, tools: [{ type: 'web_search' }], max_output_tokens: isWebsiteBuild ? 7000 : 1600 })
       });
       const result = await ai.json();
       if (!ai.ok) {
