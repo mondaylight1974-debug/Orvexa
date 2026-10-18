@@ -595,12 +595,8 @@ function resolveOpenCommand(prompt){const p=String(prompt||'').trim();if(!/^(?:p
 
 let websiteBuildFlow=null;
 const websiteBuildQuestions=[
- "First, what is the website for, and what is its exact name? Tell me the business, organization, or purpose and the main goal.",
- "Which pages or sections do you need? For example: Home, About, Services, Products, Gallery, Blog, Contact, Login, Admin dashboard.",
- "What style should I use? Describe the colours, mood, layout, and any example website you like. I can keep a design you already have if you provide it.",
- "Which features must work? For example: contact form, search, shopping cart, payments, booking, user accounts, admin panel, uploads, animations.",
- "Do you need a database or login system? If yes, tell me what it should store and whether you already have Supabase or another backend. Never send passwords or secret API keys.",
- "What should I build it with, and what assets do you have? Choose plain HTML/CSS/JavaScript, React, or let Orvexa choose; mention any logo, images, text, hosting target, or special requirements."
+ "What is the website or business name? I’ll use your first message to understand what kind of website you want. If you already gave the name, just type “same”.",
+ "Do you have a logo? Attach it with the + button if you do, or type “no logo”. You may also add preferred colours, a WhatsApp/contact detail, or one must-have feature here. Everything else is optional—I’ll choose sensible defaults and build the necessary pages automatically."
 ];
 function looksLikeWebsiteBuildRequest(value){const s=String(value||'').trim();if(s.includes('ORVEXA_WEBSITE_BUILD_REQUEST'))return false;return /\b(?:build|create|make|develop|generate)\b.{0,55}\b(?:a\s+|an\s+|the\s+|my\s+|our\s+)?(?:website|web site|web app|web application|landing page|portfolio site|online store|e-?commerce site)\b/i.test(s)||/\b(?:website|web site|web app|web application|landing page|portfolio site|online store|e-?commerce site)\b.{0,45}\b(?:build|create|make|develop|generate)\b/i.test(s);}
 function clearComposer(){const field=$('prompt');field.value='';field.style.height='auto';}
@@ -631,7 +627,7 @@ if(websiteBuildFlow){
  if(websiteBuildFlow.awaitingConfirm){
   if(/^\s*(build|build it|yes|yes build|confirm|go ahead|create it)\s*[.!]*\s*$/i.test(prompt)){
    const answers=websiteBuildFlow.answers.slice();const initialRequest=websiteBuildFlow.initial;websiteBuildFlow=null;typedPrompt='Build my website now using the requirements we agreed.';
-   prompt='ORVEXA_WEBSITE_BUILD_REQUEST\nOriginal request: '+initialRequest+'\nCreate a complete, responsive, professional website project as a ZIP-ready set of files. Use these user-approved requirements:\n'+answers.map((a,i)=>(i+1)+'. '+websiteBuildQuestions[i]+'\n'+a).join('\n\n')+'\n\nMake sensible safe defaults for any minor gaps. Include all source files, a README with run/deploy instructions, and text/SVG assets where useful. Never include secret keys or claim external services are connected unless implemented. Output the required ORVEXA_WEBSITE_PROJECT_JSON format only.';
+   prompt='ORVEXA_WEBSITE_BUILD_REQUEST\nOriginal request: '+initialRequest+'\nCreate a complete, responsive, professional website project as a ZIP-ready set of files. Use these brief user-provided details:\n'+answers.map((a,i)=>(i+1)+'. '+websiteBuildQuestions[i]+'\n'+a).join('\n\n')+'\n\nIMPORTANT: Do not ask the user more questions. Infer the website type and create the necessary pages, navigation, content, mobile layout, suitable styling, and relevant standard features automatically. Use any supplied logo/image if available; otherwise create a tasteful text or simple SVG logo. Use sensible defaults for missing details and never invent real business contact details, reviews, addresses, or prices. Keep optional details editable. Include all source files, a README with run/deploy instructions, and text/SVG assets where useful. Never include secret keys or claim external services are connected unless implemented. Output the required ORVEXA_WEBSITE_PROJECT_JSON format only.';
   }else if(/\b(cancel|stop|never mind)\b/i.test(prompt)){websiteBuildFlow=null;addMessage('assistant','Okay, I cancelled the website build. Nothing was generated.');return;}
   else{websiteBuildFlow.answers[websiteBuildQuestions.length-1]=prompt;addMessage('assistant','I’ve updated the last requirement. Reply BUILD when you want me to generate the ZIP, or tell me another change.');return;}
  }else{websiteBuildFlow.answers.push(prompt);websiteBuildFlow.step++;askWebsiteBuildQuestion();return;}
