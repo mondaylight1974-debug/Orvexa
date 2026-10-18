@@ -595,8 +595,7 @@ function resolveOpenCommand(prompt){const p=String(prompt||'').trim();if(!/^(?:p
 
 let websiteBuildFlow=null;
 const websiteBuildQuestions=[
- "What is the website or business name? I’ll use your first message to understand what kind of website you want. If you already gave the name, just type “same”.",
- "Do you have a logo? Attach it with the + button if you do, or type “no logo”. You may also add preferred colours, a WhatsApp/contact detail, or one must-have feature here. Everything else is optional—I’ll choose sensible defaults and build the necessary pages automatically."
+ "I’ll build the website from your request and choose the necessary pages and features automatically. In one reply, tell me the exact business/website name and attach a logo with the + button if you have one. You can also optionally add colours, WhatsApp/contact details, or one special feature. If the name is already in your request, just say “same”; if you have no logo, say “no logo”. I won’t ask you to choose pages or answer more setup questions."
 ];
 function looksLikeWebsiteBuildRequest(value){const s=String(value||'').trim();if(s.includes('ORVEXA_WEBSITE_BUILD_REQUEST'))return false;return /\b(?:build|create|make|develop|generate)\b.{0,55}\b(?:a\s+|an\s+|the\s+|my\s+|our\s+)?(?:website|web site|web app|web application|landing page|portfolio site|online store|e-?commerce site)\b/i.test(s)||/\b(?:website|web site|web app|web application|landing page|portfolio site|online store|e-?commerce site)\b.{0,45}\b(?:build|create|make|develop|generate)\b/i.test(s);}
 function clearComposer(){const field=$('prompt');field.value='';field.style.height='auto';}
@@ -630,7 +629,12 @@ if(websiteBuildFlow){
    prompt='ORVEXA_WEBSITE_BUILD_REQUEST\nOriginal request: '+initialRequest+'\nCreate a complete, responsive, professional website project as a ZIP-ready set of files. Use these brief user-provided details:\n'+answers.map((a,i)=>(i+1)+'. '+websiteBuildQuestions[i]+'\n'+a).join('\n\n')+'\n\nIMPORTANT: Do not ask the user more questions. Infer the website type and create the necessary pages, navigation, content, mobile layout, suitable styling, and relevant standard features automatically. Use any supplied logo/image if available; otherwise create a tasteful text or simple SVG logo. Use sensible defaults for missing details and never invent real business contact details, reviews, addresses, or prices. Keep optional details editable. Include all source files, a README with run/deploy instructions, and text/SVG assets where useful. Never include secret keys or claim external services are connected unless implemented. Output the required ORVEXA_WEBSITE_PROJECT_JSON format only.';
   }else if(/\b(cancel|stop|never mind)\b/i.test(prompt)){websiteBuildFlow=null;addMessage('assistant','Okay, I cancelled the website build. Nothing was generated.');return;}
   else{websiteBuildFlow.answers[websiteBuildQuestions.length-1]=prompt;addMessage('assistant','I’ve updated the last requirement. Reply BUILD when you want me to generate the ZIP, or tell me another change.');return;}
- }else{websiteBuildFlow.answers.push(prompt);websiteBuildFlow.step++;askWebsiteBuildQuestion();return;}
+ }else{
+  websiteBuildFlow.answers.push(prompt);websiteBuildFlow.step++;
+  if(websiteBuildFlow.step<websiteBuildQuestions.length){askWebsiteBuildQuestion();return;}
+  const answers=websiteBuildFlow.answers.slice();const initialRequest=websiteBuildFlow.initial;websiteBuildFlow=null;typedPrompt='Build my website now using the details I provided.';
+  prompt='ORVEXA_WEBSITE_BUILD_REQUEST\nOriginal request: '+initialRequest+'\nCreate a complete, responsive, professional website project as a ZIP-ready set of files. Use these brief user-provided details:\n'+answers.map((a,i)=>(i+1)+'. '+websiteBuildQuestions[i]+'\n'+a).join('\n\n')+'\n\nIMPORTANT: Build immediately; do not ask follow-up questions or require a separate BUILD confirmation. Infer the website type and create necessary pages, navigation, content, mobile layout, suitable styling, and relevant standard features automatically. Use any supplied logo/image if available; otherwise create a tasteful text or simple SVG logo. Use sensible defaults for missing details and never invent real business contact details, reviews, addresses, or prices. Keep optional details editable. Include all source files, a README with run/deploy instructions, and text/SVG assets where useful. Never include secret keys or claim external services are connected unless implemented. Output the required ORVEXA_WEBSITE_PROJECT_JSON format only.';
+ }
 }else if(looksLikeWebsiteBuildRequest(prompt)){
  addMessage('user',prompt);clearComposer();websiteBuildFlow={initial:prompt,step:0,answers:[]};askWebsiteBuildQuestion();return;
 }
