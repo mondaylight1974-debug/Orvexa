@@ -502,6 +502,7 @@ body[data-theme="light"] .msg-text .copy-code-button{background:#374151;border-c
       <div class="eyebrow">YOUR ACCOUNT</div><div class="page-title">Welcome back</div><p class="page-desc">Sign in to continue, or create an account to get started.</p>
       <div class="card account-form-card"><div class="account-account-row"><div class="account-account-details"><h3>Sign in to Orvexa AI</h3><p class="muted" id="accountStatus">Not signed in · create an account or sign in</p></div></div><label for="email" class="muted">Email address</label><input class="field" id="email" type="email" placeholder="you@example.com" autocomplete="email"><label for="password" class="muted">Password</label><input class="field" id="password" type="password" placeholder="At least 8 characters" autocomplete="current-password"><div class="btn-row"><button class="primary" onclick="accountAction('signin')">Sign in</button><button class="secondary" onclick="accountAction('signup')">Create account</button></div><p class="muted">Your account is secured by Supabase. If email confirmation is enabled, check your inbox after creating an account.</p></div>
       <div class="card"><h3>🧠 Personal memory</h3><p class="muted">Optional: let Orvexa AI use details you choose to save to personalize future answers. Keep sensitive information out of memory.</p><label style="display:flex;align-items:center;gap:9px;font-size:12px;margin-top:12px"><input type="checkbox" id="memoryEnabled" style="accent-color:var(--purple)"> Enable my saved memory</label><textarea class="field" id="memoryText" rows="4" placeholder="Things you want Orvexa AI to remember, such as your goals or preferred writing style…"></textarea><div class="btn-row"><button class="primary" id="saveMemoryButton" onclick="saveMemorySettings()">Save memory settings</button><button class="secondary" onclick="clearMemorySettings()">Clear memory</button></div><p class="muted" id="memoryStatus" aria-live="polite"></p></div>
+      <div class="card" id="githubToolsCard"><h3>🔗 Connected development tools</h3><p class="muted">Connect GitHub to let Orvexa list repositories and help with your website and software projects. Access starts only after you authorize it.</p><div class="btn-row"><button class="primary" onclick="githubConnect()">Connect GitHub</button><button class="secondary" onclick="githubLoadRepos()">Refresh repositories</button><button class="secondary" onclick="githubDisconnect()">Disconnect</button></div><p class="muted" id="githubToolsStatus" aria-live="polite">GitHub connection has not been checked.</p><div id="githubRepoList"></div><p class="muted">Important changes to code or publishing will require your confirmation.</p></div>
       <div class="card"><h3>App features</h3><p class="muted">🔊 Spoken answers · Browser-supported<br>🎙️ Voice input and AI voice call · Browser-supported<br>☁️ Cloud chat history · Sign in and deploy the latest backend<br>🎨 Image generation/editing · Requires provider credits<br>💎 Premium plans · Payment integration is not active</p><button class="secondary" onclick="toast('Review your saved memory above. Account deletion and a full privacy workflow still need to be configured before public release.')">Privacy & security</button></div>
     </section>
   </main>
@@ -674,6 +675,25 @@ $('imageInput').addEventListener('change',e=>{const file=e.target.files&&e.targe
 $('cameraInput').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];e.target.value='';loadImageAttachment(file);});
 $('documentInput').addEventListener('change',e=>{const file=e.target.files&&e.target.files[0];e.target.value='';loadDocumentAttachment(file);});
 document.addEventListener('click',e=>{const menu=$('attachMenu'),button=$('attachButton');if(menu&&!menu.hidden&&!menu.contains(e.target)&&!button.contains(e.target))toggleAttachMenu(false);});
+
+async function githubConnect(){
+ if(!sb){toast('Account service is not configured.');return;}
+ $('githubToolsStatus').textContent='Starting secure GitHub authorization…';
+ try{const {data,error}=await sb.functions.invoke('github-connect',{body:{action:'start'}});if(error)throw error;if(!data||!data.url)throw new Error('GitHub backend is not ready.');window.location.href=data.url;}
+ catch(e){console.error(e);$('githubToolsStatus').textContent='GitHub setup is not deployed yet. The database SQL, Edge Function, and GitHub OAuth credentials must be configured first.';toast('Finish GitHub backend setup before connecting.');}
+}
+async function githubLoadRepos(){
+ if(!sb){toast('Account service is not configured.');return;}
+ const status=$('githubToolsStatus'),root=$('githubRepoList');status.textContent='Checking GitHub connection…';root.innerHTML='';
+ try{const {data,error}=await sb.functions.invoke('github-connect',{body:{action:'repos'}});if(error)throw error;if(!data||!data.connected){status.textContent='GitHub is not connected yet. Tap Connect GitHub after setup.';return;}status.textContent='Connected as '+(data.login||'your GitHub account')+'.';const repos=Array.isArray(data.repos)?data.repos:[];if(!repos.length){root.innerHTML='<p class="muted">No accessible repositories were returned.</p>';return;}root.innerHTML=repos.map(r=>'<div class="card" style="margin-top:8px;padding:12px"><strong>'+escapeHtml(r.full_name||r.name||'Repository')+'</strong><p class="muted">'+escapeHtml(r.description||'No description')+'</p><a class="smart-link" href="'+escapeHtml(r.html_url||'#')+'" target="_blank" rel="noopener noreferrer">Open repository ↗</a><p class="muted">'+(r.private?'Private':'Public')+' · '+escapeHtml(r.default_branch||'main')+'</p></div>').join('');}
+ catch(e){console.error(e);status.textContent='Could not load repositories. Sign in and complete the backend setup, then retry.';}
+}
+async function githubDisconnect(){
+ if(!sb){toast('Account service is not configured.');return;}
+ if(!confirm('Disconnect Orvexa AI from GitHub?'))return;
+ try{const {error}=await sb.functions.invoke('github-connect',{body:{action:'disconnect'}});if(error)throw error;$('githubToolsStatus').textContent='GitHub disconnected.';$('githubRepoList').innerHTML='';toast('GitHub disconnected.');}
+ catch(e){console.error(e);toast('Disconnect is unavailable until the backend is deployed.');}
+}
 
 async function accountAction(action){
  if(!sb){toast('Supabase connection is not configured.');return;}
