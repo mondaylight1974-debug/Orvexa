@@ -1,4 +1,4 @@
-const CACHE='orvexa-static-v29';
+const CACHE='orvexa-static-v30';
 const ASSETS=['./','./index.html','./404.html','./manifest.json','./orvexa-icon.svg'];
 
 self.addEventListener('install',event=>{
