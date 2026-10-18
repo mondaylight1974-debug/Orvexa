@@ -621,7 +621,7 @@ async function handleWebsiteProjectReply(reply){
 }
 async function sendMessage(text){if(busy)return;const field=$('prompt');let prompt=(text||field.value).trim();let typedPrompt=prompt;
 // A build questionnaire must never trap the user in website mode. Ordinary questions and new assistant tasks exit the flow.
-const isGeneralAssistantRequest=/^(?:what|who|why|when|where|how|can you|could you|would you|tell me|explain|help me|translate|write|summari[sz]e|calculate|do you|are you|is it|give me|list|search|find|time|weather|please help|i want to ask|not a website|not building|stop building|cancel)\b/i.test(prompt)||/\\?$/.test(prompt);
+const isGeneralAssistantRequest=/^(?:what|who|why|when|where|how|can you|could you|would you|tell me|explain|help me|translate|write|summari[sz]e|calculate|do you|are you|is it|give me|list|search|find|time|weather|please help|i want to ask|not a website|not building|stop building|cancel)\b/i.test(prompt)||/\?$/.test(prompt);
 if(websiteBuildFlow&&isGeneralAssistantRequest){websiteBuildFlow=null;}
 if(websiteBuildFlow){
  if(!prompt)return;addMessage('user',prompt);clearComposer();
