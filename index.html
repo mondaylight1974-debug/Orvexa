@@ -600,7 +600,7 @@ const websiteBuildQuestions=[
  "Do you need a database or login system? If yes, tell me what it should store and whether you already have Supabase or another backend. Never send passwords or secret API keys.",
  "What should I build it with, and what assets do you have? Choose plain HTML/CSS/JavaScript, React, or let Orvexa choose; mention any logo, images, text, hosting target, or special requirements."
 ];
-function looksLikeWebsiteBuildRequest(value){return /\b(build|create|make|develop|design|generate)\b/i.test(value)&&/\b(website|web site|web app|web application|landing page|portfolio site|online store|e-?commerce site)\b/i.test(value)&&!value.includes('ORVEXA_WEBSITE_BUILD_REQUEST');}
+function looksLikeWebsiteBuildRequest(value){const s=String(value||'').trim();if(s.includes('ORVEXA_WEBSITE_BUILD_REQUEST'))return false;return /\b(?:build|create|make|develop|generate)\b.{0,55}\b(?:a\s+|an\s+|the\s+|my\s+|our\s+)?(?:website|web site|web app|web application|landing page|portfolio site|online store|e-?commerce site)\b/i.test(s)||/\b(?:website|web site|web app|web application|landing page|portfolio site|online store|e-?commerce site)\b.{0,45}\b(?:build|create|make|develop|generate)\b/i.test(s);}
 function clearComposer(){const field=$('prompt');field.value='';field.style.height='auto';}
 function askWebsiteBuildQuestion(){const f=websiteBuildFlow;if(!f)return;if(f.step<websiteBuildQuestions.length){addMessage('assistant','Before I build anything, I need a few details (question '+(f.step+1)+' of '+websiteBuildQuestions.length+').\n\n'+websiteBuildQuestions[f.step]);}else{f.awaitingConfirm=true;const summary=f.answers.map((a,i)=>(i+1)+'. '+websiteBuildQuestions[i]+'\nYour answer: '+a).join('\n\n');addMessage('assistant','Thanks. I have the requirements. Please review them below.\n\n'+summary+'\n\nIf this is correct, reply BUILD and I’ll generate the website files and prepare a ZIP download. If anything needs changing, tell me what to change first.');}}
 async function handleWebsiteProjectReply(reply){
@@ -620,6 +620,9 @@ async function handleWebsiteProjectReply(reply){
  return true;
 }
 async function sendMessage(text){if(busy)return;const field=$('prompt');let prompt=(text||field.value).trim();let typedPrompt=prompt;
+// A build questionnaire must never trap the user in website mode. Ordinary questions and new assistant tasks exit the flow.
+const isGeneralAssistantRequest=/^(?:what|who|why|when|where|how|can you|could you|would you|tell me|explain|help me|translate|write|summari[sz]e|calculate|do you|are you|is it|give me|list|search|find|time|weather|please help|i want to ask|not a website|not building|stop building|cancel)\\b/i.test(prompt)||/\\?$/.test(prompt);
+if(websiteBuildFlow&&isGeneralAssistantRequest){websiteBuildFlow=null;}
 if(websiteBuildFlow){
  if(!prompt)return;addMessage('user',prompt);clearComposer();
  if(websiteBuildFlow.awaitingConfirm){
