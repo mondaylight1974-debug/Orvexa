@@ -445,10 +445,9 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 /* Social sign-in buttons */
 
 
-/* Page-specific layout: keep the global home header only on the chat home. */
-.app:not([data-page="chat"]) > .topbar{display:none!important}
-.app:not([data-page="chat"]) > main{padding-top:16px!important}
-.app[data-page="chat"] > main{padding-top:18px}
+/* Keep the main menu/header available on every page. */
+.app > .topbar{display:flex!important}
+.app > main{padding-top:18px!important}
 </style>
 </head>
 <body>
@@ -478,7 +477,6 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
   </aside>
   <main id="main">
     <section class="page active" id="chatPage">
-      <div class="welcome-panel"><div class="welcome-mark" aria-hidden="true">✳</div><div class="welcome-eyebrow">ORVEXA AI</div><h1>What can I help<br><span class="glow">you with?</span></h1><p>Ask anything. Get a clear, direct answer.</p></div>
       <div class="section-head suggestions-head"><h2>Try asking</h2><button class="small-link" onclick="newChat()">＋ New chat</button></div>
       <div class="quick-grid">
         <button class="quick" onclick="quickPrompt('Help me write a great message. Ask me what it is for.')"><span class="emoji">✍️</span><strong>Write something</strong><small>Messages, letters, CVs</small><span class="arrow">↗</span></button>
@@ -655,7 +653,7 @@ function isChatPageFull(){const card=$('pageLimitCard');return chatContentLength
 function updatePageLimitNotice(force){const card=$('pageLimitCard');if(!card)return;const used=chatContentLength(),full=Boolean(force)||used>=MAX_CHAT_PAGE_CHARS;card.classList.toggle('visible',full);card.setAttribute('aria-hidden',String(!full));const meter=$('pageLimitMeter');if(meter)meter.textContent='Conversation size: '+used.toLocaleString()+' characters · New pages are free.';if(full)archiveCurrentChat();}
 function addMessage(role,content,attachment){const m={role,content,time:new Date().toISOString()};if(attachment)m.attachment=attachment;currentMessages.push(m);renderMessage(m);updateChatLayout();saveCurrent();updatePageLimitNotice();$('main').scrollTop=$('main').scrollHeight;return m;}
 function saveCurrent(){try{storage.setItem('smart-current',JSON.stringify(currentMessages));if(currentConversationId)storage.setItem('smart-conversation-id',currentConversationId);else storage.removeItem('smart-conversation-id');}catch(e){}}
-function loadCurrent(){try{const saved=JSON.parse(storage.getItem('smart-current')||'[]');if(saved.length){currentMessages=saved;currentMessages.forEach(renderMessage);updateChatLayout();updatePageLimitNotice();return;}}catch(e){}currentMessages=[{role:'assistant',content:WELCOME,time:new Date().toISOString()}];currentMessages.forEach(renderMessage);updateChatLayout();saveCurrent();updatePageLimitNotice();}
+function loadCurrent(){try{const saved=JSON.parse(storage.getItem('smart-current')||'[]');if(saved.length){if(saved.length===1&&saved[0].role==='assistant'&&saved[0].content===WELCOME){storage.removeItem('smart-current');currentMessages=[];updateChatLayout();updatePageLimitNotice();return;}currentMessages=saved;currentMessages.forEach(renderMessage);updateChatLayout();updatePageLimitNotice();return;}}catch(e){}currentMessages=[];updateChatLayout();saveCurrent();updatePageLimitNotice();}
 function quickPrompt(text){showPage('chat');$('prompt').value=text;$('prompt').focus();}
 
 function openMap(){showPage('discover');setTimeout(()=>{const panel=$('mapStudio');if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'});const input=$('mapSearchInput');if(input)input.focus({preventScroll:true});},80);}
