@@ -495,10 +495,13 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 #profilePage .profile-welcome-back{margin-top:4px!important}
 </style>
 <style id="orvexa-final-gap-reset">
-/* Restore Profile branding, while removing unnecessary blank space at the top of every page. */
+/* Remove excess top spacing on every page without hiding or deleting page content. */
 #main{padding-top:0!important;padding-block-start:0!important}
 #main>.page.active{padding-top:0!important;padding-block-start:0!important;margin-top:0!important}
 #main>.page.active>:first-child{margin-top:0!important;margin-block-start:0!important}
+#main>.page.active>.eyebrow:first-child,
+#main>.page.active>.page-title:first-child,
+#main>.page.active>.page-desc:first-child{margin-top:0!important}
 #profilePage{padding:0!important;margin:0!important}
 #profilePage>.account-hero:first-child{margin-top:0!important}
 #profilePage .account-hero{margin-top:0!important;padding-top:8px!important}
