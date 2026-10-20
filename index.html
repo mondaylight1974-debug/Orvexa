@@ -450,6 +450,20 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 /* Keep the main menu/header available on every page. */
 .app > .topbar{display:flex!important}
 .app > main{padding-top:18px!important}
+/* Keep the welcome panel and suggested prompts strictly on the home screen. */
+#chatPage:not(.active) .welcome-panel,
+#chatPage:not(.active) .suggestions-head,
+#chatPage:not(.active) .quick-grid,
+.app:not([data-page="chat"]) #chatPage .welcome-panel,
+.app:not([data-page="chat"]) #chatPage .suggestions-head,
+.app:not([data-page="chat"]) #chatPage .quick-grid,
+#chatPage.has-conversation .welcome-panel,
+#chatPage.has-conversation .suggestions-head,
+#chatPage.has-conversation .quick-grid{display:none!important}
+.app[data-page="chat"] #chatPage.active:not(.has-conversation) .welcome-panel{display:block!important}
+.app[data-page="chat"] #chatPage.active:not(.has-conversation) .suggestions-head{display:flex!important}
+.app[data-page="chat"] #chatPage.active:not(.has-conversation) .quick-grid{display:grid!important}
+
 /* Homepage suggestions belong only to the home screen. */
 #chatPage .suggestions-head,#chatPage .quick-grid{display:none!important}
 #chatPage:not(.has-conversation) .suggestions-head,#chatPage:not(.has-conversation) .quick-grid{display:grid!important}
