@@ -448,6 +448,11 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 /* Keep the main menu/header available on every page. */
 .app > .topbar{display:flex!important}
 .app > main{padding-top:18px!important}
+/* Homepage suggestions belong only to the home screen. */
+#chatPage .suggestions-head,#chatPage .quick-grid{display:none!important}
+#chatPage:not(.has-conversation) .suggestions-head,#chatPage:not(.has-conversation) .quick-grid{display:grid!important}
+#chatPage:not(.has-conversation) .suggestions-head{display:flex!important}
+.app:not([data-page="chat"]) .suggestions-head,.app:not([data-page="chat"]) .quick-grid{display:none!important}
 </style>
 </head>
 <body>
