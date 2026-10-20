@@ -495,20 +495,30 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 #profilePage .profile-welcome-back{margin-top:4px!important}
 </style>
 <style id="orvexa-final-gap-reset">
-/* Remove excess top spacing on every page without hiding or deleting page content. */
-#main{padding-top:0!important;padding-block-start:0!important}
-#main>.page.active{padding-top:0!important;padding-block-start:0!important;margin-top:0!important}
-#main>.page.active>:first-child{margin-top:0!important;margin-block-start:0!important}
-#main>.page.active>.eyebrow:first-child,
-#main>.page.active>.page-title:first-child,
-#main>.page.active>.page-desc:first-child{margin-top:0!important}
+/* Compact every page vertically; keep the top bar intact and remove leftover layout gaps. */
+#main{padding:0 12px 12px!important;padding-block-start:0!important;margin-block-start:0!important}
+#main>.page.active{padding:0!important;margin:0!important}
+#main>.page.active>:first-child{margin-block-start:0!important}
+#main .page.active .eyebrow:first-child{margin-top:0!important}
+#main .page.active .page-title:first-child{margin-top:0!important}
+#main .page.active .page-desc:first-child{margin-top:4px!important}
+#main .page.active .card:first-child,
+#main .page.active .grid:first-child,
+#main .page.active .list:first-child{margin-top:0!important}
+#main #historyPage .eyebrow{margin-top:0!important}
+#main #historyPage .page-title{margin-top:4px!important}
+#main #historyPage .page-desc{margin-top:5px!important;margin-bottom:12px!important}
 #profilePage{padding:0!important;margin:0!important}
-#profilePage>.account-hero:first-child{margin-top:0!important}
-#profilePage .account-hero{margin-top:0!important;padding-top:8px!important}
-#profilePage .account-art{margin-top:0!important}
-#profilePage .account-brand-mark{display:grid!important;height:42px!important;margin:0 auto 8px!important;padding:0!important}
+#profilePage>.account-hero:first-child{margin:0 0 12px!important}
+#profilePage .account-hero{min-height:0!important;margin-top:0!important;padding:8px 14px 12px!important}
+#profilePage .account-art{float:right!important;width:64px!important;height:64px!important;margin:0 0 4px 8px!important}
+#profilePage .account-brand-mark{display:grid!important;height:26px!important;margin:0 0 4px!important;padding:0!important}
 #profilePage .account-brand-name{display:block!important;height:auto!important;margin:0!important;padding:0!important}
-#profilePage .profile-welcome-back{margin-top:0!important}
+#profilePage .profile-welcome-back{margin:4px 0!important}
+#profilePage .profile-welcome-note{margin:0!important}
+#profilePage .account-welcome{margin-top:5px!important}
+#profilePage .account-hero>p{margin-top:4px!important}
+#profilePage .account-form-card{margin-top:0!important;padding:14px!important}
 </style>
 </head>
 <body>
