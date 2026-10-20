@@ -476,6 +476,14 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 #chatPage:not(.has-conversation) .suggestions-head,#chatPage:not(.has-conversation) .quick-grid{display:grid!important}
 #chatPage:not(.has-conversation) .suggestions-head{display:flex!important}
 .app:not([data-page="chat"]) .suggestions-head,.app:not([data-page="chat"]) .quick-grid{display:none!important}
+
+/* When the welcome/shortcut block is hidden, pull the remaining page content up immediately. */
+#main{padding-top:0!important}
+#main > .page.active{padding-top:0!important;margin-top:0!important}
+#main > .page.active > :first-child{margin-top:0!important}
+#chatPage.has-conversation{padding-top:0!important}
+#chatPage.has-conversation .messages{margin-top:10px!important}
+#chatPage.has-conversation .section-head:not(.suggestions-head){margin-top:0!important}
 </style>
 </head>
 <body>
