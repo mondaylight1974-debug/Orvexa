@@ -539,39 +539,7 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
       <div class="eyebrow">YOUR SPACE</div><div class="page-title">Chat history</div><p class="page-desc">Recent conversations saved on this device.</p><div id="historyList"></div>
     </section>
     <section class="page" id="profilePage">
-      <div class="account-hero">
-        <div class="account-orbit account-orbit-one"></div><div class="account-orbit account-orbit-two"></div>
-        <div class="account-art" aria-label="Futuristic Orvexa AI robot illustration" role="img">
-          <svg viewBox="0 0 240 220" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-            <defs>
-              <linearGradient id="robotShell" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c7b8ff"/><stop offset=".48" stop-color="#7776e9"/><stop offset="1" stop-color="#3a8ce9"/></linearGradient>
-              <linearGradient id="robotFace" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#151a32"/><stop offset="1" stop-color="#090d1a"/></linearGradient>
-              <linearGradient id="robotGlow" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bd8bff"/><stop offset="1" stop-color="#56e4ff"/></linearGradient>
-              <filter id="robotBlur"><feGaussianBlur stdDeviation="7"/></filter>
-            </defs>
-            <ellipse cx="120" cy="190" rx="67" ry="13" fill="#6e6aff" opacity=".28" filter="url(#robotBlur)"/>
-            <circle cx="120" cy="104" r="83" fill="#6d65ff" opacity=".1"/>
-            <path d="M76 155 Q48 165 51 190 L87 190 L100 163 M164 155 Q192 165 189 190 L153 190 L140 163" fill="none" stroke="url(#robotShell)" stroke-width="15" stroke-linecap="round"/>
-            <rect x="84" y="141" width="72" height="57" rx="24" fill="url(#robotShell)" stroke="#d9d2ff" stroke-opacity=".6"/>
-            <rect x="96" y="154" width="48" height="29" rx="12" fill="#17172e"/>
-            <path d="M104 168h32" stroke="url(#robotGlow)" stroke-width="3" stroke-linecap="round"/>
-            <rect x="62" y="47" width="116" height="104" rx="37" fill="url(#robotShell)" stroke="#d8d2ff" stroke-width="2"/>
-            <rect x="72" y="60" width="96" height="78" rx="29" fill="url(#robotFace)" stroke="#9f9aff" stroke-opacity=".8"/>
-            <path d="M120 30v17" stroke="url(#robotGlow)" stroke-width="5" stroke-linecap="round"/><circle cx="120" cy="24" r="8" fill="#6be9ff"/><circle cx="120" cy="24" r="14" fill="#6be9ff" opacity=".18"/>
-            <rect x="48" y="82" width="17" height="37" rx="8" fill="url(#robotShell)"/><rect x="175" y="82" width="17" height="37" rx="8" fill="url(#robotShell)"/>
-            <ellipse cx="99" cy="91" rx="9" ry="12" fill="#71e9ff"/><ellipse cx="141" cy="91" rx="9" ry="12" fill="#71e9ff"/>
-            <circle cx="99" cy="91" r="3" fill="#fff"/><circle cx="141" cy="91" r="3" fill="#fff"/>
-            <path d="M100 116 Q120 130 140 116" fill="none" stroke="#a99bff" stroke-width="4" stroke-linecap="round"/>
-            <path d="M33 59l5 10 10 5-10 5-5 10-5-10-10-5 10-5z M199 125l4 8 8 4-8 4-4 8-4-8-8-4 8-4z" fill="#a89aff"/>
-            <circle cx="54" cy="37" r="3" fill="#64e6ff"/><circle cx="191" cy="54" r="4" fill="#64e6ff"/>
-          </svg>
-        </div>
-        <div class="account-brand-mark">✦</div>
-        <div class="account-brand-name">Orvexa <span>AI</span></div>
-        <div class="account-welcome">Your ideas. Your assistant. Your space.</div>
-        <p>Sign in or create your account to make Orvexa AI your own.</p>
-      </div>
-      <div class="eyebrow">YOUR ACCOUNT</div><div class="page-title">Welcome <span style="color:#ffd52f">Back</span></div><p class="page-desc">Enter your details to access your Orvexa account.</p>
+      
       <div class="card account-form-card"><div class="account-account-row"><div class="account-account-details"><h3>Sign in to Orvexa AI</h3><p class="muted" id="accountStatus">Not signed in · create an account or sign in</p></div></div><label for="email" class="muted">Email address</label><input class="field" id="email" type="email" placeholder="you@example.com" autocomplete="email"><label for="password" class="muted">Password</label><input class="field" id="password" type="password" placeholder="At least 8 characters" autocomplete="current-password"><div class="btn-row"><button class="primary" onclick="accountAction('signin')">Sign in with Email</button><button class="secondary" onclick="accountAction('signup')">Create account</button></div></div>
       <div class="card"><h3>🧠 Personal memory</h3><p class="muted">Optional: let Orvexa AI use details you choose to save to personalize future answers. Keep sensitive information out of memory.</p><label style="display:flex;align-items:center;gap:9px;font-size:12px;margin-top:12px"><input type="checkbox" id="memoryEnabled" style="accent-color:var(--purple)"> Enable my saved memory</label><textarea class="field" id="memoryText" rows="4" placeholder="Things you want Orvexa AI to remember, such as your goals or preferred writing style…"></textarea><div class="btn-row"><button class="primary" id="saveMemoryButton" onclick="saveMemorySettings()">Save memory settings</button><button class="secondary" onclick="clearMemorySettings()">Clear memory</button></div><p class="muted" id="memoryStatus" aria-live="polite"></p></div>
       <div class="card" id="githubToolsCard"><h3>🔗 Connected development tools</h3><p class="muted">Connect GitHub to let Orvexa list repositories and help with your website and software projects. Access starts only after you authorize it.</p><div class="btn-row"><button class="primary" onclick="githubConnect()">Connect GitHub</button><button class="secondary" onclick="githubLoadRepos()">Refresh repositories</button><button class="secondary" onclick="githubDisconnect()">Disconnect</button></div><p class="muted" id="githubToolsStatus" aria-live="polite">GitHub connection has not been checked.</p><div id="githubRepoList"></div><p class="muted">Important changes to code or publishing will require your confirmation.</p></div>
