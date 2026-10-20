@@ -450,6 +450,12 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 /* Keep the main menu/header available on every page. */
 .app > .topbar{display:flex!important}
 .app > main{padding-top:18px!important}
+/* Tighten the top spacing on inner pages after removing home-only content. */
+.app:not([data-page="chat"]) > main{padding-top:6px!important}
+.app:not([data-page="chat"]) .page.active > :first-child{margin-top:0!important}
+#profilePage .account-hero{margin-top:0!important}
+#profilePage .profile-welcome-back{margin-top:8px}
+
 /* Keep the welcome panel and suggested prompts strictly on the home screen. */
 #chatPage:not(.active) .welcome-panel,
 #chatPage:not(.active) .suggestions-head,
