@@ -495,31 +495,32 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 #profilePage .profile-welcome-back{margin-top:4px!important}
 </style>
 <style id="orvexa-final-gap-reset">
-/* Hard reset: eliminate inherited top gaps on every active screen. */
-html,body,.app{margin-top:0!important;padding-top:0!important}
-.app>main,#main{padding:0 12px 12px!important;margin:0!important;inset-block-start:0!important}
-#main>.page.active{display:block!important;padding:0!important;margin:0!important;min-height:0!important;inset-block-start:0!important}
-#main>.page.active>*:first-child{margin-block-start:0!important}
-#main>.page.active .eyebrow:first-child{margin-top:0!important}
-#main>.page.active .page-title:first-child{margin-top:0!important}
-#main>.page.active .page-desc:first-child{margin-top:4px!important}
-#main #historyPage{padding-top:0!important;margin-top:0!important}
-#main #historyPage>.eyebrow{margin-top:0!important}
-#main #historyPage>.page-title{margin-top:3px!important}
-#main #historyPage>.page-desc{margin-top:4px!important;margin-bottom:10px!important}
-#profilePage{padding:0!important;margin:0!important;min-height:0!important}
-#main #profilePage>.account-hero:first-child{margin:0 0 10px!important}
-#main #profilePage .account-hero{min-height:0!important;height:auto!important;margin-top:0!important;padding:6px 12px 10px!important}
-#main #profilePage .account-art{float:right!important;width:52px!important;height:52px!important;max-height:52px!important;margin:0 0 2px 6px!important}
-#main #profilePage .account-art svg{width:52px!important;height:52px!important;max-height:52px!important}
-#main #profilePage .account-brand-mark{display:grid!important;height:22px!important;margin:0 0 3px!important;padding:0!important}
+/* Zero vertical offset on all pages, not just the outer main container. */
+html,body{margin:0!important;padding:0!important}
+.app{margin:0 auto!important;padding:0!important;gap:0!important}
+.app>.topbar{flex:0 0 58px!important;height:58px!important}
+.app>#main,#main{flex:1 1 auto!important;min-height:0!important;padding:0 10px 10px!important;margin:0!important;gap:0!important;scroll-padding-top:0!important}
+#main>.page.active,#main>section.page.active{display:block!important;position:relative!important;top:0!important;inset-block-start:0!important;padding:0!important;margin:0!important;transform:none!important}
+#main>.page.active>*{scroll-margin-top:0!important}
+#main>.page.active>*:first-child{margin-top:0!important;margin-block-start:0!important}
+#main>.page.active>.eyebrow:first-child{margin:0!important}
+#main>.page.active>.page-title:first-child{margin:0!important}
+#main>.page.active>.page-desc:first-child{margin:3px 0 10px!important}
+#main #historyPage{padding:0!important;margin:0!important}
+#main #historyPage>.eyebrow{margin:0!important;padding:0!important}
+#main #historyPage>.page-title{margin:3px 0!important}
+#main #historyPage>.page-desc{margin:3px 0 10px!important}
+#main #profilePage{padding:0!important;margin:0!important;min-height:0!important}
+#main #profilePage>.account-hero{min-height:0!important;height:auto!important;margin:0 0 8px!important;padding:5px 10px 8px!important;transform:none!important}
+#main #profilePage .account-art{float:right!important;width:42px!important;height:42px!important;max-height:42px!important;margin:0 0 2px 5px!important}
+#main #profilePage .account-art svg{width:42px!important;height:42px!important;max-height:42px!important}
+#main #profilePage .account-brand-mark{display:grid!important;height:18px!important;line-height:18px!important;margin:0 0 2px!important;padding:0!important}
 #main #profilePage .account-brand-name{display:block!important;height:auto!important;margin:0!important;padding:0!important}
-#main #profilePage .profile-welcome-back{margin:3px 0!important}
+#main #profilePage .profile-welcome-back{margin:2px 0!important}
 #main #profilePage .profile-welcome-note{margin:0!important}
-#main #profilePage .account-welcome{margin-top:4px!important}
-#main #profilePage .account-hero>p{margin-top:3px!important}
-#main #profilePage .account-form-card{margin:0!important;padding:12px!important}
-#main #profilePage .account-form-card>*:first-child{margin-top:0!important}
+#main #profilePage .account-welcome{margin:3px 0 0!important}
+#main #profilePage .account-hero>p{margin:3px 0 0!important}
+#main #profilePage .account-form-card{margin:0!important;padding:10px!important}
 </style>
 </head>
 <body>
