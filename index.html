@@ -761,7 +761,7 @@ async function accountAction(action){
  try{
    let result;
    if(action==='signup'){
-     result=await sb.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin + '/Smartt/',data:{full_name:email.split('@')[0]}}});
+     result=await sb.auth.signUp({email,password,options:{emailRedirectTo:window.location.origin + '/Orvexa/',data:{full_name:email.split('@')[0]}}});
    }else{
      result=await sb.auth.signInWithPassword({email,password});
    }
