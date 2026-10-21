@@ -481,7 +481,22 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 /* Keep Orvexa responsive on phones and lower-powered devices. */
 @media(max-width:700px){.topbar,.composer-area{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}.msg{animation:none!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-.drawer-link>.drawer-profile-avatar{width:30px!important;height:30px!important;min-width:30px;flex:0 0 30px!important;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;border-radius:50%;border:1px solid #a78bfa!important;background:linear-gradient(145deg,#3a2b63,#151b2c)!important;color:#e2d7ff!important;overflow:hidden}.drawer-link>.drawer-profile-avatar svg{display:block;width:18px;height:18px;flex:none}.profile-drawer-link{gap:11px!important}.profile-drawer-link>span:last-child{display:inline-block;width:auto;text-align:left;color:inherit;font-size:13px}</style>
+.drawer-link>.drawer-profile-avatar{width:30px!important;height:30px!important;min-width:30px;flex:0 0 30px!important;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;border-radius:50%;border:1px solid #a78bfa!important;background:linear-gradient(145deg,#3a2b63,#151b2c)!important;color:#e2d7ff!important;overflow:hidden}.drawer-link>.drawer-profile-avatar svg{display:block;width:18px;height:18px;flex:none}.profile-drawer-link{gap:11px!important}.profile-drawer-link>span:last-child{display:inline-block;width:auto;text-align:left;color:inherit;font-size:13px}
+/* ChatGPT-style drawer scrolling: fixed viewport with a dedicated scroll area. */
+html,body{min-height:100%;overflow-x:hidden}
+.app-drawer{
+  height:100vh!important;height:100dvh!important;max-height:100vh!important;max-height:100dvh!important;
+  box-sizing:border-box!important;display:flex!important;flex-direction:column!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  -webkit-overflow-scrolling:touch!important;overscroll-behavior-y:contain!important;
+  touch-action:pan-y!important;scrollbar-width:thin;
+}
+.app-drawer>*{flex-shrink:0!important}
+.app-drawer .drawer-chat-history{flex:0 1 auto!important;min-height:0!important;max-height:28vh!important;overflow-y:auto!important;overscroll-behavior:contain!important}
+.app-drawer .drawer-footer{margin-top:16px!important;flex:0 0 auto!important}
+body.menu-open{overflow:hidden!important}
+
+</style>
 
 <style id="orvexa-top-spacing-only">
 /* Remove top whitespace on every screen without changing the content or its features. */
