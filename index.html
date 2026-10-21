@@ -477,11 +477,14 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 #chatPage:not(.has-conversation) .suggestions-head{display:flex!important}
 .app:not([data-page="chat"]) .suggestions-head,.app:not([data-page="chat"]) .quick-grid{display:none!important}
 
-/* Minimal spacing-only adjustment: keep the original layout and features unchanged. */
-main{padding-top:4px!important}
-.page.active{margin-top:0!important}
 </style>
 
+<style id="orvexa-top-spacing-only">/* Close only the blank top gap on every page; preserve existing features and styling. */
+#main{padding-top:0!important}
+#main>.page.active{margin-top:0!important;padding-top:0!important}
+#main>.page.active>:first-child{margin-top:0!important}
+#main #profilePage>.account-hero{margin-top:0!important}
+</style>
 </head>
 <body>
 <div id="runtimeErrorNotice" role="alert" hidden style="position:fixed;z-index:99999;left:10px;right:10px;top:10px;padding:14px;border-radius:12px;background:#7f1d1d;color:white;font:14px system-ui;overflow-wrap:anywhere"></div>
