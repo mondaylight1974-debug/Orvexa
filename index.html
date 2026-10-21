@@ -477,6 +477,10 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 #chatPage:not(.has-conversation) .suggestions-head{display:flex!important}
 .app:not([data-page="chat"]) .suggestions-head,.app:not([data-page="chat"]) .quick-grid{display:none!important}
 
+
+/* Keep Orvexa responsive on phones and lower-powered devices. */
+@media(max-width:700px){.topbar,.composer-area{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}.msg{animation:none!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 </style>
 
 <style id="orvexa-top-spacing-only">
@@ -990,8 +994,8 @@ function applyTheme(theme){const light=theme==='light';document.body.dataset.the
 function toggleTheme(){applyTheme(document.body.dataset.theme==='light'?'dark':'light');}
 try{applyTheme(storage.getItem('smart-theme')==='light'?'light':'dark')}catch(e){applyTheme('dark')}
 
-$('prompt').addEventListener('input',e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,110)+'px';});
-$('prompt').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();if(!busy)sendMessage();}});
+$('prompt').addEventListener('input',e=>{const field=e.currentTarget;field.style.height='auto';field.style.height=Math.min(field.scrollHeight,110)+'px';});
+$('prompt').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing||e.keyCode===229)return;if(e.shiftKey){requestAnimationFrame(()=>{const field=e.currentTarget;if(!field)return;field.style.height='auto';field.style.height=Math.min(field.scrollHeight,110)+'px';});return;}e.preventDefault();if(!busy)sendMessage();});
 // Force removal of stale app caches so this page always uses the latest deployed code.
 if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(reg=>reg.unregister())).catch(()=>{});}
 if('caches' in window){caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('orvexa-static-')).map(k=>caches.delete(k)))).catch(()=>{});}
