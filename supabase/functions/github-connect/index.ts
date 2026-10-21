@@ -190,9 +190,19 @@ Deno.serve(async (req) => {
       const fullName = String(created.full_name || (owner + '/' + repoName));
       for (const file of cleanFiles) {
         const encoded = btoa(Array.from(new TextEncoder().encode(file.content), (b) => String.fromCharCode(b)).join(''));
-        const upload = await fetch('https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repoName) + '/contents/' + file.path.split('/').map(encodeURIComponent).join('/'), {
+        const fileUrl = 'https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repoName) + '/contents/' + file.path.split('/').map(encodeURIComponent).join('/');
+        // GitHub auto-initializes the new repository with a README; include its SHA when replacing it.
+        let existingSha: string | undefined;
+        if (file.path === 'README.md') {
+          const existingResponse = await fetch(fileUrl, { headers });
+          if (existingResponse.ok) {
+            const existingFile = await existingResponse.json();
+            if (typeof existingFile.sha === 'string') existingSha = existingFile.sha;
+          }
+        }
+        const upload = await fetch(fileUrl, {
           method: 'PUT', headers,
-          body: JSON.stringify({ message: 'Add ' + file.path + ' from Orvexa AI', content: encoded, branch: created.default_branch || 'main' }),
+          body: JSON.stringify({ message: 'Add ' + file.path + ' from Orvexa AI', content: encoded, branch: created.default_branch || 'main', ...(existingSha ? { sha: existingSha } : {}) }),
         });
         if (!upload.ok) {
           const failure = await upload.json().catch(() => ({}));
