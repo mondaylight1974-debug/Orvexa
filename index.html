@@ -480,14 +480,35 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 </style>
 
 <style id="orvexa-top-spacing-only">
-/* Top-gap fix only: remove all empty space between the header and each page's first content. Keep all page content and features. */
-html,body,.app{margin-top:0!important}
-#main{padding:0 10px 10px!important;margin:0!important;scroll-padding-top:0!important}
-#main>.page.active,#main>section.page.active{margin-block-start:0!important;padding-block-start:0!important;top:0!important;transform:none!important}
-#main>.page.active>:first-child,#main>section.page.active>:first-child{margin-block-start:0!important}
-#main #profilePage>.account-hero{margin-block-start:0!important}
-#main #historyPage>.eyebrow{margin-block-start:0!important}
-#main #chatPage>.welcome-panel{margin-block-start:0!important}
+/* Remove top whitespace on every screen without changing the content or its features. */
+html,body,.app{margin-top:0!important;padding-top:0!important}
+.app>.topbar{flex-shrink:0}
+.app>#main, .app>main#main, #main{
+  margin-top:0!important;
+  padding-top:0!important;
+  scroll-padding-top:0!important;
+}
+#main>.page.active, #main>section.page.active, #main .page.active{
+  margin-top:0!important;
+  padding-top:0!important;
+  margin-block-start:0!important;
+  padding-block-start:0!important;
+  top:0!important;
+}
+#main .page.active>:first-child{
+  margin-top:0!important;
+  margin-block-start:0!important;
+}
+#main #profilePage>.account-hero,
+#main #historyPage>.eyebrow,
+#main #chatPage>.welcome-panel{
+  margin-top:0!important;
+  margin-block-start:0!important;
+}
+@media(max-width:480px){
+  #main{padding-top:0!important}
+  #main .page.active>:first-child{margin-top:0!important;margin-block-start:0!important}
+}
 </style>
 </head>
 <body>
