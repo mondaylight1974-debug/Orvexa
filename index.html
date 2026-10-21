@@ -477,51 +477,11 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 #chatPage:not(.has-conversation) .suggestions-head{display:flex!important}
 .app:not([data-page="chat"]) .suggestions-head,.app:not([data-page="chat"]) .quick-grid{display:none!important}
 
-/* When the welcome/shortcut block is hidden, pull the remaining page content up immediately. */
-#main{padding-top:0!important}
-#main > .page.active{padding-top:0!important;margin-top:0!important}
-#main > .page.active > :first-child{margin-top:0!important}
-#chatPage.has-conversation{padding-top:0!important}
-#chatPage.has-conversation .messages{margin-top:10px!important}
-#chatPage.has-conversation .section-head:not(.suggestions-head){margin-top:0!important}
+/* Minimal spacing-only adjustment: keep the original layout and features unchanged. */
+main{padding-top:4px!important}
+.page.active{margin-top:0!important}
+</style>
 
-/* Final top-gap reset for all screens, especially Profile and other inner pages. */
-#main{padding-block-start:0!important}
-#main > section.page.active{padding-block-start:0!important;margin-block-start:0!important}
-#main > section.page.active > :first-child{margin-block-start:0!important}
-#profilePage{padding-top:0!important;margin-top:0!important}
-#profilePage .account-hero{margin-top:0!important;padding-top:8px!important}
-#profilePage .account-art{margin-top:0!important}
-#profilePage .profile-welcome-back{margin-top:4px!important}
-</style>
-<style id="orvexa-final-gap-reset">
-/* Zero vertical offset on all pages, not just the outer main container. */
-html,body{margin:0!important;padding:0!important}
-.app{margin:0 auto!important;padding:0!important;gap:0!important}
-.app>.topbar{flex:0 0 58px!important;height:58px!important}
-.app>#main,#main{flex:1 1 auto!important;min-height:0!important;padding:0 10px 10px!important;margin:0!important;gap:0!important;scroll-padding-top:0!important}
-#main>.page.active,#main>section.page.active{display:block!important;position:relative!important;top:0!important;inset-block-start:0!important;padding:0!important;margin:0!important;transform:none!important}
-#main>.page.active>*{scroll-margin-top:0!important}
-#main>.page.active>*:first-child{margin-top:0!important;margin-block-start:0!important}
-#main>.page.active>.eyebrow:first-child{margin:0!important}
-#main>.page.active>.page-title:first-child{margin:0!important}
-#main>.page.active>.page-desc:first-child{margin:3px 0 10px!important}
-#main #historyPage{padding:0!important;margin:0!important}
-#main #historyPage>.eyebrow{margin:0!important;padding:0!important}
-#main #historyPage>.page-title{margin:3px 0!important}
-#main #historyPage>.page-desc{margin:3px 0 10px!important}
-#main #profilePage{padding:0!important;margin:0!important;min-height:0!important}
-#main #profilePage>.account-hero{min-height:0!important;height:auto!important;margin:0 0 8px!important;padding:5px 10px 8px!important;transform:none!important}
-#main #profilePage .account-art{float:right!important;width:42px!important;height:42px!important;max-height:42px!important;margin:0 0 2px 5px!important}
-#main #profilePage .account-art svg{width:42px!important;height:42px!important;max-height:42px!important}
-#main #profilePage .account-brand-mark{display:grid!important;height:18px!important;line-height:18px!important;margin:0 0 2px!important;padding:0!important}
-#main #profilePage .account-brand-name{display:block!important;height:auto!important;margin:0!important;padding:0!important}
-#main #profilePage .profile-welcome-back{margin:2px 0!important}
-#main #profilePage .profile-welcome-note{margin:0!important}
-#main #profilePage .account-welcome{margin:3px 0 0!important}
-#main #profilePage .account-hero>p{margin:3px 0 0!important}
-#main #profilePage .account-form-card{margin:0!important;padding:10px!important}
-</style>
 </head>
 <body>
 <div id="runtimeErrorNotice" role="alert" hidden style="position:fixed;z-index:99999;left:10px;right:10px;top:10px;padding:14px;border-radius:12px;background:#7f1d1d;color:white;font:14px system-ui;overflow-wrap:anywhere"></div>
