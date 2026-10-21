@@ -134,5 +134,97 @@ Deno.serve(async (req) => {
     if (error) return json({ error: 'Could not disconnect GitHub.' }, 500);
     return json({ disconnected: true });
   }
+
+  if (action === 'publish') {
+    const repoName = String((body as any).repo_name || '').trim();
+    const files = (body as any).files;
+    if (!/^[A-Za-z0-9._-]{1,100}$/.test(repoName) || repoName === '.' || repoName === '..') {
+      return json({ error: 'Choose a repository name using letters, numbers, dots, underscores, or hyphens.' }, 400);
+    }
+    if (!Array.isArray(files) || files.length < 1 || files.length > 80) {
+      return json({ error: 'The website must contain between 1 and 80 files.' }, 400);
+    }
+    const seen = new Set<string>();
+    let totalBytes = 0;
+    const cleanFiles: { path: string; content: string }[] = [];
+    for (const item of files) {
+      if (!item || typeof item.path !== 'string' || typeof item.content !== 'string') {
+        return json({ error: 'A website file has an invalid format.' }, 400);
+      }
+      const filePath = item.path.replace(/\\/g, '/').replace(/^\\/+/, '');
+      if (!filePath || filePath.split('/').some((part: string) => !part || part === '.' || part === '..') ||
+          filePath.startsWith('.git/') || seen.has(filePath) || item.content.length > 500000) {
+        return json({ error: 'A website file has an unsafe path, duplicate name, or exceeds the 500 KB per-file limit.' }, 400);
+      }
+      seen.add(filePath);
+      totalBytes += new TextEncoder().encode(item.content).length;
+      if (totalBytes > 5_000_000) return json({ error: 'The website project exceeds the 5 MB publishing limit. Download the ZIP instead.' }, 413);
+      cleanFiles.push({ path: filePath, content: item.content });
+    }
+    if (!seen.has('index.html')) return json({ error: 'The website needs an index.html file before it can be published.' }, 400);
+    const ghHeaders = {
+      Authorization: 'Bearer ' + (await admin.from('github_connections').select('access_token').eq('user_id', user.id).maybeSingle()).data?.access_token,
+      Accept: 'application/vnd.github+json',
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+    };
+    const token = (await admin.from('github_connections').select('access_token').eq('user_id', user.id).maybeSingle()).data?.access_token;
+    if (!token) return json({ error: 'GitHub is not connected. Connect GitHub first.' }, 401);
+    const headers = { ...ghHeaders, Authorization: 'Bearer ' + token };
+    try {
+      const createResponse = await fetch('https://api.github.com/user/repos', {
+        method: 'POST', headers,
+        body: JSON.stringify({
+          name: repoName,
+          description: String((body as any).project_name || 'Website built with Orvexa AI').slice(0, 350),
+          private: false,
+          auto_init: true,
+        }),
+      });
+      const created = await createResponse.json();
+      if (!createResponse.ok) {
+        const reason = created?.errors?.[0]?.message || created?.message || 'GitHub could not create the repository.';
+        return json({ error: createResponse.status === 422 ? 'That repository name may already exist, or GitHub rejected it: ' + reason : reason }, 502);
+      }
+      const owner = String(created.owner?.login || '');
+      const fullName = String(created.full_name || (owner + '/' + repoName));
+      for (const file of cleanFiles) {
+        const encoded = btoa(Array.from(new TextEncoder().encode(file.content), (b) => String.fromCharCode(b)).join(''));
+        const upload = await fetch('https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repoName) + '/contents/' + file.path.split('/').map(encodeURIComponent).join('/'), {
+          method: 'PUT', headers,
+          body: JSON.stringify({ message: 'Add ' + file.path + ' from Orvexa AI', content: encoded, branch: created.default_branch || 'main' }),
+        });
+        if (!upload.ok) {
+          const failure = await upload.json().catch(() => ({}));
+          console.error('GitHub website file upload failed:', file.path, upload.status, failure?.message);
+          return json({ error: 'Repository was created, but uploading ' + file.path + ' failed. Open ' + fullName + ' and retry with a smaller project. ' + String(failure?.message || ''), repository: fullName, repository_url: created.html_url }, 502);
+        }
+      }
+      let pagesEnabled = false;
+      let pagesMessage = '';
+      const pagesResponse = await fetch('https://api.github.com/repos/' + encodeURIComponent(owner) + '/' + encodeURIComponent(repoName) + '/pages', {
+        method: 'POST', headers,
+        body: JSON.stringify({ source: { branch: created.default_branch || 'main', path: '/' } }),
+      });
+      if (pagesResponse.ok || pagesResponse.status === 409) {
+        pagesEnabled = true;
+      } else {
+        const pagesError = await pagesResponse.json().catch(() => ({}));
+        pagesMessage = String(pagesError?.message || 'GitHub Pages could not be enabled automatically. Enable it in repository Settings → Pages.');
+      }
+      return json({
+        success: true,
+        repository: fullName,
+        repository_url: created.html_url,
+        pages_enabled: pagesEnabled,
+        pages_message: pagesMessage,
+        pages_url: 'https://' + owner + '.github.io/' + repoName + '/',
+      });
+    } catch (e) {
+      console.error('GitHub website publishing failed:', e);
+      return json({ error: 'Could not finish publishing to GitHub. Check your connection and try again.' }, 502);
+    }
+  }
+
   return json({ error: 'Unsupported action.' }, 400);
 });
