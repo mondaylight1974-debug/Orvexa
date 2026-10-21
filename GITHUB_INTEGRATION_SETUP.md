@@ -8,7 +8,7 @@ In Supabase, open **SQL Editor**, paste the complete contents of `supabase/githu
 ## 2. Register a GitHub OAuth App
 In GitHub, open **Settings → Developer settings → OAuth Apps → New OAuth App**.
 - Application name: `Orvexa AI`
-- Homepage URL: `https://mondaylight1974-debug.github.io/Smartt/`
+- Homepage URL: `https://mondaylight1974-debug.github.io/Orvexa/`
 - Authorization callback URL: `https://ruczzcnrkgnoftghoapr.supabase.co/functions/v1/github-connect`
 
 Create the app and keep its Client ID and Client Secret private. The app requests `read:user`, `user:email`, and `repo` scopes; the `repo` scope can allow access to private repositories, so only authorize it on a GitHub account you control and trust.
