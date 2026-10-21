@@ -151,7 +151,7 @@ Deno.serve(async (req) => {
       if (!item || typeof item.path !== 'string' || typeof item.content !== 'string') {
         return json({ error: 'A website file has an invalid format.' }, 400);
       }
-      const filePath = item.path.replace(/\\/g, '/').replace(/^\\/+/, '');
+      const filePath = item.path.replaceAll("\\", "/").replace(/^\/+/, '');
       if (!filePath || filePath.split('/').some((part: string) => !part || part === '.' || part === '..') ||
           filePath.startsWith('.git/') || seen.has(filePath) || item.content.length > 500000) {
         return json({ error: 'A website file has an unsafe path, duplicate name, or exceeds the 500 KB per-file limit.' }, 400);
