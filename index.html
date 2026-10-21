@@ -481,7 +481,7 @@ body[data-theme="light"] .history-delete:hover{background:#ffe4e6}
 /* Keep Orvexa responsive on phones and lower-powered devices. */
 @media(max-width:700px){.topbar,.composer-area{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}.msg{animation:none!important}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
-</style>
+.drawer-profile-avatar{width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;flex:0 0 30px;border-radius:50%;border:1px solid var(--line);background:linear-gradient(145deg,#272044,#121827);color:#c7b5ff;overflow:hidden}.profile-drawer-link{gap:11px}.profile-drawer-link>span:last-child{display:inline-block}</style>
 
 <style id="orvexa-top-spacing-only">
 /* Remove top whitespace on every screen without changing the content or its features. */
@@ -537,7 +537,7 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
     <button class="drawer-link" data-page="discover" onclick="closeMenu();showPage('discover')"><span>⌘</span> Explore tools</button>
     <button class="drawer-link" data-page="capabilityHub" onclick="closeMenu();showPage('capabilityHub')"><span>✧</span> 235 capabilities</button><button class="drawer-link" data-page="history" onclick="closeMenu();showPage('history')"><span>◷</span> Chat history</button>
     <div class="drawer-label">ACCOUNT</div>
-    <button class="drawer-link" data-page="profile" onclick="closeMenu();showPage('profile')"><span>○</span> Profile & settings</button>
+    <button class="drawer-link profile-drawer-link" data-page="profile" onclick="closeMenu();showPage('profile')"><span class="drawer-profile-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.7-3.7 3.1-5.5 7-5.5s6.3 1.8 7 5.5"></path></svg></span><span>Profile & settings</span></button>
     <div class="drawer-footer">Private space for your ideas.<br><span>Orvexa AI</span></div>
   </aside>
   <main id="main">
