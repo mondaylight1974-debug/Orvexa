@@ -741,7 +741,7 @@ function getLocalTimeAnswer(question){
  'australia':'Australia/Sydney','sydney':'Australia/Sydney','melbourne':'Australia/Melbourne','brisbane':'Australia/Brisbane','perth':'Australia/Perth','adelaide':'Australia/Adelaide','new zealand':'Pacific/Auckland','auckland':'Pacific/Auckland','fiji':'Pacific/Fiji','suva':'Pacific/Fiji'
  };
  const timeIntent=/\b(what(?:'s| is) the time|what time is it|time now|current time|local time|tell me the time|time in|time at|clock in|date in|what day is it|today'?s date|current date|date today|world time)\b/.test(q);
- const localIntent=/\b(what day is it|today'?s date|current date|date today|local time|time now|what time is it|what(?:'s| is) the time|tell me the time)\b/.test(q);
+ const localIntent=/\b(what day is it|today'?s date|current date|date today|local time|time now|what time is it|what(?:'s| is) the time|tell me the time)\b/.test(q)&&!/\b(?:in|at|for)\s+[a-z]/.test(q);
  let places=[];
  if(timeIntent&&!localIntent){
   let extracted=q.replace(/[?!.]/g,' ').match(/\b(?:time|clock|date)\s+(?:in|at|for)\s+(.+?)(?:\s+(?:right now|now|please|today|currently))?$/i);
