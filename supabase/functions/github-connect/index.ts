@@ -7,7 +7,7 @@ const cors = {
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
-const siteUrl = 'https://mondaylight1974-debug.github.io/Smartt/';
+const siteUrl = 'https://mondaylight1974-debug.github.io/Orvexa/';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
