@@ -731,7 +731,7 @@ function newChat(){archiveCurrentChat();currentConversationId=null;try{storage.r
 function clearChat(){if(!confirm('Clear this chat from the screen? Your conversation will be saved in Chat history so you can reopen it later.'))return;archiveCurrentChat();currentConversationId=null;try{storage.removeItem('smart-current-archive-id');storage.removeItem('smart-conversation-id');}catch(e){}currentMessages=[];$('messages').innerHTML='';const card=$('pageLimitCard');if(card){card.classList.remove('visible');card.setAttribute('aria-hidden','true');}addMessage('assistant','This chat is cleared from the screen. Your previous conversation is saved in Chat history if you want to return to it.');updateChatLayout();renderHistory();renderDrawerHistory();}
 function getLocalTimeAnswer(question){
  const raw=String(question||'').trim(),q=raw.toLowerCase();
- const asksTime=/\\b(time|clock|date|day)\\b/.test(q)&&/\\b(what|current|local|time|tell|show|know|check|now|today|date|clock|in|at)\\b/.test(q);
+ const asksTime=/\b(time|clock|date|day)\b/.test(q)&&/\b(what|current|local|time|tell|show|know|check|now|today|date|clock|in|at)\b/.test(q);
  if(!asksTime)return null;
  const aliases={
  'nigeria':'Africa/Lagos','lagos':'Africa/Lagos','abuja':'Africa/Lagos','port harcourt':'Africa/Lagos','ghana':'Africa/Accra','accra':'Africa/Accra','kenya':'Africa/Nairobi','nairobi':'Africa/Nairobi','south africa':'Africa/Johannesburg','johannesburg':'Africa/Johannesburg','cape town':'Africa/Johannesburg','egypt':'Africa/Cairo','cairo':'Africa/Cairo','morocco':'Africa/Casablanca','casablanca':'Africa/Casablanca','ethiopia':'Africa/Addis_Ababa','addis ababa':'Africa/Addis_Ababa','uganda':'Africa/Kampala','kampala':'Africa/Kampala','senegal':'Africa/Dakar','dakar':'Africa/Dakar',
@@ -740,13 +740,13 @@ function getLocalTimeAnswer(question){
  'uae':'Asia/Dubai','united arab emirates':'Asia/Dubai','dubai':'Asia/Dubai','abu dhabi':'Asia/Dubai','saudi arabia':'Asia/Riyadh','riyadh':'Asia/Riyadh','qatar':'Asia/Qatar','doha':'Asia/Qatar','israel':'Asia/Jerusalem','jerusalem':'Asia/Jerusalem','iran':'Asia/Tehran','tehran':'Asia/Tehran','india':'Asia/Kolkata','new delhi':'Asia/Kolkata','delhi':'Asia/Kolkata','mumbai':'Asia/Kolkata','pakistan':'Asia/Karachi','karachi':'Asia/Karachi','bangladesh':'Asia/Dhaka','dhaka':'Asia/Dhaka','nepal':'Asia/Kathmandu','kathmandu':'Asia/Kathmandu','thailand':'Asia/Bangkok','bangkok':'Asia/Bangkok','vietnam':'Asia/Ho_Chi_Minh','ho chi minh city':'Asia/Ho_Chi_Minh','singapore':'Asia/Singapore','malaysia':'Asia/Kuala_Lumpur','kuala lumpur':'Asia/Kuala_Lumpur','indonesia':'Asia/Jakarta','jakarta':'Asia/Jakarta','philippines':'Asia/Manila','manila':'Asia/Manila','china':'Asia/Shanghai','beijing':'Asia/Shanghai','shanghai':'Asia/Shanghai','hong kong':'Asia/Hong_Kong','taiwan':'Asia/Taipei','taipei':'Asia/Taipei','japan':'Asia/Tokyo','tokyo':'Asia/Tokyo','south korea':'Asia/Seoul','korea':'Asia/Seoul','seoul':'Asia/Seoul','north korea':'Asia/Pyongyang','sri lanka':'Asia/Colombo','colombo':'Asia/Colombo','myanmar':'Asia/Yangon','yangon':'Asia/Yangon','kazakhstan':'Asia/Almaty','almaty':'Asia/Almaty','uzbekistan':'Asia/Tashkent','tashkent':'Asia/Tashkent',
  'australia':'Australia/Sydney','sydney':'Australia/Sydney','melbourne':'Australia/Melbourne','brisbane':'Australia/Brisbane','perth':'Australia/Perth','adelaide':'Australia/Adelaide','new zealand':'Pacific/Auckland','auckland':'Pacific/Auckland','fiji':'Pacific/Fiji','suva':'Pacific/Fiji'
  };
- const timeIntent=/\\b(what(?:'s| is) the time|what time is it|time now|current time|local time|tell me the time|time in|time at|clock in|date in|what day is it|today'?s date|current date|date today|world time)\\b/.test(q);
- const localIntent=/\\b(what day is it|today'?s date|current date|date today|local time|time now|what time is it|what(?:'s| is) the time|tell me the time)\\b/.test(q);
+ const timeIntent=/\b(what(?:'s| is) the time|what time is it|time now|current time|local time|tell me the time|time in|time at|clock in|date in|what day is it|today'?s date|current date|date today|world time)\b/.test(q);
+ const localIntent=/\b(what day is it|today'?s date|current date|date today|local time|time now|what time is it|what(?:'s| is) the time|tell me the time)\b/.test(q);
  let places=[];
  if(timeIntent&&!localIntent){
-  let extracted=q.replace(/[?!.]/g,' ').match(/\\b(?:time|clock|date)\\s+(?:in|at|for)\\s+(.+?)(?:\\s+(?:right now|now|please|today|currently))?$/i);
-  if(!extracted)extracted=q.match(/\\b(?:what time is it|what(?:'s| is) the time|current time)\\s+(?:in|at|for)\\s+(.+)$/i);
-  if(extracted&&extracted[1])places=extracted[1].split(/\\s+(?:and|&|,|versus|vs\\.?|compared with)\\s+/i).map(x=>x.trim().replace(/^(?:the city of|the country of)\\s+/,'').replace(/\\s+(?:right now|now|please|today)$/,'').trim()).filter(Boolean).slice(0,5);
+  let extracted=q.replace(/[?!.]/g,' ').match(/\b(?:time|clock|date)\s+(?:in|at|for)\s+(.+?)(?:\s+(?:right now|now|please|today|currently))?$/i);
+  if(!extracted)extracted=q.match(/\b(?:what time is it|what(?:'s| is) the time|current time)\s+(?:in|at|for)\s+(.+)$/i);
+  if(extracted&&extracted[1])places=extracted[1].split(/\s+(?:and|&|,|versus|vs\.?|compared with)\s+/i).map(x=>x.trim().replace(/^(?:the city of|the country of)\s+/,'').replace(/\s+(?:right now|now|please|today)$/,'').trim()).filter(Boolean).slice(0,5);
  }
  const now=new Date(),localZone=Intl.DateTimeFormat().resolvedOptions().timeZone||'UTC';
  if(!places.length){
@@ -756,10 +756,10 @@ function getLocalTimeAnswer(question){
  }
  const results=[];
  for(const place of places){
-  const key=place.toLowerCase().replace(/\\s+/g,' ').trim();
+  const key=place.toLowerCase().replace(/\s+/g,' ').trim();
   let zone=aliases[key];
   if(!zone){
-   const candidate=place.replace(/\\s+/g,'_');
+   const candidate=place.replace(/\s+/g,'_');
    try{new Intl.DateTimeFormat('en',{timeZone:candidate}).format(now);zone=candidate;}catch(e){}
   }
   if(!zone){
@@ -770,10 +770,10 @@ function getLocalTimeAnswer(question){
   try{
    const time=new Intl.DateTimeFormat('en',{hour:'numeric',minute:'2-digit',second:'2-digit',timeZone:zone,timeZoneName:'short'}).format(now);
    const date=new Intl.DateTimeFormat('en',{weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:zone}).format(now);
-   results.push(place.replace(/\\b\\w/g,c=>c.toUpperCase())+': '+time+' — '+date+' ('+zone+').');
+   results.push(place.replace(/\b\w/g,c=>c.toUpperCase())+': '+time+' — '+date+' ('+zone+').');
   }catch(e){results.push(place+': I could not read that time zone.');}
  }
- return results.join('\\n')+'\\nTimes are calculated from the current clock and the location’s time-zone rules, including daylight-saving changes where applicable.';
+ return results.join('\n')+'\nTimes are calculated from the current clock and the location’s time-zone rules, including daylight-saving changes where applicable.';
 }
 function resolveOpenCommand(prompt){const p=String(prompt||'').trim();if(!/^(?:please\s+)?open\s+/i.test(p))return null;const target=p.replace(/^(?:please\s+)?open\s+/i,'').trim().replace(/[.!?]+$/,'');const direct=target.match(/^(https?:\/\/\S+|www\.\S+)$/i);if(direct){let url=direct[1];if(!/^https?:\/\//i.test(url))url='https://'+url;try{const parsed=new URL(url);return /^https?:$/.test(parsed.protocol)?{url:parsed.href,label:parsed.hostname}:null;}catch(e){return null;}}const key=target.toLowerCase().replace(/\s+/g,' ').replace(/\.com$/,'');const sites={'youtube':'https://www.youtube.com','google':'https://www.google.com','google search':'https://www.google.com','facebook':'https://www.facebook.com','whatsapp':'https://web.whatsapp.com','whatsapp web':'https://web.whatsapp.com','instagram':'https://www.instagram.com','tiktok':'https://www.tiktok.com','github':'https://github.com','gmail':'https://mail.google.com','google maps':'https://maps.google.com','maps':'https://maps.google.com','x':'https://x.com','twitter':'https://x.com','chatgpt':'https://chatgpt.com','orvexa ai':'https://mondaylight1974-debug.github.io/Smartt/','orvexa':'https://mondaylight1974-debug.github.io/Smartt/'};const url=sites[key]||(/^[a-z0-9.-]+\.[a-z]{2,}(?:\/.*)?$/i.test(target)?'https://'+target:null);if(!url)return null;try{return{url:new URL(url).href,label:new URL(url).hostname};}catch(e){return null;}}
 
