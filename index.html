@@ -995,7 +995,7 @@ function toggleTheme(){applyTheme(document.body.dataset.theme==='light'?'dark':'
 try{applyTheme(storage.getItem('smart-theme')==='light'?'light':'dark')}catch(e){applyTheme('dark')}
 
 $('prompt').addEventListener('input',e=>{const field=e.currentTarget;field.style.height='auto';field.style.height=Math.min(field.scrollHeight,110)+'px';});
-$('prompt').addEventListener('keydown',e=>{if(e.key!=='Enter'||e.isComposing||e.keyCode===229)return;if(e.shiftKey){requestAnimationFrame(()=>{const field=e.currentTarget;if(!field)return;field.style.height='auto';field.style.height=Math.min(field.scrollHeight,110)+'px';});return;}e.preventDefault();if(!busy)sendMessage();});
+$('prompt').addEventListener('keydown',function(e){if(e.key!=='Enter'||e.isComposing||e.keyCode===229)return;const shiftHeld=Boolean(e.shiftKey||(typeof e.getModifierState==='function'&&e.getModifierState('Shift')));if(shiftHeld){/* Keep the browser's native newline behavior; never send on Shift+Enter. */return;}e.preventDefault();if(!busy)sendMessage();});
 // Force removal of stale app caches so this page always uses the latest deployed code.
 if('serviceWorker' in navigator){navigator.serviceWorker.getRegistrations().then(regs=>regs.forEach(reg=>reg.unregister())).catch(()=>{});}
 if('caches' in window){caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('orvexa-static-')).map(k=>caches.delete(k)))).catch(()=>{});}
