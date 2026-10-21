@@ -4,7 +4,7 @@ This is the current Orvexa AI starter package. It preserves the existing dark in
 
 ## Upload to GitHub from Android
 1. Extract this ZIP on your phone.
-2. Open your `Smartt` repository on GitHub.
+2. Open your `Orvexa` repository on GitHub.
 3. Choose **Add file → Upload files**.
 4. Upload the files and folders inside this extracted folder (not just the ZIP). Keep `index.html` at the repository root.
 5. Commit the upload.
