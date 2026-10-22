@@ -543,7 +543,7 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
   <header class="topbar">
     <button class="icon-btn menu-trigger" aria-label="Open menu" title="Menu" onclick="toggleMenu()">☰</button>
     <div class="brand-lockup"><div class="logo" aria-hidden="true">✳</div><div><div class="brand">Orvexa AI</div><div class="tagline">PERSONAL ASSISTANT</div></div></div>
-    <div class="spacer"></div><button class="model-pill" type="button" aria-label="Current assistant">Smart <span>⌄</span></button>
+    <div class="spacer"></div><button class="model-pill" id="orvexaPlanPill" type="button" aria-label="Current plan" onclick="showPage(\'profile\')" title="View your Free or Pro plan">Free Mode <span>⌄</span></button>
     <button class="icon-btn profile-button" aria-label="Profile" onclick="showPage('profile')"><span class="profile-button-avatar" aria-hidden="true">◉</span></button>
   </header>
   <div class="drawer-scrim" id="drawerScrim" onclick="closeMenu()" aria-hidden="true"></div>
@@ -1032,6 +1032,15 @@ function renderCapabilityHub(){const root=$('capabilityGrid'),count=$('capabilit
 
 initCapabilityHub();
 
+/* Orvexa plan indicator: reflects the signed-in account's verified profile flag. */
+function setOrvexaPlanPill(isPro){
+ const pill=document.getElementById('orvexaPlanPill');
+ if(!pill)return;
+ pill.innerHTML=(isPro?'Pro Mode':'Free Mode')+' <span>⌄</span>';
+ pill.setAttribute('aria-label',isPro?'Orvexa Pro plan active':'Orvexa Free plan');
+ pill.title=isPro?'Orvexa Pro is active on this account':'You are using Orvexa Free. Tap to view upgrade options.';
+ pill.dataset.plan=isPro?'pro':'free';
+}
 /* Orvexa Pro payments: checkout + server-verified activation */
 (function initOrvexaProPayments(){
   const profile=$('profilePage');
@@ -1046,10 +1055,10 @@ initCapabilityHub();
   let checking=false;
   async function refreshEntitlement(){
     const {data:{session}}=await sb.auth.getSession();
-    if(!session){status.textContent='Sign in first to upgrade or check your plan.';upgrade.disabled=false;return false;}
+    if(!session){setOrvexaPlanPill(false);status.textContent='Sign in first to upgrade or check your plan.';upgrade.disabled=false;return false;}
     const {data,error}=await sb.from('profiles').select('is_premium').eq('id',session.user.id).maybeSingle();
-    if(!error&&data?.is_premium){status.textContent='✅ Orvexa Pro is active on this account.';upgrade.textContent='Pro is active';upgrade.disabled=true;check.style.display='none';return true;}
-    status.textContent='₦5,000 per month · secure Paystack checkout.';
+    if(!error&&data?.is_premium){setOrvexaPlanPill(true);status.textContent='✅ Orvexa Pro is active on this account.';upgrade.textContent='Pro is active';upgrade.disabled=true;check.style.display='none';return true;}
+    setOrvexaPlanPill(false);status.textContent='Free Mode · Upgrade to unlock Pro benefits for ₦5,000/month.';
     upgrade.textContent='Upgrade to Pro · ₦5,000/month';upgrade.disabled=false;check.style.display='';return false;
   }
   async function verifyReference(reference){
