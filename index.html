@@ -535,6 +535,34 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
 .app-drawer>*{flex-shrink:0}
 .app-drawer .drawer-chat-history{flex-shrink:1;min-height:0;}
 .app-drawer .drawer-footer{margin-top:16px;}
+
+/* Modern ChatGPT-inspired Orvexa navigation drawer */
+.app-drawer{width:min(82vw,390px);padding:0;background:#000;color:#f7f7f7;border-right:1px solid #252525;box-shadow:20px 0 70px #0009;overflow:hidden}
+.drawer-head-modern{flex:0 0 auto;padding:28px 20px 24px;border:0;gap:16px}
+.drawer-brand-modern{font-size:24px;font-weight:650;letter-spacing:-.5px}
+.drawer-head-actions{display:flex;align-items:center;gap:12px}
+.drawer-round-action{width:48px;height:48px;border-radius:50%;border:1px solid #303030;background:#1b1b1b;color:#f5f5f5;display:grid;place-items:center;cursor:pointer}
+.drawer-round-action svg{width:25px;height:25px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.drawer-scroll-area{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:0 18px 110px;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.app-drawer .drawer-link{min-height:54px;padding:12px 10px;gap:18px;border:0;border-radius:12px;background:transparent;color:#ededed;font-size:16px;font-weight:450}
+.app-drawer .drawer-link:hover{background:#191919;border-color:transparent;color:#fff}
+.app-drawer .drawer-feature-link{min-height:60px;font-size:17px}
+.drawer-line-icon{width:28px;min-width:28px;display:inline-grid;place-items:center;font-size:25px;line-height:1;color:#f4f4f4}
+.drawer-section-label{font-size:15px;color:#bcbcbc;margin:24px 8px 12px;padding:0;text-transform:none;letter-spacing:0}
+.app-drawer .drawer-chat-history{max-height:none;overflow:visible;gap:2px;margin:0}
+.app-drawer .drawer-history-item{padding:13px 9px;border:0;border-radius:9px;color:#e6e6e6;font-size:15px;font-weight:400}
+.app-drawer .drawer-history-item:hover{background:#1a1a1a}
+.app-drawer .drawer-history-empty{color:#777;padding:8px 9px;font-size:13px}
+.app-drawer .drawer-view-all{font-size:14px;color:#bcbcbc;min-height:44px}
+.app-drawer .drawer-footer{margin:24px 8px 10px;padding:16px 0 0;border-top:1px solid #222;color:#999}
+.drawer-bottom-bar{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;align-items:center;gap:12px;padding:14px 18px max(14px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#0000 0%,#000 24%);border-top:0}
+.drawer-chat-cta{display:flex;align-items:center;gap:12px;border:0;border-radius:32px;background:#3478f6;color:white;padding:15px 22px;font-size:16px;font-weight:550;min-width:140px;cursor:pointer}
+.drawer-chat-cta span{font-size:23px}
+.drawer-account-chip,.drawer-voice-chip{width:52px;height:52px;border-radius:50%;border:1px solid #292929;background:#191919;display:grid;place-items:center;color:#fff;cursor:pointer;margin-left:auto}
+.drawer-account-chip span{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#9855b8;color:#fff;font-size:13px}
+.drawer-voice-chip{margin-left:0;background:#276be9;color:#fff;font-size:21px}
+.drawer-close{display:none}
+@media(max-width:480px){.app-drawer{width:min(88vw,390px)}.drawer-head-modern{padding:25px 16px 20px}.drawer-brand-modern{font-size:23px}.drawer-round-action{width:44px;height:44px}.drawer-scroll-area{padding-left:14px;padding-right:14px}.drawer-bottom-bar{padding-left:14px;padding-right:14px}.drawer-chat-cta{min-width:128px;padding:14px 18px}}
 </style>
 </head>
 <body>
@@ -548,20 +576,32 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
   </header>
   <div class="drawer-scrim" id="drawerScrim" onclick="closeMenu()" aria-hidden="true"></div>
   <aside class="app-drawer" id="appDrawer" aria-label="Main menu" aria-hidden="true">
-    <div class="drawer-head"><div class="drawer-brand"><span>✦</span> Orvexa AI</div><button class="icon-btn drawer-close" onclick="closeMenu()" aria-label="Close menu">×</button></div>
-    <button class="drawer-new" onclick="closeMenu();newChat()"><span>＋</span> New chat</button>
-    <button class="drawer-link theme-toggle" id="themeToggle" onclick="toggleTheme()"><span id="themeIcon">☼</span> <span id="themeLabel">Switch to light mode</span></button>
-    <div class="drawer-label">CHAT HISTORY</div>
-    <div id="drawerChatHistory" class="drawer-chat-history" aria-label="Previous chats"></div>
-    <button class="drawer-link" onclick="closeMenu();showPage('history')"><span>◷</span> View all chats</button>
-    <div class="drawer-label">WORKSPACE</div>
-    <button class="drawer-link active" data-page="chat" onclick="closeMenu();showPage('chat')"><span>◉</span> Chat</button>
-    <button class="drawer-link" data-page="discover" onclick="closeMenu();showPage('discover')"><span>⌘</span> Explore tools</button>
-    <button class="drawer-link" data-page="capabilityHub" onclick="closeMenu();showPage('capabilityHub')"><span>✧</span> 235 capabilities</button><button class="drawer-link" data-page="history" onclick="closeMenu();showPage('history')"><span>◷</span> Chat history</button>
-    <div class="drawer-label">ACCOUNT</div>
-    <button class="drawer-link pro-mode-link" onclick="closeMenu();showPage('profile');setTimeout(()=>{const p=document.getElementById('orvexaProCard');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},180)"><span>💎</span><span>Pro Mode</span><span class="pro-menu-badge">₦5,000/mo</span></button>
-    <button class="drawer-link profile-drawer-link" data-page="profile" onclick="closeMenu();showPage('profile')"><span class="drawer-profile-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.7-3.7 3.1-5.5 7-5.5s6.3 1.8 7 5.5"></path></svg></span><span>Profile & settings</span></button>
-    <div class="drawer-footer">Private space for your ideas.<br><span>Orvexa AI</span><div class="orvexa-legal-links"><button type="button" onclick="showPage('about')">About</button><button type="button" onclick="showPage('privacy')">Privacy</button><button type="button" onclick="showPage('terms')">Terms</button><button type="button" onclick="showPage('contact')">Contact</button></div></div>
+    <div class="drawer-head drawer-head-modern">
+      <div class="drawer-brand drawer-brand-modern">Orvexa AI</div>
+      <div class="drawer-head-actions"><button class="drawer-round-action" onclick="searchDrawerChats()" aria-label="Search chats" title="Search chats"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.7"></circle><path d="m16 16 5 5"></path></svg></button><button class="drawer-round-action" onclick="closeMenu();newChat()" aria-label="New chat" title="New chat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+    </div>
+    <div class="drawer-scroll-area">
+      <button class="drawer-link drawer-feature-link" onclick="closeMenu();showPage('discover')"><span class="drawer-line-icon">▧</span> Images</button>
+      <button class="drawer-link drawer-feature-link" onclick="closeMenu();showPage('history')"><span class="drawer-line-icon">▤</span> Library</button>
+      <button class="drawer-link drawer-feature-link" onclick="closeMenu();showPage('discover')"><span class="drawer-line-icon">▱</span> Projects</button>
+      <button class="drawer-link drawer-feature-link" onclick="closeMenu();showPage('capabilityHub')"><span class="drawer-line-icon">◷</span> Scheduled & tools</button>
+      <button class="drawer-link drawer-feature-link" onclick="closeMenu();showPage('discover')"><span class="drawer-line-icon">⎔</span> Plugins & integrations</button>
+      <div class="drawer-label drawer-section-label">Pinned</div>
+      <button class="drawer-link drawer-feature-link" onclick="closeMenu();showPage('capabilityHub')"><span class="drawer-line-icon">♡</span> Orvexa capabilities</button>
+      <div class="drawer-label drawer-section-label">Recents</div>
+      <div id="drawerChatHistory" class="drawer-chat-history" aria-label="Previous chats"></div>
+      <button class="drawer-link drawer-view-all" onclick="closeMenu();showPage('history')"><span class="drawer-line-icon">◷</span> View all chats</button>
+      <div class="drawer-label drawer-section-label">Workspace</div>
+      <button class="drawer-link" data-page="chat" onclick="closeMenu();showPage('chat')"><span class="drawer-line-icon">◉</span> Chat</button>
+      <button class="drawer-link" data-page="discover" onclick="closeMenu();showPage('discover')"><span class="drawer-line-icon">⌘</span> Explore tools</button>
+      <button class="drawer-link" data-page="history" onclick="closeMenu();showPage('history')"><span class="drawer-line-icon">◷</span> Chat history</button>
+      <button class="drawer-link pro-mode-link" onclick="closeMenu();showPage('profile');setTimeout(()=>{const p=document.getElementById('orvexaProCard');if(p)p.scrollIntoView({behavior:'smooth',block:'start'});},180)"><span>💎</span><span>Pro Mode</span><span class="pro-menu-badge">₦5,000/mo</span></button>
+      <button class="drawer-link theme-toggle" id="themeToggle" onclick="toggleTheme()"><span id="themeIcon">☼</span> <span id="themeLabel">Switch to light mode</span></button>
+      <div class="drawer-label drawer-section-label">Account</div>
+      <button class="drawer-link profile-drawer-link" data-page="profile" onclick="closeMenu();showPage('profile')"><span class="drawer-profile-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.7-3.7 3.1-5.5 7-5.5s6.3 1.8 7 5.5"></path></svg></span><span>Profile & settings</span></button>
+      <div class="drawer-footer">Private space for your ideas.<br><span>Orvexa AI</span><div class="orvexa-legal-links"><button type="button" onclick="showPage('about')">About</button><button type="button" onclick="showPage('privacy')">Privacy</button><button type="button" onclick="showPage('terms')">Terms</button><button type="button" onclick="showPage('contact')">Contact</button></div></div>
+    </div>
+    <div class="drawer-bottom-bar"><button class="drawer-chat-cta" onclick="closeMenu();newChat()"><span>✎</span> Chat</button><button class="drawer-account-chip" onclick="closeMenu();showPage('profile')" aria-label="Profile"><span>ML</span></button><button class="drawer-voice-chip" onclick="closeMenu();showPage('chat');setTimeout(()=>{const b=document.getElementById('voiceInputButton')||document.querySelector('[aria-label*=voice i]');if(b)b.click();else toast('Use the microphone button beside the message box for voice input.');},180)" aria-label="Voice input">▮</button></div>
   </aside>
   <main id="main">
     <section class="page active" id="chatPage">
@@ -903,6 +943,7 @@ function openSavedChat(item){currentConversationId=item.id&&String(item.id).star
 async function deleteSavedConversation(id,isCloud){const label=isCloud?'synced conversation':'conversation';if(!confirm('Delete this '+label+' permanently? This cannot be undone.'))return;if(isCloud){if(!sb){toast('Cloud account service is not connected.');return;}try{const {data:{session}}=await sb.auth.getSession();if(!session){toast('Sign in to delete this synced conversation.');return;}const {error}=await sb.from('conversations').delete().eq('id',id).eq('user_id',session.user.id);if(error)throw error;}catch(e){toast('Could not delete the synced conversation: '+(e.message||'please try again'));return;}}else{let list=[];try{list=JSON.parse(storage.getItem('smart-history')||'[]')}catch(e){}list=list.filter(item=>String(item.id)!==String(id));try{storage.setItem('smart-history',JSON.stringify(list));}catch(e){toast('Could not update local chat history.');return;}}if(String(currentConversationId)===String(id)){currentConversationId=null;currentMessages=[{role:'assistant',content:WELCOME,time:new Date().toISOString()}];$('messages').innerHTML='';currentMessages.forEach(renderMessage);saveCurrent();updateChatLayout();}try{if(storage.getItem('smart-current-archive-id')===String(id))storage.removeItem('smart-current-archive-id');}catch(e){}renderHistory();renderDrawerHistory();toast('Conversation deleted.');}
 function makeHistoryRow(item,isCloud,metaText,messages){const row=document.createElement('div');row.className='history-row';const open=document.createElement('button');open.type='button';open.className='history-item';const title=document.createElement('strong');title.textContent=item.title||'Conversation';const meta=document.createElement('small');meta.textContent=metaText;open.append(title,meta);open.onclick=()=>{if(isCloud){openSavedChat({id:item.id,title:item.title,messages:messages||[],time:item.updated_at||item.created_at});}else openSavedChat(item);};const del=document.createElement('button');del.type='button';del.className='history-delete';del.textContent='Delete';del.setAttribute('aria-label','Delete conversation: '+(item.title||'Conversation'));del.onclick=()=>deleteSavedConversation(item.id,isCloud);row.append(open,del);return row;}
 function renderHistory(){const root=$('historyList');if(!root)return;let local=[];try{local=JSON.parse(storage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!local.length){root.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:30px;margin-bottom:8px">◷</div><h3>No previous chats yet</h3><p class="muted">Your conversations will appear here as you use Orvexa AI.</p><button class="primary" onclick="newChat()">Start a chat</button></div>';}local.forEach(item=>{const meta='On this device · '+new Date(item.time||Date.now()).toLocaleString()+' · '+(item.messages||[]).length+' messages';root.appendChild(makeHistoryRow(item,false,meta));});loadCloudHistory(root);renderDrawerHistory();}
+function searchDrawerChats(){const q=prompt('Search your recent chats');if(q===null)return;const term=q.trim().toLowerCase();const root=$('drawerChatHistory');if(!root)return;root.querySelectorAll('.drawer-history-item').forEach(b=>{b.hidden=!!term&&!((b.textContent||'').toLowerCase().includes(term));});const empty=root.querySelector('.drawer-history-empty');if(empty)empty.textContent=term?'Showing matches in loaded recent chats':'Recent chats';if(term&&!Array.from(root.querySelectorAll('.drawer-history-item')).some(b=>!b.hidden))toast('No match in the recent chats loaded. Open Chat history to search older conversations.');}
 function renderDrawerHistory(){const root=$('drawerChatHistory');if(!root)return;let list=[];try{list=JSON.parse(storage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!list.length){const empty=document.createElement('div');empty.className='drawer-history-empty';empty.textContent='Your previous chats will appear here';root.appendChild(empty);}list.slice(0,12).forEach(item=>{const b=document.createElement('button');b.type='button';b.className='drawer-history-item';b.textContent=item.title||'Conversation';b.title=item.title||'Conversation';b.onclick=()=>{closeMenu();openSavedChat(item)};root.appendChild(b);});loadCloudDrawerHistory(root);}
 async function loadCloudDrawerHistory(root){if(!sb)return;try{const {data:{session}}=await sb.auth.getSession();if(!session)return;const {data,error}=await sb.from('conversations').select('id,title,created_at,updated_at,messages(id,role,content,created_at)').eq('user_id',session.user.id).order('updated_at',{ascending:false}).limit(12);if(error||!data)return;const label=document.createElement('div');label.className='drawer-history-empty';label.textContent='SYNCED CHATS';root.appendChild(label);data.forEach(item=>{const msgs=(item.messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));if(!msgs.length)return;const b=document.createElement('button');b.type='button';b.className='drawer-history-item';b.textContent=item.title||msgs.find(m=>m.role==='user')?.content?.slice(0,60)||'Conversation';b.title=b.textContent;b.onclick=()=>{closeMenu();openSavedChat({id:item.id,title:item.title,messages:msgs.map(m=>({role:m.role,content:m.content,time:m.created_at})),time:item.updated_at||item.created_at})};root.appendChild(b);});}catch(e){console.warn('Could not load synced menu history:',e.message);}}
 async function loadCloudHistory(root){if(!sb)return;try{const {data:{session}}=await sb.auth.getSession();if(!session)return;const {data,error}=await sb.from('conversations').select('id,title,created_at,updated_at,messages(id,role,content,created_at)').eq('user_id',session.user.id).order('updated_at',{ascending:false}).limit(30);if(error)throw error;if(!data||!data.length)return;const heading=document.createElement('div');heading.className='section-head';heading.innerHTML='<h2>☁️ Synced conversations</h2>';root.appendChild(heading);data.forEach(item=>{const msgs=(item.messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));if(!msgs.length)return;const normalized=msgs.map(m=>({role:m.role,content:m.content,time:m.created_at}));const meta='☁️ Synced · '+new Date(item.updated_at||item.created_at).toLocaleString()+' · '+msgs.length+' messages';root.appendChild(makeHistoryRow(item,true,meta,normalized));});}catch(e){console.warn('Cloud history is not available:',e.message);}}
