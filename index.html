@@ -958,6 +958,49 @@ async function handleWebsiteProjectReply(reply){
  catch(error){addMessage('assistant','The website files were created, but ZIP packaging failed on this device. Please retry or ask for a smaller project.');}
  return true;
 }
+
+// Downloadable document exports for Orvexa chat replies.
+function getRequestedExportFormat(prompt){
+ const p=String(prompt||'').toLowerCase();
+ if(!/\b(convert|export|download|save|create|make|turn|document|file|pdf|word|docx|spreadsheet|excel|csv|txt|markdown|\.md|\.html|\.json)\b/.test(p))return '';
+ if(/\b(pdf|\.pdf)\b/.test(p))return 'pdf';
+ if(/\b(docx|word document|microsoft word|\.docx)\b/.test(p))return 'docx';
+ if(/\b(excel|spreadsheet|\.xlsx)\b/.test(p))return 'xlsx';
+ if(/\b(csv|\.csv)\b/.test(p))return 'csv';
+ if(/\b(json|\.json)\b/.test(p))return 'json';
+ if(/\b(html|\.html)\b/.test(p))return 'html';
+ if(/\b(markdown|\.md)\b/.test(p))return 'md';
+ if(/\b(txt|text file|\.txt)\b/.test(p))return 'txt';
+ return '';
+}
+function downloadOrvexaBlob(blob,filename){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.style.display='none';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
+async function exportOrvexaDocument(content,format,prompt){
+ const contentText=String(content||'').trim();if(!contentText){toast('There is no content to export yet.');return;}
+ const base='orvexa-document';
+ try{
+  if(format==='pdf'){
+   if(!window.jspdf||!window.jspdf.jsPDF){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('PDF library failed to load'));document.head.appendChild(s);});}
+   const PDF=window.jspdf&&window.jspdf.jsPDF;if(!PDF)throw new Error('PDF library unavailable');
+   const pdf=new PDF({unit:'pt',format:'a4'});const margin=48;const lines=pdf.splitTextToSize(contentText,pdf.internal.pageSize.getWidth()-margin*2);let y=margin;
+   for(const line of lines){if(y>pdf.internal.pageSize.getHeight()-margin){pdf.addPage();y=margin;}pdf.text(String(line),margin,y);y+=15;}
+   pdf.save(base+'.pdf');toast('PDF created and downloaded.');return;
+  }
+  if(format==='docx'){
+   if(!window.docx){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/docx/8.5.0/docx.umd.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('Word document library failed to load'));document.head.appendChild(s);});}
+   const d=window.docx;if(!d||!d.Document||!d.Packer)throw new Error('Word document library unavailable');
+   const paragraphs=contentText.split(/\n+/).map(line=>new d.Paragraph({children:[new d.TextRun(line)]}));
+   const doc=new d.Document({sections:[{children:paragraphs}]});downloadOrvexaBlob(await d.Packer.toBlob(doc),base+'.docx');toast('Word document created and downloaded.');return;
+  }
+  if(format==='xlsx')throw new Error('Excel export is not available yet. Ask for CSV, which opens in Excel.');
+  let output=contentText,mime='text/plain;charset=utf-8';
+  if(format==='md')mime='text/markdown;charset=utf-8';
+  if(format==='csv')mime='text/csv;charset=utf-8';
+  if(format==='json')mime='application/json;charset=utf-8';
+  if(format==='html'){mime='text/html;charset=utf-8';output='<!doctype html><html><head><meta charset="utf-8"><title>Orvexa document</title></head><body><pre style="white-space:pre-wrap;font:16px/1.6 sans-serif">'+contentText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre></body></html>';}
+  downloadOrvexaBlob(new Blob([output],{type:mime}),base+'.'+format);toast(format.toUpperCase()+' file created and downloaded.');
+ }catch(e){toast('Could not create '+format.toUpperCase()+': '+String(e&&e.message||e));}
+}
+
 async function sendMessage(text){if(busy)return;const field=$('prompt');let prompt=(text||field.value).trim();let typedPrompt=prompt;
 // A build questionnaire must never trap the user in website mode. Ordinary questions and new assistant tasks exit the flow.
 const isGeneralAssistantRequest=/^(?:what|who|why|when|where|how|can you|could you|would you|tell me|explain|help me|translate|write|summari[sz]e|calculate|do you|are you|is it|give me|list|search|find|time|weather|please help|i want to ask|not a website|not building|stop building|cancel)\b/i.test(prompt)||/\?$/.test(prompt);
@@ -988,7 +1031,7 @@ try{
  if(!supabaseReady){throw new Error('Supabase is not configured.');}
  else{
    const sessionResult = sb ? await sb.auth.getSession() : {data:{session:null}}; const token=sessionResult.data.session?.access_token; if(!token) throw new Error('Please configure Supabase and sign in first.'); const wantsImage=/\b(?:generate|create|draw|make|design|produce|show me|give me|make me)\b.{0,70}\b(?:an?\s+)?(?:image|picture|photo|illustration|drawing|artwork|wallpaper|logo|poster|thumbnail)\b|\b(?:image|picture|photo|illustration|drawing|artwork|wallpaper)\s+of\b/i.test(prompt);const conversationHistory=currentMessages.filter((m,index)=>index!==currentMessages.length-1||m.role!=='user').slice(-12).map(m=>({role:m.role,content:m.content}));const requestBody=wantsImage?{action:'generate_image',prompt:prompt.replace(/^\s*(?:please\s+)?(?:generate|create|draw|make|design|produce|show me|give me|make me)\s*/i,'').trim()||prompt,conversationId:currentConversationId,history:conversationHistory}:{message:prompt,conversationId:currentConversationId,history:conversationHistory,image:selectedImage};const resp=await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify(requestBody)});
-   const data=await resp.json();if(!resp.ok)throw new Error(data.error||'AI request failed');if(data.conversationId){currentConversationId=data.conversationId;saveCurrent();}if(data.image){addMessage('assistant','Your image was created.');const card=$('messages').lastElementChild;const img=document.createElement('img');img.src=data.image;img.alt='Image created by Orvexa AI';img.style.maxWidth='100%';img.style.borderRadius='16px';card.querySelector('.msg-text').appendChild(img);const save=document.createElement('a');save.href=data.image;save.download='orvexa-image.png';save.textContent='Save image';save.className='text-action';card.appendChild(save);}else{const reply=data.reply||'I could not create a response this time.';if(!await handleWebsiteProjectReply(reply))addMessage('assistant',reply);}
+   const data=await resp.json();if(!resp.ok)throw new Error(data.error||'AI request failed');if(data.conversationId){currentConversationId=data.conversationId;saveCurrent();}if(data.image){addMessage('assistant','Your image was created.');const card=$('messages').lastElementChild;const img=document.createElement('img');img.src=data.image;img.alt='Image created by Orvexa AI';img.style.maxWidth='100%';img.style.borderRadius='16px';card.querySelector('.msg-text').appendChild(img);const save=document.createElement('a');save.href=data.image;save.download='orvexa-image.png';save.textContent='Save image';save.className='text-action';card.appendChild(save);}else{const reply=data.reply||'I could not create a response this time.';if(!await handleWebsiteProjectReply(reply)){addMessage('assistant',reply);const exportFormat=getRequestedExportFormat(typedPrompt);if(exportFormat)await exportOrvexaDocument(reply,exportFormat,typedPrompt);}}
  }
  selectedImage=null;selectedImagePreview='';selectedImageName='';selectedDocumentText='';selectedDocumentName='';updateAttachmentPreview();
 }catch(e){const reason=String(e&&e.message||'');let help='I could not reach the AI service.';if(reason.includes('sign in'))help='Your message was added, but Orvexa AI needs you to sign in before it can reply. Open Profile, create an account or sign in, then try again.';else if(reason.includes('Supabase'))help='The chat service is not configured yet. The website buttons can work, but AI replies need the Supabase backend and AI function deployed.';else if(reason)help='Orvexa AI could not reply: '+reason;addMessage('assistant',help);}
