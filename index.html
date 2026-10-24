@@ -617,6 +617,10 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
 @media(min-width:700px){.app-drawer{width:360px}.drawer-head-modern{padding-left:22px;padding-right:22px}.drawer-scroll-area{padding-left:20px;padding-right:20px}}
 @media(prefers-reduced-motion:reduce){.app-drawer,.drawer-scrim,.drawer-round-action{transition:none!important}}
 
+
+/* Bottom navigation matches the clean reference: Chat only */
+.drawer-bottom-bar{justify-content:flex-start;gap:0}
+.drawer-bottom-bar .drawer-chat-cta{margin:0}
 </style>
 </head>
 <body>
@@ -655,7 +659,7 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
       <button class="drawer-link profile-drawer-link" data-page="profile" onclick="closeMenu();showPage('profile')"><span class="drawer-profile-avatar" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"></circle><path d="M5 20c.7-3.7 3.1-5.5 7-5.5s6.3 1.8 7 5.5"></path></svg></span><span>Profile & settings</span></button>
       <div class="drawer-footer">Private space for your ideas.<br><span>Orvexa AI</span><div class="orvexa-legal-links"><button type="button" onclick="showPage('about')">About</button><button type="button" onclick="showPage('privacy')">Privacy</button><button type="button" onclick="showPage('terms')">Terms</button><button type="button" onclick="showPage('contact')">Contact</button></div></div>
     </div>
-    <div class="drawer-bottom-bar"><button class="drawer-chat-cta" onclick="closeMenu();newChat()"><span>✎</span> Chat</button><button class="drawer-account-chip" onclick="closeMenu();showPage('profile')" aria-label="Profile"><span>ML</span></button><button class="drawer-voice-chip" onclick="closeMenu();showPage('chat');setTimeout(()=>{const b=document.getElementById('voiceInputButton')||document.querySelector('[aria-label*=voice i]');if(b)b.click();else toast('Use the microphone button beside the message box for voice input.');},180)" aria-label="Voice input">▮</button></div>
+    <div class="drawer-bottom-bar"><button class="drawer-chat-cta" onclick="closeMenu();newChat()"><span>✎</span> Chat</button></div>
   </aside>
   <main id="main">
     <section class="page active" id="chatPage">
