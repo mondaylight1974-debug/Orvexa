@@ -563,6 +563,60 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
 .drawer-voice-chip{margin-left:0;background:#276be9;color:#fff;font-size:21px}
 .drawer-close{display:none}
 @media(max-width:480px){.app-drawer{width:min(88vw,390px)}.drawer-head-modern{padding:25px 16px 20px}.drawer-brand-modern{font-size:23px}.drawer-round-action{width:44px;height:44px}.drawer-scroll-area{padding-left:14px;padding-right:14px}.drawer-bottom-bar{padding-left:14px;padding-right:14px}.drawer-chat-cta{min-width:128px;padding:14px 18px}}
+
+/* Refined mobile drawer: closer to the supplied ChatGPT reference */
+.app-drawer{
+ width:min(82vw,410px);height:100dvh;height:100vh;max-height:100dvh;
+ padding:0;background:#000;color:#f5f5f5;border-right:1px solid #242424;
+ box-shadow:24px 0 80px rgba(0,0,0,.52);overflow:hidden;
+ transform:translate3d(-102%,0,0);transition:transform .24s cubic-bezier(.2,.75,.25,1);
+ padding-bottom:env(safe-area-inset-bottom)
+}
+.app-drawer.open{transform:translate3d(0,0,0)}
+.drawer-scrim{background:rgba(0,0,0,.58);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.drawer-head-modern{padding:calc(22px + env(safe-area-inset-top)) 18px 22px;gap:14px}
+.drawer-brand-modern{font-size:clamp(21px,5.2vw,25px);font-weight:650;letter-spacing:-.65px;white-space:nowrap}
+.drawer-head-actions{gap:10px;flex-shrink:0}
+.drawer-round-action{width:48px;height:48px;border-radius:50%;border:1px solid #2c2c2c;background:#1c1c1e;color:#f7f7f7;transition:background .16s,transform .16s}
+.drawer-round-action:active{transform:scale(.96);background:#303033}
+.drawer-round-action svg{width:25px;height:25px}
+.drawer-scroll-area{padding:0 16px 128px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#333 transparent}
+.app-drawer .drawer-link{min-height:52px;padding:11px 10px;gap:17px;border:0;border-radius:10px;background:transparent;color:#e9e9eb;font-size:16px;font-weight:430;line-height:1.25;transition:background .15s,color .15s}
+.app-drawer .drawer-link:hover,.app-drawer .drawer-link:focus-visible{background:#19191b;color:#fff;outline:none}
+.app-drawer .drawer-feature-link{min-height:60px;font-size:17px;letter-spacing:-.15px}
+.drawer-line-icon{width:29px;min-width:29px;height:30px;display:inline-grid;place-items:center;font-size:25px;line-height:1;color:#f5f5f5}
+.drawer-section-label{font-size:15px;color:#b9b9bc;margin:25px 8px 11px;padding:0;letter-spacing:-.1px;text-transform:none}
+.app-drawer .drawer-chat-history{max-height:none;overflow:visible;gap:1px;margin:0}
+.app-drawer .drawer-history-item{padding:12px 9px;min-height:46px;border:0;border-radius:9px;color:#e8e8e9;font-size:15px;line-height:1.35;font-weight:400}
+.app-drawer .drawer-history-item:hover{background:#1b1b1d;color:#fff}
+.app-drawer .drawer-history-item[hidden]{display:none}
+.app-drawer .drawer-history-empty{padding:8px 9px;color:#858589;font-size:13px;line-height:1.45}
+.app-drawer .drawer-view-all{min-height:45px;font-size:14px;color:#bdbdc1}
+.app-drawer .pro-mode-link{margin-top:4px}
+.app-drawer .drawer-footer{margin:24px 8px 8px;padding:16px 0 8px;border-top:1px solid #242426;color:#858589;font-size:12px}
+.app-drawer .orvexa-legal-links{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px}
+.app-drawer .orvexa-legal-links button{color:#a9a9ad;font-size:12px}
+.drawer-bottom-bar{position:absolute;left:0;right:0;bottom:0;z-index:3;display:flex;align-items:center;gap:12px;padding:16px 16px calc(13px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(0,0,0,0) 0%,rgba(0,0,0,.94) 23%,#000 48%);border:0}
+.drawer-chat-cta{display:flex;align-items:center;justify-content:center;gap:12px;min-width:138px;min-height:54px;padding:12px 21px;border:0;border-radius:32px;background:#3478f6;color:#fff;font-size:16px;font-weight:550;box-shadow:0 3px 12px #0004;cursor:pointer}
+.drawer-chat-cta span{font-size:23px;line-height:1}
+.drawer-account-chip,.drawer-voice-chip{width:52px;height:52px;min-width:52px;border-radius:50%;border:1px solid #29292b;background:#1b1b1d;display:grid;place-items:center;color:#fff;cursor:pointer;margin-left:auto}
+.drawer-account-chip span{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#9855b8;color:#fff;font-size:13px}
+.drawer-voice-chip{margin-left:0;background:#276be9;border-color:#303e67;color:#fff;font-size:20px}
+.drawer-close{display:none}
+@media(max-width:480px){
+ .app-drawer{width:min(88vw,390px)}
+ .drawer-head-modern{padding:calc(20px + env(safe-area-inset-top)) 15px 20px}
+ .drawer-brand-modern{font-size:22px}
+ .drawer-round-action{width:44px;height:44px}
+ .drawer-scroll-area{padding-left:13px;padding-right:13px}
+ .app-drawer .drawer-feature-link{min-height:59px}
+ .drawer-bottom-bar{gap:10px;padding-left:13px;padding-right:13px}
+ .drawer-chat-cta{min-width:125px;padding:12px 17px}
+ .drawer-account-chip,.drawer-voice-chip{width:49px;height:49px;min-width:49px}
+}
+@media(min-width:700px){.app-drawer{width:360px}.drawer-head-modern{padding-left:22px;padding-right:22px}.drawer-scroll-area{padding-left:20px;padding-right:20px}}
+@media(prefers-reduced-motion:reduce){.app-drawer,.drawer-scrim,.drawer-round-action{transition:none!important}}
+
 </style>
 </head>
 <body>
@@ -943,7 +997,7 @@ function openSavedChat(item){currentConversationId=item.id&&String(item.id).star
 async function deleteSavedConversation(id,isCloud){const label=isCloud?'synced conversation':'conversation';if(!confirm('Delete this '+label+' permanently? This cannot be undone.'))return;if(isCloud){if(!sb){toast('Cloud account service is not connected.');return;}try{const {data:{session}}=await sb.auth.getSession();if(!session){toast('Sign in to delete this synced conversation.');return;}const {error}=await sb.from('conversations').delete().eq('id',id).eq('user_id',session.user.id);if(error)throw error;}catch(e){toast('Could not delete the synced conversation: '+(e.message||'please try again'));return;}}else{let list=[];try{list=JSON.parse(storage.getItem('smart-history')||'[]')}catch(e){}list=list.filter(item=>String(item.id)!==String(id));try{storage.setItem('smart-history',JSON.stringify(list));}catch(e){toast('Could not update local chat history.');return;}}if(String(currentConversationId)===String(id)){currentConversationId=null;currentMessages=[{role:'assistant',content:WELCOME,time:new Date().toISOString()}];$('messages').innerHTML='';currentMessages.forEach(renderMessage);saveCurrent();updateChatLayout();}try{if(storage.getItem('smart-current-archive-id')===String(id))storage.removeItem('smart-current-archive-id');}catch(e){}renderHistory();renderDrawerHistory();toast('Conversation deleted.');}
 function makeHistoryRow(item,isCloud,metaText,messages){const row=document.createElement('div');row.className='history-row';const open=document.createElement('button');open.type='button';open.className='history-item';const title=document.createElement('strong');title.textContent=item.title||'Conversation';const meta=document.createElement('small');meta.textContent=metaText;open.append(title,meta);open.onclick=()=>{if(isCloud){openSavedChat({id:item.id,title:item.title,messages:messages||[],time:item.updated_at||item.created_at});}else openSavedChat(item);};const del=document.createElement('button');del.type='button';del.className='history-delete';del.textContent='Delete';del.setAttribute('aria-label','Delete conversation: '+(item.title||'Conversation'));del.onclick=()=>deleteSavedConversation(item.id,isCloud);row.append(open,del);return row;}
 function renderHistory(){const root=$('historyList');if(!root)return;let local=[];try{local=JSON.parse(storage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!local.length){root.innerHTML='<div class="card" style="text-align:center;padding:20px"><div style="font-size:30px;margin-bottom:8px">◷</div><h3>No previous chats yet</h3><p class="muted">Your conversations will appear here as you use Orvexa AI.</p><button class="primary" onclick="newChat()">Start a chat</button></div>';}local.forEach(item=>{const meta='On this device · '+new Date(item.time||Date.now()).toLocaleString()+' · '+(item.messages||[]).length+' messages';root.appendChild(makeHistoryRow(item,false,meta));});loadCloudHistory(root);renderDrawerHistory();}
-function searchDrawerChats(){const q=prompt('Search your recent chats');if(q===null)return;const term=q.trim().toLowerCase();const root=$('drawerChatHistory');if(!root)return;root.querySelectorAll('.drawer-history-item').forEach(b=>{b.hidden=!!term&&!((b.textContent||'').toLowerCase().includes(term));});const empty=root.querySelector('.drawer-history-empty');if(empty)empty.textContent=term?'Showing matches in loaded recent chats':'Recent chats';if(term&&!Array.from(root.querySelectorAll('.drawer-history-item')).some(b=>!b.hidden))toast('No match in the recent chats loaded. Open Chat history to search older conversations.');}
+function searchDrawerChats(){const root=$('drawerChatHistory');if(!root)return;let box=$('drawerChatSearch');if(box){box.focus();return;}box=document.createElement('input');box.id='drawerChatSearch';box.type='search';box.placeholder='Search recent chats';box.setAttribute('aria-label','Search recent chats');box.autocomplete='off';box.style.cssText='width:100%;margin:0 0 10px;padding:12px 13px;border:1px solid #343434;border-radius:12px;background:#171717;color:#fff;font:inherit;outline:none';const label=root.querySelector('.drawer-history-empty');root.insertBefore(box,root.firstChild);box.addEventListener('input',()=>{const term=box.value.trim().toLowerCase();root.querySelectorAll('.drawer-history-item').forEach(b=>{b.hidden=!!term&&!((b.textContent||'').toLowerCase().includes(term));});if(label)label.textContent=term?'Matching recent chats':'Your recent conversations';});box.focus();}
 function renderDrawerHistory(){const root=$('drawerChatHistory');if(!root)return;let list=[];try{list=JSON.parse(storage.getItem('smart-history')||'[]')}catch(e){}root.innerHTML='';if(!list.length){const empty=document.createElement('div');empty.className='drawer-history-empty';empty.textContent='Your previous chats will appear here';root.appendChild(empty);}list.slice(0,12).forEach(item=>{const b=document.createElement('button');b.type='button';b.className='drawer-history-item';b.textContent=item.title||'Conversation';b.title=item.title||'Conversation';b.onclick=()=>{closeMenu();openSavedChat(item)};root.appendChild(b);});loadCloudDrawerHistory(root);}
 async function loadCloudDrawerHistory(root){if(!sb)return;try{const {data:{session}}=await sb.auth.getSession();if(!session)return;const {data,error}=await sb.from('conversations').select('id,title,created_at,updated_at,messages(id,role,content,created_at)').eq('user_id',session.user.id).order('updated_at',{ascending:false}).limit(12);if(error||!data)return;const label=document.createElement('div');label.className='drawer-history-empty';label.textContent='SYNCED CHATS';root.appendChild(label);data.forEach(item=>{const msgs=(item.messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));if(!msgs.length)return;const b=document.createElement('button');b.type='button';b.className='drawer-history-item';b.textContent=item.title||msgs.find(m=>m.role==='user')?.content?.slice(0,60)||'Conversation';b.title=b.textContent;b.onclick=()=>{closeMenu();openSavedChat({id:item.id,title:item.title,messages:msgs.map(m=>({role:m.role,content:m.content,time:m.created_at})),time:item.updated_at||item.created_at})};root.appendChild(b);});}catch(e){console.warn('Could not load synced menu history:',e.message);}}
 async function loadCloudHistory(root){if(!sb)return;try{const {data:{session}}=await sb.auth.getSession();if(!session)return;const {data,error}=await sb.from('conversations').select('id,title,created_at,updated_at,messages(id,role,content,created_at)').eq('user_id',session.user.id).order('updated_at',{ascending:false}).limit(30);if(error)throw error;if(!data||!data.length)return;const heading=document.createElement('div');heading.className='section-head';heading.innerHTML='<h2>☁️ Synced conversations</h2>';root.appendChild(heading);data.forEach(item=>{const msgs=(item.messages||[]).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));if(!msgs.length)return;const normalized=msgs.map(m=>({role:m.role,content:m.content,time:m.created_at}));const meta='☁️ Synced · '+new Date(item.updated_at||item.created_at).toLocaleString()+' · '+msgs.length+' messages';root.appendChild(makeHistoryRow(item,true,meta,normalized));});}catch(e){console.warn('Cloud history is not available:',e.message);}}
