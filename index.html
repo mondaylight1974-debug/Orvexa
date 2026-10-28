@@ -1140,7 +1140,14 @@ async function processOrvexaVideo(){
    const coreURL=await blobFallback(u,['https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js','https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js'],'text/javascript',90000,'Downloading the video engine');
    const wasmURL=await blobFallback(u,['https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm','https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm'],'application/wasm',90000,'Downloading the video engine data');
    updateStatus('Step 2 of 3: Starting the video processor…');
-   await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),120000,'Starting the video processor');
+   try{
+    await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),120000,'Starting the video processor');
+    URL.revokeObjectURL(workerURL);
+   }catch(loadError){
+    try{ff.terminate();}catch(e){}
+    URL.revokeObjectURL(workerURL);
+    throw loadError;
+   }
    orvexaFFmpeg=ff;
   }
   const ff=orvexaFFmpeg,u=ff.util,ext=(orvexaVideoFile.name.split('.').pop()||'mp4').toLowerCase();
@@ -1175,7 +1182,10 @@ async function processOrvexaVideo(){
   if(p==='mute'||req.includes('mute')||req.includes('remove audio')||req.includes('no sound')||req.includes('silent'))args.push('-an');
   args.push('-c:v','libx264','-preset','ultrafast','-crf','23','-pix_fmt','yuv420p','-c:a','aac','-b:a','128k','-movflags','+faststart',output);
   updateStatus('Step 2 of 3: Editing your video now. Keep Orvexa open.');
-  await withTimeout(ff.exec(args),180000,'Editing your video');
+  let exitCode;
+  try{exitCode=await withTimeout(ff.exec(args,180000),185000,'Editing your video');}
+  catch(execError){if(/timed out/i.test(String(execError&&execError.message||execError))){try{ff.terminate();}catch(e){}orvexaFFmpeg=null;}throw execError;}
+  if(exitCode!==0)throw Error('The video engine stopped with code '+exitCode+'. Try a shorter MP4 or a simpler edit.');
   updateStatus('Step 3 of 3: Preparing your finished video…');
   const data=await withTimeout(ff.readFile(output),30000,'Preparing the edited video');
   if(!data||!data.length)throw Error('The video processor returned an empty file. Try a shorter MP4.');
