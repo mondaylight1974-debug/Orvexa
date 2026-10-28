@@ -1151,7 +1151,7 @@ async function processOrvexaVideo(){
      const response=await withTimeout(fetch(candidate.core,{cache:'no-store'}),45000,'Checking the FFmpeg core');
      if(!response.ok)throw Error('FFmpeg core CDN returned HTTP '+response.status);
      const source=await response.text();
-     if(!source||source.length<1000||!(/export\\s+default|export\\s*\\{[^}]*default/s.test(source)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
+     if(!source||source.length<1000||!(/export\s+default|export\s*\{[^}]*default/s.test(source)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
      // The worker imports this exact verified module URL. Keep its origin intact so
      // ESM imports and the core's WASM locator are not broken by a Blob URL.
      coreURL=candidate.core;wasmURL=candidate.wasm;
