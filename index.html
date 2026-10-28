@@ -1081,58 +1081,79 @@ async function processOrvexaVideo(){
  let statusNode=null,statusText=null,progressHandler=null,progressTimer=null;
  const startedAt=Date.now();
  const updateStatus=(message)=>{
-  if(statusText)statusText.textContent=message;
+  if(statusText){statusText.textContent=message;}
   const status=$('videoEditorStatus');if(status)status.textContent=message;
   const live=$('orvexaVideoJobStatus');if(live)live.textContent=message;
+  const livePanel=$('orvexaVideoJobPanel');if(livePanel)livePanel.textContent=message;
  };
- const withTimeout=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(Error(label+' timed out. Please try a shorter MP4 video or retry on a stronger connection.')),ms))]);
+ const withTimeout=(promise,ms,label)=>Promise.race([promise,new Promise((_,reject)=>setTimeout(()=>reject(Error(label+' timed out. The video tools could not finish loading. Check your connection and try a short MP4 again.')),ms))]);
  try{
   showPage('chat');
   const messages=$('messages');
-  addMessage('assistant','Preparing your video edit. Orvexa will show the edited video and a download button here when processing finishes.');
-  const nodes=messages?messages.querySelectorAll('.msg.assistant'):[];statusNode=nodes.length?nodes[nodes.length-1]:null;statusText=statusNode?statusNode.querySelector('.msg-text'):null;
-  updateStatus('Loading video tools… this first step may take a minute on a phone.');
+  addMessage('assistant','Orvexa is starting the video edit. I will show the finished video here, or clearly tell you what failed.');
+  const nodes=messages?messages.querySelectorAll('.msg.assistant'):[];
+  statusNode=nodes.length?nodes[nodes.length-1]:null;
+  statusText=statusNode?statusNode.querySelector('.msg-text'):null;
+  updateStatus('Step 1 of 3: Loading the video processor…');
   progressTimer=setInterval(()=>{
    const secs=Math.floor((Date.now()-startedAt)/1000);
-   const live=$('orvexaVideoJobStatus');
-   if(live&&secs>=25&&secs<90)live.textContent='Still preparing the video tools ('+secs+' seconds). Keep this page open.';
-   else if(live&&secs>=90)live.textContent='This video is taking longer than expected. Large videos can be slow on phones; keep this page open while Orvexa tries to finish.';
-  },5000);
+   if(secs>=30&&secs<90)updateStatus('Still loading the video processor ('+secs+' seconds). Keep Orvexa open.');
+   else if(secs>=90)updateStatus('The video processor is taking too long. Orvexa will stop and show an error instead of leaving you waiting forever.');
+  },10000);
   if(!orvexaFFmpeg){
-   const m=await withTimeout(import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js'),90000,'Loading the video library');
-   const u=await withTimeout(import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js'),90000,'Loading video utilities');
-   orvexaFFmpeg=new m.FFmpeg();orvexaFFmpeg.util=u;
-   const workerURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/worker.js','text/javascript'),90000,'Preparing the video worker');
-   const coreURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js','text/javascript'),90000,'Downloading the video processor');
-   updateStatus('Starting video processor…');
-   await withTimeout(orvexaFFmpeg.load({classWorkerURL:workerURL,coreURL,wasmURL:'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm'}),120000,'Starting the video processor');
+   const m=await withTimeout(import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js'),60000,'Loading the FFmpeg library');
+   const u=await withTimeout(import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js'),60000,'Loading video utilities');
+   const ff=new m.FFmpeg();ff.util=u;
+   updateStatus('Step 1 of 3: Preparing the video worker…');
+   const workerURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/worker.js','text/javascript'),60000,'Preparing the video worker');
+   updateStatus('Step 1 of 3: Downloading the video engine…');
+   const coreURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js','text/javascript'),60000,'Downloading the video engine');
+   const wasmURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm','application/wasm'),60000,'Downloading the video engine data');
+   updateStatus('Step 2 of 3: Starting the video processor…');
+   await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),90000,'Starting the video processor');
+   orvexaFFmpeg=ff;
   }
-  const ff=orvexaFFmpeg,u=ff.util,ext=(orvexaVideoFile.name.split('.').pop()||'mp4').toLowerCase(),input='input.'+(['mp4','mov','webm','m4v'].includes(ext)?ext:'mp4'),output='edited.mp4';
-  progressHandler=({progress})=>{const pct=Math.max(0,Math.min(100,Math.round((Number(progress)||0)*100)));updateStatus('Editing your video… '+pct+'%');};
+  const ff=orvexaFFmpeg,u=ff.util,ext=(orvexaVideoFile.name.split('.').pop()||'mp4').toLowerCase();
+  const input='input.'+(['mp4','mov','webm','m4v'].includes(ext)?ext:'mp4'),output='edited.mp4';
+  progressHandler=({progress})=>{
+   const pct=Math.max(0,Math.min(100,Math.round((Number(progress)||0)*100)));
+   updateStatus('Step 2 of 3: Editing your video… '+pct+'%');
+  };
   try{ff.on('progress',progressHandler);}catch(e){}
-  await ff.writeFile(input,await u.fetchFile(orvexaVideoFile));
+  updateStatus('Step 2 of 3: Preparing your video file…');
+  await withTimeout(ff.writeFile(input,await u.fetchFile(orvexaVideoFile)),60000,'Preparing your video file');
   const startTime=Math.max(0,Number($('videoStart').value)||0),endTime=Math.max(0,Number($('videoEnd').value)||0);
   if(endTime>0&&endTime<=startTime)throw Error('Trim end must be greater than trim start.');
   const p=$('videoEditPreset').value,req=$('videoEditRequest').value.toLowerCase(),filters=[];
   if(p==='crop-right'||req.includes('crop')||/\b(?:watermark|tiktok logo|remove (?:the )?(?:logo|writing|text))\b/.test(req))filters.push('crop=trunc(iw*0.88/2)*2:ih:0:0');
   if(p==='vertical'||req.includes('vertical')||req.includes('9:16'))filters.push('scale=720:1280:force_original_aspect_ratio=increase,crop=720:1280');
   if(p==='square'||req.includes('square'))filters.push('scale=720:720:force_original_aspect_ratio=increase,crop=720:720');
-  const args=['-y'];if(startTime>0)args.push('-ss',String(startTime));args.push('-i',input);if(endTime>0)args.push('-t',String(endTime-startTime));if(filters.length)args.push('-vf',filters.join(','));if(p==='mute'||req.includes('mute')||req.includes('remove audio')||req.includes('no sound')||req.includes('silent'))args.push('-an');args.push('-c:v','libx264','-preset','ultrafast','-crf','23','-pix_fmt','yuv420p','-c:a','aac','-b:a','128k','-movflags','+faststart',output);
-  updateStatus('Editing your video now. Keep Orvexa open; the edited result will appear in this chat.');
-  await ff.exec(args);
-  const data=await ff.readFile(output);if(!data||!data.length)throw Error('The processor returned an empty video. Try a shorter MP4 file.');
+  const args=['-y'];
+  if(startTime>0)args.push('-ss',String(startTime));
+  args.push('-i',input);
+  if(endTime>0)args.push('-t',String(endTime-startTime));
+  if(filters.length)args.push('-vf',filters.join(','));
+  if(p==='mute'||req.includes('mute')||req.includes('remove audio')||req.includes('no sound')||req.includes('silent'))args.push('-an');
+  args.push('-c:v','libx264','-preset','ultrafast','-crf','23','-pix_fmt','yuv420p','-c:a','aac','-b:a','128k','-movflags','+faststart',output);
+  updateStatus('Step 2 of 3: Editing your video now. Keep Orvexa open.');
+  await withTimeout(ff.exec(args),180000,'Editing your video');
+  updateStatus('Step 3 of 3: Preparing your finished video…');
+  const data=await withTimeout(ff.readFile(output),30000,'Preparing the edited video');
+  if(!data||!data.length)throw Error('The video processor returned an empty file. Try a shorter MP4.');
   if(orvexaEditedUrl)URL.revokeObjectURL(orvexaEditedUrl);
   orvexaEditedUrl=URL.createObjectURL(new Blob([data],{type:'video/mp4'}));
   const filename=orvexaVideoFile.name.replace(/\.[^.]+$/,'')+'-orvexa-edited.mp4';
-  const link=$('downloadEditedVideo');if(link){link.href=orvexaEditedUrl;link.download=filename;link.hidden=false;}
-  const preview=$('videoResultPreview');if(preview){preview.src=orvexaEditedUrl;preview.hidden=false;preview.load();}
-  updateStatus('Done! Your edited video is ready below.');
+  const link=$('downloadEditedVideo');
+  if(link){link.href=orvexaEditedUrl;link.download=filename;link.hidden=false;}
+  const preview=$('videoResultPreview');
+  if(preview){preview.src=orvexaEditedUrl;preview.hidden=false;preview.load();}
+  updateStatus('Finished! Your edited video is ready below. Play it or use the download button.');
   addMessage('assistant','Your edited video is ready. Play it below or tap Download edited video.',{type:'video-result',url:orvexaEditedUrl,name:filename});
   try{await ff.deleteFile(input);await ff.deleteFile(output);}catch(e){}
  }catch(e){
   const reason=String(e&&e.message||e||'Unknown error');
   updateStatus('Video edit failed: '+reason);
-  addMessage('assistant','Orvexa could not finish processing this video: '+reason+' If the video processor hangs or your phone runs out of memory, try a shorter/smaller MP4 and check your connection. Advanced AI watermark/object removal is not available in this basic processor.');
+  addMessage('assistant','The video edit did not complete: '+reason+' Try a short MP4 (about 10–20 seconds) on a stable connection. If this error repeats, send me the exact error text so I can fix the failing step. Orvexa has not created a finished video yet.');
  }finally{
   if(progressTimer)clearInterval(progressTimer);
   if(progressHandler&&orvexaFFmpeg){try{orvexaFFmpeg.off('progress',progressHandler);}catch(e){}}
