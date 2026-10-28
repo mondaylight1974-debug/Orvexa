@@ -1118,13 +1118,29 @@ async function processOrvexaVideo(){
    const u=await importFallback(['https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js','https://unpkg.com/@ffmpeg/util@0.12.1/dist/esm/index.js'],60000,'Loading video utilities');
    const ff=new m.FFmpeg();ff.util=u;ff.on('log',({message})=>{try{console.info('[Orvexa video]',message);}catch(e){}});ff.on('error',({message})=>{try{console.error('[Orvexa video engine]',message);}catch(e){}});
    updateStatus('Step 1 of 3: Preparing the video worker…');
-   // Let the official FFmpeg ESM package resolve its own worker from import.meta.url.
-   // Converting worker.js to a blob breaks relative module imports in some Android browsers.
+   // Module workers must be same-origin on many browsers. Build a same-page blob worker,
+   // rewriting its two package-relative imports to absolute CDN URLs so they still resolve.
+   updateStatus('Step 1 of 3: Preparing the video worker…');
+   const makeWorkerURL=async()=>{
+    let lastError;
+    for(const base of ['https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/','https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/esm/']){
+     try{
+      const response=await withTimeout(fetch(base+'worker.js',{cache:'force-cache'}),45000,'Downloading the video worker');
+      if(!response.ok)throw Error('HTTP '+response.status);
+      let source=await response.text();
+      source=source.replaceAll('"./const.js"','"'+base+'const.js"').replaceAll("'./const.js'","'"+base+"const.js'").replaceAll('"./errors.js"','"'+base+'errors.js"').replaceAll("'./errors.js'","'"+base+"errors.js'");
+      if(/from\s+['"]\.\//.test(source))throw Error('Worker still has unresolved relative imports');
+      return URL.createObjectURL(new Blob([source],{type:'text/javascript'}));
+     }catch(e){lastError=e;}
+    }
+    throw Error('Could not prepare the video worker from either CDN: '+String(lastError&&lastError.message||lastError));
+   };
+   const workerURL=await makeWorkerURL();
    updateStatus('Step 1 of 3: Downloading the video engine…');
    const coreURL=await blobFallback(u,['https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js','https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js'],'text/javascript',90000,'Downloading the video engine');
    const wasmURL=await blobFallback(u,['https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm','https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm'],'application/wasm',90000,'Downloading the video engine data');
    updateStatus('Step 2 of 3: Starting the video processor…');
-   await withTimeout(ff.load({coreURL,wasmURL}),120000,'Starting the video processor');
+   await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),120000,'Starting the video processor');
    orvexaFFmpeg=ff;
   }
   const ff=orvexaFFmpeg,u=ff.util,ext=(orvexaVideoFile.name.split('.').pop()||'mp4').toLowerCase();
