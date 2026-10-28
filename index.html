@@ -1092,9 +1092,10 @@ async function processOrvexaVideo(){
  try{
   showPage('chat');
   const messages=$('messages');
-  addMessage('assistant','Step 1 of 3: Loading the video processor…');
-  statusNode=messages?messages.lastElementChild:null;
+  const messageNodes=messages?[...messages.querySelectorAll('.msg.assistant')]:[];
+  statusNode=messageNodes.reverse().find(node=>{const t=node.querySelector('.msg-text');return t&&/Processing your video now|I’m processing your video automatically now|starting the video edit/i.test(t.textContent||'');})||null;
   statusText=statusNode?statusNode.querySelector('.msg-text'):null;
+  if(!statusText){addMessage('assistant','Step 1 of 3: Loading the video processor…');statusNode=messages?messages.lastElementChild:null;statusText=statusNode?statusNode.querySelector('.msg-text'):null;}
   updateStatus('Step 1 of 3: Loading the video processor…');
   if(!statusText){
    // Fallback: ensure the user always sees live progress in chat, even if the message renderer changes.
