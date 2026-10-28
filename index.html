@@ -1137,8 +1137,8 @@ async function processOrvexaVideo(){
    };
    const workerURL=await makeWorkerURL();
    updateStatus('Step 1 of 3: Downloading the video engine…');
-   const coreURL=await blobFallback(u,['https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js','https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js'],'text/javascript',90000,'Downloading the video engine');
-   const wasmURL=await blobFallback(u,['https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm','https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm'],'application/wasm',90000,'Downloading the video engine data');
+   const coreURL=await blobFallback(u,['https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js','https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js'],'text/javascript',90000,'Downloading the video engine');
+   const wasmURL=await blobFallback(u,['https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm','https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm'],'application/wasm',90000,'Downloading the video engine data');
    updateStatus('Step 2 of 3: Starting the video processor…');
    try{
     await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),120000,'Starting the video processor');
