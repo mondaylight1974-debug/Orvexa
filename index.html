@@ -1103,12 +1103,12 @@ async function processOrvexaVideo(){
   if(!orvexaFFmpeg){
    const m=await withTimeout(import('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/index.js'),60000,'Loading the FFmpeg library');
    const u=await withTimeout(import('https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js'),60000,'Loading video utilities');
-   const ff=new m.FFmpeg();ff.util=u;
+   const ff=new m.FFmpeg();ff.util=u;ff.on('log',({message})=>{try{console.info('[Orvexa video]',message);}catch(e){}});ff.on('error',({message})=>{try{console.error('[Orvexa video engine]',message);}catch(e){}});
    updateStatus('Step 1 of 3: Preparing the video worker…');
    const workerURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/esm/worker.js','text/javascript'),60000,'Preparing the video worker');
    updateStatus('Step 1 of 3: Downloading the video engine…');
-   const coreURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.js','text/javascript'),60000,'Downloading the video engine');
-   const wasmURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd/ffmpeg-core.wasm','application/wasm'),60000,'Downloading the video engine data');
+   const coreURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.js','text/javascript'),60000,'Downloading the video engine');
+   const wasmURL=await withTimeout(u.toBlobURL('https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd/ffmpeg-core.wasm','application/wasm'),60000,'Downloading the video engine data');
    updateStatus('Step 2 of 3: Starting the video processor…');
    await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),90000,'Starting the video processor');
    orvexaFFmpeg=ff;
