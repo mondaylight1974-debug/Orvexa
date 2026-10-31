@@ -1154,7 +1154,7 @@ async function processOrvexaVideo(){
      const response=await withTimeout(fetch(candidate.core,{cache:'no-store'}),45000,'Checking the FFmpeg core');
      if(!response.ok)throw Error('FFmpeg core CDN returned HTTP '+response.status);
      const source=await response.text();
-     if(!source||source.length<1000||!(/export\\s+default|export\\s*\\{[^}]*default/s.test(source)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
+          if(!source||source.length<1000||!(/export\s+default|export\s*\{[^}]*default/s.test(source)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
      const moduleCheck=await withTimeout(import(candidate.core),60000,'Verifying the FFmpeg core module');
      if(typeof moduleCheck.default!=='function')throw Error('The CDN file loaded but did not expose the FFmpeg core module factory.');
      // Keep the verified ESM URL intact: the worker imports this module and it
