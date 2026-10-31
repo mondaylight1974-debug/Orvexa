@@ -1178,7 +1178,7 @@ async function processOrvexaVideo(){
      const coreResponse=await withTimeout(fetch(candidate.core,{cache:'no-store'}),45000,'Checking the FFmpeg core');
      if(!coreResponse.ok)throw Error('FFmpeg core CDN returned HTTP '+coreResponse.status);
      const coreSource=await coreResponse.text();
-     if(!coreSource||coreSource.length<1000||!(/export\\s+default|export\\s*\\{[^}]*default/s.test(coreSource)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
+     if(!coreSource||coreSource.length<1000)throw Error('The CDN returned an empty or incomplete FFmpeg core file.');
      const moduleCheck=await withTimeout(import(candidate.core),60000,'Verifying the FFmpeg core module');
      if(typeof moduleCheck.default!=='function')throw Error('The CDN file did not expose the FFmpeg core module factory.');
      const wasmResponse=await withTimeout(fetch(candidate.wasm,{cache:'no-store'}),90000,'Downloading the FFmpeg WebAssembly engine');
@@ -1258,7 +1258,7 @@ async function processOrvexaVideo(){
   try{await ff.deleteFile(input);await ff.deleteFile(output);}catch(e){}
  }catch(e){
   const reason=String(e&&e.message||e||'Unknown error');
-  updateStatus('Video edit failed: '+reason);
+  updateStatus('Video export failed: '+reason);
   addMessage('assistant','Video export failed: '+reason+' No finished video was created. You can retry with a short MP4.');
  }finally{
   if(progressTimer)clearInterval(progressTimer);
