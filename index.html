@@ -1142,35 +1142,37 @@ async function processOrvexaVideo(){
    // and produce "failed to import ffmpeg-core.js". Validate the CDN response first.
    updateStatus('Step 1 of 3: Checking the video engine files…');
    const coreCandidates=[
-    // Official single-thread ESM core mirrors. Verify actual module execution,
-    // not just an HTTP response that happens to contain JavaScript text.
-    {core:'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.10/esm/ffmpeg-core.js',wasm:'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.10/esm/ffmpeg-core.wasm'},
     {core:'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js',wasm:'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm'},
     {core:'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js',wasm:'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm'}
    ];
    let coreURL='',wasmURL='',assetError=null;
    for(const candidate of coreCandidates){
     try{
-     const response=await withTimeout(fetch(candidate.core,{cache:'no-store'}),45000,'Checking the FFmpeg core');
-     if(!response.ok)throw Error('FFmpeg core CDN returned HTTP '+response.status);
-     const source=await response.text();
-          if(!source||source.length<1000||!(/export\s+default|export\s*\{[^}]*default/s.test(source)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
+     const coreResponse=await withTimeout(fetch(candidate.core,{cache:'no-store'}),45000,'Checking the FFmpeg core');
+     if(!coreResponse.ok)throw Error('FFmpeg core CDN returned HTTP '+coreResponse.status);
+     const coreSource=await coreResponse.text();
+     if(!coreSource||coreSource.length<1000||!(/export\\s+default|export\\s*\\{[^}]*default/s.test(coreSource)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
      const moduleCheck=await withTimeout(import(candidate.core),60000,'Verifying the FFmpeg core module');
-     if(typeof moduleCheck.default!=='function')throw Error('The CDN file loaded but did not expose the FFmpeg core module factory.');
-     // Keep the verified ESM URL intact: the worker imports this module and it
-     // locates the matching WASM binary from the explicit wasmURL below.
-     coreURL=candidate.core;wasmURL=candidate.wasm;
+     if(typeof moduleCheck.default!=='function')throw Error('The CDN file did not expose the FFmpeg core module factory.');
+     const wasmResponse=await withTimeout(fetch(candidate.wasm,{cache:'no-store'}),90000,'Downloading the FFmpeg WebAssembly engine');
+     if(!wasmResponse.ok)throw Error('FFmpeg WASM CDN returned HTTP '+wasmResponse.status);
+     const wasmBytes=new Uint8Array(await wasmResponse.arrayBuffer());
+     // A real WebAssembly binary MUST begin 00 61 73 6d. This prevents HTML
+     // CDN error pages from reaching WebAssembly.instantiate() as if they were WASM.
+     if(wasmBytes.length<8||wasmBytes[0]!==0||wasmBytes[1]!==97||wasmBytes[2]!==115||wasmBytes[3]!==109)throw Error('The CDN returned an invalid WebAssembly file, not the FFmpeg engine.');
+     coreURL=candidate.core;
+     wasmURL=URL.createObjectURL(new Blob([wasmBytes],{type:'application/wasm'}));
      break;
     }catch(e){assetError=e;}
    }
-   if(!coreURL)throw Error('The FFmpeg core could not be imported from any of the three CDN mirrors. '+String(assetError&&assetError.message||assetError));
+   if(!coreURL)throw Error('Could not download a valid FFmpeg engine from either CDN. '+String(assetError&&assetError.message||assetError));
    updateStatus('Step 2 of 3: Starting the video processor…');
    try{
     await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),120000,'Starting the video processor');
-    URL.revokeObjectURL(workerURL);
+    URL.revokeObjectURL(workerURL);if(wasmURL.startsWith('blob:'))URL.revokeObjectURL(wasmURL);
    }catch(loadError){
     try{ff.terminate();}catch(e){}
-    URL.revokeObjectURL(workerURL);
+    URL.revokeObjectURL(workerURL);if(wasmURL&&wasmURL.startsWith('blob:'))URL.revokeObjectURL(wasmURL);
     throw loadError;
    }
    orvexaFFmpeg=ff;
