@@ -1259,6 +1259,7 @@ async function processOrvexaVideo(){
  }catch(e){
   const reason=String(e&&e.message||e||'Unknown error');
   updateStatus('Video export failed: '+reason);
+  if(statusText)statusText.textContent='Video export failed: '+reason;
   addMessage('assistant','Video export failed: '+reason+' No finished video was created. You can retry with a short MP4.');
  }finally{
   if(progressTimer)clearInterval(progressTimer);
