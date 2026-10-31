@@ -1142,6 +1142,9 @@ async function processOrvexaVideo(){
    // and produce "failed to import ffmpeg-core.js". Validate the CDN response first.
    updateStatus('Step 1 of 3: Checking the video engine files…');
    const coreCandidates=[
+    // Official single-thread ESM core mirrors. Verify actual module execution,
+    // not just an HTTP response that happens to contain JavaScript text.
+    {core:'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.10/esm/ffmpeg-core.js',wasm:'https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.12.10/esm/ffmpeg-core.wasm'},
     {core:'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js',wasm:'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm'},
     {core:'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.js',wasm:'https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm/ffmpeg-core.wasm'}
    ];
@@ -1151,14 +1154,16 @@ async function processOrvexaVideo(){
      const response=await withTimeout(fetch(candidate.core,{cache:'no-store'}),45000,'Checking the FFmpeg core');
      if(!response.ok)throw Error('FFmpeg core CDN returned HTTP '+response.status);
      const source=await response.text();
-     if(!source||source.length<1000||!(/export\s+default|export\s*\{[^}]*default/s.test(source)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
-     // The worker imports this exact verified module URL. Keep its origin intact so
-     // ESM imports and the core's WASM locator are not broken by a Blob URL.
+     if(!source||source.length<1000||!(/export\\s+default|export\\s*\\{[^}]*default/s.test(source)))throw Error('The CDN did not return a valid ESM FFmpeg core file.');
+     const moduleCheck=await withTimeout(import(candidate.core),60000,'Verifying the FFmpeg core module');
+     if(typeof moduleCheck.default!=='function')throw Error('The CDN file loaded but did not expose the FFmpeg core module factory.');
+     // Keep the verified ESM URL intact: the worker imports this module and it
+     // locates the matching WASM binary from the explicit wasmURL below.
      coreURL=candidate.core;wasmURL=candidate.wasm;
      break;
     }catch(e){assetError=e;}
    }
-   if(!coreURL)throw Error('Could not load a valid FFmpeg ESM core from either CDN. '+String(assetError&&assetError.message||assetError));
+   if(!coreURL)throw Error('The FFmpeg core could not be imported from any of the three CDN mirrors. '+String(assetError&&assetError.message||assetError));
    updateStatus('Step 2 of 3: Starting the video processor…');
    try{
     await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),120000,'Starting the video processor');
