@@ -1152,15 +1152,7 @@ async function exportOrvexaDocument(content,format,prompt){
   if(format==='md')mime='text/markdown;charset=utf-8';
   if(format==='csv')mime='text/csv;charset=utf-8';
   if(format==='json')mime='application/json;charset=utf-8';
-  if(format==='html'){mime='text/html;charset=utf-8';output='<!doctype html><html><head><meta charset="utf-8"><title>Orvexa document</title></head><body><pre style="white-space:pre-wrap;font:16px/1.6 sans-serif">'+contentText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>
-<style id="orvexa-chatgpt-typography-v1">
-/* Clean, readable system typography for exported HTML documents */
-html, body, button, input, textarea, select {
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
-}
-body { font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-</style>
-</body></html>';}
+  if(format==='html'){mime='text/html;charset=utf-8';output='<!doctype html><html><head><meta charset="utf-8"><title>Orvexa document</title><style>html,body{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}body{margin:32px auto;padding:0 20px;max-width:900px}pre{white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}</style></head><body><pre>'+contentText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre></body></html>';}
   downloadOrvexaBlob(new Blob([output],{type:mime}),base+'.'+format);toast(format.toUpperCase()+' file created and downloaded.');
  }catch(e){toast('Could not create '+format.toUpperCase()+': '+String(e&&e.message||e));}
 }
