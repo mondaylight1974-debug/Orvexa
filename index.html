@@ -753,6 +753,30 @@ body.orv-motion-off *,body.orv-motion-off *::before,body.orv-motion-off *::after
 body.orv-lite-motion .welcome-mark,body.orv-lite-motion .thinking{animation:none!important}
 @media(prefers-reduced-motion:reduce){.welcome-mark,.thinking,button.recording{animation:none!important}}
 </style>
+<style id="orvexa-chatgpt-typography-v2">
+/* Consistent ChatGPT-inspired typography across the Orvexa app */
+:root { --orvexa-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+html, body, button, input, textarea, select { font-family: var(--orvexa-font) !important; font-kerning: normal; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+body { font-size: 15px; line-height: 1.55; font-weight: 400; letter-spacing: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; text-rendering: optimizeLegibility; }
+h1, h2, h3, h4, .page-title, .hero h1, .hero h2 { font-family: var(--orvexa-font) !important; letter-spacing: -0.035em; line-height: 1.2; font-weight: 650; }
+.page-title { font-size: clamp(25px, 5vw, 34px); }
+h2 { font-size: clamp(20px, 4vw, 24px); }
+h3 { font-size: 17px; }
+.msg-text { font-family: var(--orvexa-font) !important; font-size: 16px !important; line-height: 1.72 !important; font-weight: 400; letter-spacing: 0 !important; overflow-wrap: anywhere; }
+.msg-text p { margin: 0 0 12px; }
+.msg-text p:last-child { margin-bottom: 0; }
+.msg-text ul, .msg-text ol { padding-left: 1.5em; margin: 8px 0 14px; }
+.msg-text li { padding-left: 2px; margin: 4px 0; line-height: 1.65; }
+.msg-text strong, .msg-text b { font-weight: 650; }
+.role { font-family: var(--orvexa-font) !important; font-size: 11px; font-weight: 650; letter-spacing: .055em; }
+.input, textarea, select { font-size: 16px !important; line-height: 1.5 !important; }
+button { letter-spacing: 0; }
+.hero p, .page-desc { font-size: 15px !important; line-height: 1.7 !important; }
+.card .muted, .feature p { font-size: 13px !important; line-height: 1.65 !important; }
+.msg-text .code-block, .msg-text pre, .msg-text code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important; }
+@media (max-width: 480px) { body { font-size: 15px; } .msg-text { font-size: 16px !important; line-height: 1.7 !important; } }
+</style>
 </head>
 <body>
 <div id="runtimeErrorNotice" role="alert" hidden style="position:fixed;z-index:99999;left:10px;right:10px;top:10px;padding:14px;border-radius:12px;background:#7f1d1d;color:white;font:14px system-ui;overflow-wrap:anywhere"></div>
@@ -1130,16 +1154,12 @@ async function exportOrvexaDocument(content,format,prompt){
   if(format==='json')mime='application/json;charset=utf-8';
   if(format==='html'){mime='text/html;charset=utf-8';output='<!doctype html><html><head><meta charset="utf-8"><title>Orvexa document</title></head><body><pre style="white-space:pre-wrap;font:16px/1.6 sans-serif">'+contentText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre>
 <style id="orvexa-chatgpt-typography-v1">
-/* Clean, readable system typography inspired by ChatGPT */
+/* Clean, readable system typography for exported HTML documents */
 html, body, button, input, textarea, select {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important;
 }
-body { font-size: 15px; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
-.msg-text { font-size: 15px !important; line-height: 1.75 !important; letter-spacing: normal !important; }
-.input { font-size: 16px !important; line-height: 1.5 !important; }
-.hero p, .page-desc { font-size: 15px !important; line-height: 1.7 !important; }
-.card .muted, .feature p { font-size: 13px !important; line-height: 1.65 !important; }
-
+body { font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+</style>
 </body></html>';}
   downloadOrvexaBlob(new Blob([output],{type:mime}),base+'.'+format);toast(format.toUpperCase()+' file created and downloaded.');
  }catch(e){toast('Could not create '+format.toUpperCase()+': '+String(e&&e.message||e));}
