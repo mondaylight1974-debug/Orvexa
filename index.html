@@ -1182,15 +1182,16 @@ async function processOrvexaVideo(){
      if(!coreResponse.ok)throw Error('FFmpeg core CDN returned HTTP '+coreResponse.status);
      const coreSource=await coreResponse.text();
      if(!coreSource||coreSource.length<1000)throw Error('The CDN returned an empty or incomplete FFmpeg core file.');
-     const moduleCheck=await withTimeout(import(candidate.core),60000,'Verifying the FFmpeg core module');
-     if(typeof moduleCheck.default!=='function')throw Error('The CDN file did not expose the FFmpeg core module factory.');
+     const candidateCoreURL=await withTimeout(u.toBlobURL(candidate.core,'text/javascript'),60000,'Preparing the FFmpeg core module');
+     const moduleCheck=await withTimeout(import(candidateCoreURL),60000,'Verifying the FFmpeg core module');
+     if(typeof moduleCheck.default!=='function'){URL.revokeObjectURL(candidateCoreURL);throw Error('The CDN file did not expose the FFmpeg core module factory.');}
      const wasmResponse=await withTimeout(fetch(candidate.wasm,{cache:'no-store'}),90000,'Downloading the FFmpeg WebAssembly engine');
      if(!wasmResponse.ok)throw Error('FFmpeg WASM CDN returned HTTP '+wasmResponse.status);
      const wasmBytes=new Uint8Array(await wasmResponse.arrayBuffer());
      // A real WebAssembly binary MUST begin 00 61 73 6d. This prevents HTML
      // CDN error pages from reaching WebAssembly.instantiate() as if they were WASM.
      if(wasmBytes.length<8||wasmBytes[0]!==0||wasmBytes[1]!==97||wasmBytes[2]!==115||wasmBytes[3]!==109)throw Error('The CDN returned an invalid WebAssembly file, not the FFmpeg engine.');
-     coreURL=candidate.core;
+     coreURL=candidateCoreURL;
      wasmURL=URL.createObjectURL(new Blob([wasmBytes],{type:'application/wasm'}));
      break;
     }catch(e){assetError=e;}
