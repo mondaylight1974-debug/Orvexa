@@ -1375,8 +1375,8 @@ async function processOrvexaVideo(){
   const secondsMatch=req.match(/\b(?:to|for|make it|trim to|shorten to|first)\s*(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);
   if(endTime===0&&secondsMatch){endTime=Number(secondsMatch[1]);}
   if(endTime===0&&/\b(?:shorter|shorten|make it short|reduce the length|cut it down)\b/.test(req)&&duration>0){endTime=Math.max(1,Math.floor(duration/2));}
-  if(/\b(?:remove|cut)\s+the\s+first\s+(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/.test(req)){startTime=Number(req.match(/\b(?:remove|cut)\s+the\s+first\s+(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/)[1]);}
-  if(/\b(?:remove|cut)\s+the\s+last\s+(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/.test(req)&&duration>0){const m=req.match(/\b(?:remove|cut)\s+the\s+last\s+(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);endTime=Math.max(1,duration-Number(m[1]));}
+  const removeFirstMatch=req.match(/\b(?:remove|cut)\s+the\s+first\s+(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);if(removeFirstMatch){startTime=Number(removeFirstMatch[1]);}
+  const removeLastMatch=req.match(/\b(?:remove|cut)\s+the\s+last\s+(\d+(?:\.\d+)?)\s*(?:seconds?|secs?|s)\b/);if(removeLastMatch&&duration>0){endTime=Math.max(1,duration-Number(removeLastMatch[1]));}
   if(endTime>0&&endTime<=startTime)throw Error('The requested trim end must be after the trim start.');
   if(endTime>0&&duration>0&&endTime>duration)endTime=duration;
   if(p==='crop-right'||req.includes('crop')||/\b(?:watermark|tiktok logo|remove (?:the )?(?:logo|writing|text))\b/.test(req))filters.push('crop=trunc(iw*0.88/2)*2:ih:0:0');
