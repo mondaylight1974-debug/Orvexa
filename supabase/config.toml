@@ -2,3 +2,20 @@ project_id = "ruczzcnrkgnoftghoapr"
 
 [functions.smart-assistant]
 verify_jwt = true
+
+[functions.github-connect]
+# GitHub OAuth redirects arrive without a Supabase JWT; the function validates its one-time state.
+verify_jwt = false
+
+[functions.paystack-initialize]
+verify_jwt = true
+
+[functions.paystack-verify]
+verify_jwt = true
+
+[functions.paystack-webhook]
+# Paystack signs webhook requests; the function verifies the HMAC-SHA512 signature.
+verify_jwt = false
+
+[functions.transcribe-audio]
+verify_jwt = true
