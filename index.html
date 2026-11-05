@@ -623,7 +623,19 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
 .drawer-bottom-bar{justify-content:flex-start;gap:0}
 .drawer-bottom-bar .drawer-chat-cta{margin:0}
 </style>
-</head>
+<style id="orvexa-chatgpt-recording-ui">
+.voice-note-dock{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);z-index:10020;display:none;align-items:center;gap:12px;padding:12px 14px;border:1px solid #383a48;border-radius:28px;background:#171719;box-shadow:0 12px 40px #0009;color:#f7f7f7;max-width:680px;margin:auto}
+.voice-note-dock.open{display:flex;animation:voiceDockIn .18s ease-out}
+.voice-note-action{width:42px;height:42px;flex:0 0 42px;border:0;border-radius:50%;display:grid;place-items:center;background:#29292d;color:#fff;font-size:21px}
+.voice-note-action.send{background:#397ce8;font-size:23px}.voice-note-action.stop{background:#303036}
+.voice-note-live{min-width:0;flex:1;display:flex;align-items:center;gap:10px}
+.voice-note-timer{font-variant-numeric:tabular-nums;font-size:13px;color:#ddd;min-width:38px}
+.voice-note-wave{height:34px;display:flex;align-items:center;justify-content:center;gap:3px;flex:1;overflow:hidden}
+.voice-note-wave i{width:3px;height:8px;flex:0 0 3px;border-radius:8px;background:#d8d8df;opacity:.85;animation:voiceWave .72s ease-in-out infinite alternate}
+.voice-note-wave i:nth-child(3n){animation-delay:.18s}.voice-note-wave i:nth-child(4n){animation-delay:.32s}.voice-note-wave i:nth-child(5n){animation-delay:.45s}
+.voice-note-status{position:absolute;left:72px;top:-22px;font-size:11px;color:#c8c8ce}
+@keyframes voiceWave{from{height:5px;opacity:.55}to{height:30px;opacity:1}}@keyframes voiceDockIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+</style></head>
 <body>
 <div id="runtimeErrorNotice" role="alert" hidden style="position:fixed;z-index:99999;left:10px;right:10px;top:10px;padding:14px;border-radius:12px;background:#7f1d1d;color:white;font:14px system-ui;overflow-wrap:anywhere"></div>
 <div class="app" data-page="chat">
@@ -811,7 +823,7 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
       <button type="button" role="menuitem" onclick="chooseAttachment('camera')"><span class="attach-icon camera-icon">◎</span><span><strong>Camera</strong><small>Take a new photo</small></span></button>
       <button type="button" role="menuitem" onclick="chooseAttachment('files')"><span class="attach-icon files-icon">▤</span><span><strong>Files</strong><small>PDF, text, CSV, JSON</small></span></button>
     </div>
-    <div class="composer"><button class="tool" aria-label="Attach files, photos, or use camera" aria-haspopup="menu" aria-expanded="false" id="attachButton" onclick="toggleAttachMenu()">＋</button><textarea id="prompt" class="input" rows="1" placeholder="Ask Smart anything…" aria-label="Message"></textarea><button class="tool" aria-label="Send a voice note" title="Speak a voice note and get a text reply" onclick="startVoiceNote()">🎙</button><button class="tool voice-launch" id="callButton" aria-label="Start voice conversation" title="Start a voice conversation" onclick="toggleVoiceCall()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
+    <div class="composer"><button class="tool" aria-label="Attach files, photos, or use camera" aria-haspopup="menu" aria-expanded="false" id="attachButton" onclick="toggleAttachMenu()">＋</button><textarea id="prompt" class="input" rows="1" placeholder="Ask Orvexa anything…" aria-label="Message"></textarea><button class="tool" aria-label="Send a voice note" title="Speak a voice note and get a text reply" onclick="startVoiceNote()">🎙</button><button class="tool voice-launch" id="callButton" aria-label="Start voice conversation" title="Start a voice conversation" onclick="toggleVoiceCall()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
     <div class="disclaimer">Orvexa AI prioritizes accuracy and checks reliable sources when available.</div>
   </div>
   <input type="file" id="imageInput" accept="image/*,video/*,.mp4,.mov,.webm,.m4v" hidden>
@@ -1061,33 +1073,24 @@ function toggleVoiceCall(){if(callMode){callMode=false;if(callRecognition){callR
 function toggleVoiceMute(){if(!callMode)return;callMuted=!callMuted;const b=$('voiceMuteButton');b.classList.toggle('active',callMuted);$('voiceMuteLabel').textContent=callMuted?'Unmute mic':'Mute mic';const circle=b.querySelector('.circle');circle.textContent=callMuted?'🔇':'🎙';if(callMuted){if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}setVoiceState('', 'Microphone muted');}else{setVoiceState('listening','Listening… speak naturally');voiceCallListen();}}
 function interruptVoiceReply(){if(!callMode)return;if('speechSynthesis'in window)speechSynthesis.cancel();if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}if(!callMuted){setVoiceState('listening','Listening… speak now');setTimeout(voiceCallListen,180);}else setVoiceState('', 'Microphone muted');}
 function voiceCallListen(){if(!callMode||callMuted||busy)return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;const r=new SR();callRecognition=r;r.lang=getVoiceRecognitionLanguage();r.interimResults=false;r.maxAlternatives=1;r.onresult=async e=>{const said=(e.results&&e.results[0]&&e.results[0][0]&&e.results[0][0].transcript||'').trim();r.onend=null;try{r.stop();}catch(err){}callRecognition=null;if(!said){if(callMode&&!callMuted)setTimeout(voiceCallListen,400);return;}$('voiceTranscript').textContent='You: '+said;setVoiceState('', 'Thinking…');try{await sendMessage(said);const last=[...currentMessages].reverse().find(m=>m.role==='assistant');if(callMode&&last){$('voiceTranscript').textContent='Orvexa: '+last.content;setVoiceState('speaking','Orvexa is speaking… tap the orb to interrupt');speak(last.content,()=>{if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}});}else if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}}catch(err){if(callMode&&!callMuted)setTimeout(voiceCallListen,1000);}};r.onerror=e=>{callRecognition=null;if(callMode&&!callMuted){setVoiceState('listening','I could not hear you. Try again.');toast(e.error==='not-allowed'?'Allow microphone access to use AI voice call.':'I could not hear you. Please speak again.');setTimeout(voiceCallListen,1200);}};r.onend=()=>{if(callRecognition===r)callRecognition=null;};try{setVoiceState('listening','Listening… speak naturally');r.start();}catch(e){callRecognition=null;if(callMode&&!callMuted)setTimeout(voiceCallListen,900);}}
-let orvexaVoiceNoteRecognition=null,orvexaVoiceNoteText='',orvexaVoiceNoteActive=false;
-function setVoiceNoteButton(active){const b=document.querySelector('button[aria-label="Send a voice note"],button[aria-label="Stop voice note recording"]');if(!b)return;b.textContent=active?'■':'🎙';b.setAttribute('aria-label',active?'Stop voice note recording':'Send a voice note');b.title=active?'Stop recording and send the transcript':'Record a voice note and get a text reply';b.style.color=active?'#ff7777':'';}
+let orvexaVoiceNoteRecognition=null,orvexaVoiceNoteText='',orvexaVoiceNoteActive=false,orvexaVoiceNoteAction='insert',orvexaVoiceNoteStarted=0,orvexaVoiceNoteClock=null;
+function ensureVoiceNoteDock(){let d=document.getElementById('orvexaVoiceNoteDock');if(d)return d;d=document.createElement('div');d.id='orvexaVoiceNoteDock';d.className='voice-note-dock';d.setAttribute('role','group');d.setAttribute('aria-label','Voice note recording controls');d.innerHTML='<button class="voice-note-action" type="button" aria-label="Cancel recording" title="Cancel" onclick="finishVoiceNote(\'cancel\')">×</button><div class="voice-note-live"><span class="voice-note-timer" id="orvexaVoiceTimer">0:00</span><div class="voice-note-wave" aria-hidden="true">'+Array.from({length: thirty= thirty??30},()=>'<i></i>').join('')+'</div></div><button class="voice-note-action stop" type="button" aria-label="Stop recording" title="Stop and insert transcript" onclick="finishVoiceNote(\'insert\')">■</button><button class="voice-note-action send" type="button" aria-label="Send voice note" title="Stop, transcribe and send" onclick="finishVoiceNote(\'send\')">↑</button><span class="voice-note-status">Recording</span>';document.body.appendChild(d);return d;}
+function setVoiceNoteButton(active){const b=document.querySelector('button[aria-label="Send a voice note"],button[aria-label="Stop voice note recording"]');if(!b)return;b.textContent=active?'●':'🎙';b.setAttribute('aria-label',active?'Voice note recording active':'Send a voice note');b.title=active?'Recording is active. Use the controls below.':'Record a voice note and get a text reply';}
+function updateVoiceNoteTimer(){const el=document.getElementById('orvexaVoiceTimer');if(!el)return;const sec=Math.floor((Date.now()-orvexaVoiceNoteStarted)/1000);el.textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');}
+function finishVoiceNote(action){if(!orvexaVoiceNoteActive)return;orvexaVoiceNoteAction=action;if(action==='cancel')orvexaVoiceNoteText='';if(orvexaVoiceNoteRecognition){try{orvexaVoiceNoteRecognition.stop();}catch(e){completeVoiceNote(action);}}else completeVoiceNote(action);}
+async function completeVoiceNote(action){const said=orvexaVoiceNoteText.trim();orvexaVoiceNoteRecognition=null;orvexaVoiceNoteActive=false;if(orvexaVoiceNoteClock)clearInterval(orvexaVoiceNoteClock);orvexaVoiceNoteClock=null;const dock=document.getElementById('orvexaVoiceNoteDock');if(dock)dock.classList.remove('open');setVoiceNoteButton(false);if(action==='cancel'){orvexaVoiceNoteText='';toast('Recording cancelled.');return;}if(!said){toast('I could not hear a clear voice note. Please try again.');return;}if(action==='send'){await sendMessage(said);return;}if($('prompt')){$('prompt').value=said;$('prompt').focus();$('prompt').dispatchEvent(new Event('input',{bubbles:true}));}toast('Voice note transcribed. Review it or press send.');}
 async function startVoiceNote(){
  if(busy){toast('Orvexa is still answering. Please wait a moment.');return;}
- if(orvexaVoiceNoteActive&&orvexaVoiceNoteRecognition){try{orvexaVoiceNoteRecognition.stop();}catch(e){}return;}
+ if(orvexaVoiceNoteActive)return;
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR){toast('Voice recording transcription needs Chrome speech recognition. Try Chrome and allow microphone access.');$('prompt').focus();return;}
- const r=new SR();orvexaVoiceNoteRecognition=r;orvexaVoiceNoteText='';orvexaVoiceNoteActive=true;
+ if(!SR){toast('Voice transcription needs Chrome speech recognition. Allow microphone access and try again.');$('prompt').focus();return;}
+ const r=new SR();orvexaVoiceNoteRecognition=r;orvexaVoiceNoteText='';orvexaVoiceNoteActive=true;orvexaVoiceNoteAction='insert';orvexaVoiceNoteStarted=Date.now();
  r.lang=getVoiceRecognitionLanguage();r.interimResults=true;r.continuous=true;r.maxAlternatives=1;
- setVoiceNoteButton(true);toast('Recording… Speak now. Tap the microphone again when you finish.');
- r.onresult=e=>{
-  let interim='';
-  for(let i=e.resultIndex;i<e.results.length;i++){const item=e.results[i];const text=String(item[0]&&item[0].transcript||'');if(item.isFinal)orvexaVoiceNoteText+=' '+text;else interim+=' '+text;}
-  const preview=(orvexaVoiceNoteText+' '+interim).trim();
-  if($('prompt'))$('prompt').value=preview;
- };
+ ensureVoiceNoteDock().classList.add('open');updateVoiceNoteTimer();orvexaVoiceNoteClock=setInterval(updateVoiceNoteTimer,500);setVoiceNoteButton(true);
+ r.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const item=e.results[i];const text=String(item[0]&&item[0].transcript||'');if(item.isFinal)orvexaVoiceNoteText+=' '+text;else interim+=' '+text;}const preview=(orvexaVoiceNoteText+' '+interim).trim();const timer=document.getElementById('orvexaVoiceTimer');if(timer)timer.title=preview;};
  r.onerror=e=>{if(e.error==='not-allowed')toast('Allow microphone access to record a voice note.');else if(e.error!=='no-speech'&&e.error!=='aborted')toast('Voice recording stopped: '+e.error);};
- r.onend=async()=>{
-  if(orvexaVoiceNoteRecognition!==r)return;
-  orvexaVoiceNoteRecognition=null;orvexaVoiceNoteActive=false;setVoiceNoteButton(false);
-  const said=orvexaVoiceNoteText.trim();
-  if(!said){if($('prompt'))$('prompt').value='';toast('I could not hear a clear voice note. Please try again.');return;}
-  if($('prompt'))$('prompt').value='';
-  await sendMessage(said);
-  // Voice notes are transcribed and receive text replies, just like ChatGPT dictation.
- };
- try{r.start();}catch(e){orvexaVoiceNoteRecognition=null;orvexaVoiceNoteActive=false;setVoiceNoteButton(false);toast('Could not start the microphone. Try again in Chrome.');}
+ r.onend=()=>{if(orvexaVoiceNoteRecognition!==r)return;completeVoiceNote(orvexaVoiceNoteAction);};
+ try{r.start();toast('Recording… speak naturally.');}catch(e){orvexaVoiceNoteRecognition=null;orvexaVoiceNoteActive=false;if(orvexaVoiceNoteClock)clearInterval(orvexaVoiceNoteClock);const d=document.getElementById('orvexaVoiceNoteDock');if(d)d.classList.remove('open');setVoiceNoteButton(false);toast('Could not start the microphone. Try again in Chrome.');}
 }
 function generateImage(){return runImageAction('generate_image');}
 function editImage(){if(!selectedImage){toast('Choose a photo first, then tap Edit chosen photo.');return;}return runImageAction('edit_image');}
