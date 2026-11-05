@@ -999,7 +999,8 @@ async function exportOrvexaDocument(content,format,prompt){
   if(format==='md')mime='text/markdown;charset=utf-8';
   if(format==='csv')mime='text/csv;charset=utf-8';
   if(format==='json')mime='application/json;charset=utf-8';
-  if(format==='html'){mime='text/html;charset=utf-8';output='<!doctype html><html><head><meta charset="utf-8"><title>Orvexa document</title></head><body><pre style="white-space:pre-wrap;font:16px/1.6 sans-serif">'+contentText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre></body></html>';}
+  if(format==='html'){mime='text/html;charset=utf-8';output='<!doctype html><html><head><meta charset="utf-8"><title>Orvexa document</title></head><body><pre style="white-space:pre-wrap;font:16px/1.6 sans-serif">'+contentText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</pre><script type="module" src="./appwrite-client.js"></script>
+</body></html>';}
   downloadOrvexaBlob(new Blob([output],{type:mime}),base+'.'+format);toast(format.toUpperCase()+' file created and downloaded.');
  }catch(e){toast('Could not create '+format.toUpperCase()+': '+String(e&&e.message||e));}
 }
