@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#080910">
 <meta name="description" content="Orvexa AI — your personal AI companion for ideas, learning, writing and creating.">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -623,19 +623,137 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
 .drawer-bottom-bar{justify-content:flex-start;gap:0}
 .drawer-bottom-bar .drawer-chat-cta{margin:0}
 </style>
-<style id="orvexa-chatgpt-recording-ui">
-.voice-note-dock{position:fixed;left:12px;right:12px;bottom:calc(env(safe-area-inset-bottom) + 12px);z-index:10020;display:none;align-items:center;gap:12px;padding:12px 14px;border:1px solid #383a48;border-radius:28px;background:#171719;box-shadow:0 12px 40px #0009;color:#f7f7f7;max-width:680px;margin:auto}
-.voice-note-dock.open{display:flex;animation:voiceDockIn .18s ease-out}
-.voice-note-action{width:42px;height:42px;flex:0 0 42px;border:0;border-radius:50%;display:grid;place-items:center;background:#29292d;color:#fff;font-size:21px}
-.voice-note-action.send{background:#397ce8;font-size:23px}.voice-note-action.stop{background:#303036}
-.voice-note-live{min-width:0;flex:1;display:flex;align-items:center;gap:10px}
-.voice-note-timer{font-variant-numeric:tabular-nums;font-size:13px;color:#ddd;min-width:38px}
-.voice-note-wave{height:34px;display:flex;align-items:center;justify-content:center;gap:3px;flex:1;overflow:hidden}
-.voice-note-wave i{width:3px;height:8px;flex:0 0 3px;border-radius:8px;background:#d8d8df;opacity:.85;animation:voiceWave .72s ease-in-out infinite alternate}
-.voice-note-wave i:nth-child(3n){animation-delay:.18s}.voice-note-wave i:nth-child(4n){animation-delay:.32s}.voice-note-wave i:nth-child(5n){animation-delay:.45s}
-.voice-note-status{position:absolute;left:72px;top:-22px;font-size:11px;color:#c8c8ce}
-@keyframes voiceWave{from{height:5px;opacity:.55}to{height:30px;opacity:1}}@keyframes voiceDockIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
-</style></head>
+
+<style id="orvexa-layout-fix-v1">
+/* Orvexa layout fix v1: respect phone status bar / gesture bar and give every page consistent breathing room. */
+.app>.topbar{padding-top:env(safe-area-inset-top,0px);height:calc(62px + env(safe-area-inset-top,0px));box-sizing:border-box}
+@media(max-width:480px){.app>.topbar{height:calc(58px + env(safe-area-inset-top,0px))}}
+#main .page.active:not(#chatPage){padding-top:14px!important}
+#main .page.active:not(#chatPage)>:first-child{margin-top:0!important}
+#main .page.active{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.nav{padding-bottom:max(env(safe-area-inset-bottom,0px),0px);height:calc(65px + env(safe-area-inset-bottom,0px))}
+.orvexa-plans-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr))!important}
+img,video,canvas{max-width:100%}
+</style>
+<style id="orvexa-voice-v2">
+/* Recording bar (like ChatGPT / Claude voice-note recording) */
+.orv-rec-bar{display:flex;align-items:center;gap:8px;padding:7px 8px;min-height:52px;border-radius:26px;border:1px solid #414141;background:#1b1b1b;box-shadow:0 8px 35px #0003}
+.orv-rec-bar[hidden]{display:none}
+.orv-rec-bar button{border:0;cursor:pointer;font:inherit}
+.orv-rec-x,.orv-rec-ok,.orv-rec-send{width:38px;height:38px;flex-shrink:0;border-radius:50%;font-size:19px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.orv-rec-x{background:#2a2a2a;color:#ddd}
+.orv-rec-ok{background:#2a2a2a;color:#65e6b3}
+.orv-rec-send{background:linear-gradient(140deg,var(--purple,#9575ff),#637aff);color:#fff}
+.orv-rec-mid{flex:1;min-width:0;display:flex;align-items:center;gap:9px;padding:0 4px}
+.orv-rec-mid[hidden]{display:none}
+.orv-rec-mid canvas{flex:1;min-width:0;height:38px;width:100%}
+.orv-rec-dot{width:9px;height:9px;border-radius:50%;background:#ff5a5a;flex-shrink:0;animation:orvPulse 1.1s ease-in-out infinite}
+.orv-rec-time{font-variant-numeric:tabular-nums;font-size:14px;color:#ddd;min-width:34px;text-align:right}
+.orv-rec-busy{flex:1;display:flex;align-items:center;gap:10px;padding:0 10px;color:#ddd;font-size:14px;flex-wrap:wrap}
+.orv-rec-busy[hidden]{display:none}
+.orv-rec-busy button{background:#2a2a2a;color:#eee;border-radius:14px;padding:7px 12px}
+.orv-spin{width:16px;height:16px;border:2px solid #555;border-top-color:#b3a0ff;border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+button.recording{color:#ff6b6b!important}
+@keyframes orvPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.8)}}
+body[data-theme="light"] .orv-rec-bar{background:#fff;border-color:#e0e3ee}
+body[data-theme="light"] .orv-rec-x,body[data-theme="light"] .orv-rec-ok,body[data-theme="light"] .orv-rec-busy button{background:#eef0f6;color:#222}
+body[data-theme="light"] .orv-rec-time,body[data-theme="light"] .orv-rec-busy{color:#222}
+/* Voice call: orb reacts to your voice level */
+.voice-screen .voice-orb-wrap{transform:scale(calc(1 + var(--lvl,0) * .08));transition:transform .08s linear}
+.voice-language-label.orv-barge{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px}
+@media(prefers-reduced-motion:reduce){.orv-rec-dot,.orv-spin{animation-duration:2.4s}.voice-screen .voice-orb-wrap{transition:none;transform:none}}
+</style>
+<style id="orvexa-personalization-v1">
+/* Accent themes (apply to everything that uses the colour variables) */
+body[data-accent="ocean"]{--purple:#4f8cff;--blue:#35c6ff}
+body[data-accent="emerald"]{--purple:#2fd39a;--blue:#37b6ff}
+body[data-accent="sunset"]{--purple:#ff8a4c;--blue:#ff5d8f}
+/* Shared form look for the new cards */
+.orv-label{display:block;margin:12px 0 5px;font-size:12px;letter-spacing:.4px;color:var(--muted,#9b9fba);font-weight:700}
+.orv-field{width:100%;box-sizing:border-box;padding:11px 12px;border-radius:14px;border:1px solid var(--line,#282b43);background:rgba(255,255,255,.04);color:inherit;font:inherit;font-size:15px}
+textarea.orv-field{resize:vertical;min-height:84px}
+.orv-field:focus-visible,.orv-rec-bar button:focus-visible,.orv-mini:focus-visible{outline:2px solid var(--purple,#9575ff);outline-offset:2px}
+.orv-check{display:flex;align-items:flex-start;gap:8px;margin:14px 0 4px;font-size:14px;line-height:1.35}
+.orv-check input{margin-top:3px;width:18px;height:18px;accent-color:var(--purple,#9575ff);flex-shrink:0}
+.orv-row{display:flex;gap:8px;align-items:center;margin-top:10px}.orv-row .orv-field{flex:1;min-width:0}
+.orv-list{display:flex;flex-direction:column;gap:8px;margin:12px 0}
+.orv-item{display:flex;align-items:center;gap:6px;padding:9px 10px;border-radius:14px;border:1px solid var(--line,#282b43);background:rgba(255,255,255,.035)}
+.orv-item-text{flex:1;min-width:0;overflow-wrap:anywhere;font-size:14px}
+.orv-mini{width:34px;height:34px;border-radius:50%;border:0;background:rgba(255,255,255,.08);color:inherit;font-size:15px;flex-shrink:0}
+.orv-chip{display:inline-flex;align-items:center;gap:8px;margin:0 0 8px;padding:6px 8px 6px 12px;border-radius:999px;background:rgba(149,117,255,.16);border:1px solid rgba(149,117,255,.4);font-size:13px;max-width:100%}
+.orv-chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.orv-chip button{border:0;background:transparent;color:inherit;width:24px;height:24px;border-radius:50%;font-size:13px}
+.orv-offline{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 64px);z-index:50;max-width:min(92vw,520px);padding:9px 14px;border-radius:14px;background:#3a2a10;color:#ffd9a3;border:1px solid #7a5a22;font-size:13px;text-align:center;box-shadow:0 8px 30px #0006}
+.orv-offline[hidden]{display:none}
+/* Low-data mode: no animation, no blur, lighter rendering */
+body.orv-low-data *,body.orv-low-data *::before,body.orv-low-data *::after{animation:none!important;transition:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+/* General polish: press feedback, thin scrollbars, readable selection */
+button{-webkit-tap-highlight-color:transparent}
+button:not(:disabled):active{transform:scale(.97)}
+::selection{background:rgba(149,117,255,.35)}
+*{scrollbar-width:thin;scrollbar-color:#3a3d57 transparent}
+body[data-theme="light"] .orv-field,body[data-theme="light"] .orv-item{background:#fff;border-color:#e0e3ee}
+body[data-theme="light"] .orv-mini{background:#eef0f6}
+@media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+<style id="orvexa-motion-v1">
+/* Orvexa motion v1 — only transform/opacity (smooth on budget phones). Respects: OS reduced-motion, Low-data mode, and the Animations switch. */
+@keyframes orvPageIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes orvRise{from{opacity:0;transform:translateY(16px) scale(.97)}to{opacity:1;transform:none}}
+@keyframes orvMsgIn{from{opacity:0;transform:translate(var(--dx,0),10px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes orvSlideUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes orvFade{from{opacity:0}to{opacity:1}}
+@keyframes orvPop{0%{transform:scale(1)}45%{transform:scale(1.25)}100%{transform:scale(1)}}
+@keyframes orvBreath{0%,100%{opacity:.55}50%{opacity:1}}
+@keyframes orvSpinSlow{to{transform:rotate(360deg)}}
+@keyframes orvFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes orvRing{0%{box-shadow:0 0 0 0 rgba(255,90,90,.55)}100%{box-shadow:0 0 0 14px rgba(255,90,90,0)}}
+@keyframes orvToast{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes orvRipple{to{transform:scale(3.2);opacity:0}}
+@keyframes orvShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+
+/* Page changes */
+#main .page.active{animation:orvPageIn .36s cubic-bezier(.22,1,.36,1) backwards}
+/* Staggered entrance for cards and tiles */
+.quick,.feature,#profilePage .card,#historyPage .card{animation:orvRise .5s cubic-bezier(.22,1,.36,1) backwards}
+.quick:nth-child(1),.feature:nth-child(1),#profilePage>:nth-child(1){animation-delay:.02s}
+.quick:nth-child(2),.feature:nth-child(2),#profilePage>:nth-child(2){animation-delay:.07s}
+.quick:nth-child(3),.feature:nth-child(3),#profilePage>:nth-child(3){animation-delay:.12s}
+.quick:nth-child(4),.feature:nth-child(4),#profilePage>:nth-child(4){animation-delay:.17s}
+.quick:nth-child(5),.feature:nth-child(5),#profilePage>:nth-child(5){animation-delay:.22s}
+.quick:nth-child(6),.feature:nth-child(6),#profilePage>:nth-child(6){animation-delay:.27s}
+.quick:nth-child(n+7),.feature:nth-child(n+7),#profilePage>:nth-child(n+7){animation-delay:.32s}
+/* Messages glide in from their own side */
+.msg{animation:orvMsgIn .4s cubic-bezier(.22,1,.36,1) backwards}
+.msg.user{--dx:14px}.msg.assistant{--dx:-10px}
+/* "Thinking" indicator breathes */
+.thinking{animation:orvBreath 1.3s ease-in-out infinite}
+/* Welcome screen: slow-turning mark (decorative, switched off on low-end phones) */
+.welcome-mark{display:inline-block;animation:orvSpinSlow 22s linear infinite,orvFloat 4s ease-in-out infinite}
+/* Touch + hover feedback */
+.quick,.feature,.card,.send,.tool,.primary,.secondary{transition:transform .18s ease,box-shadow .25s ease,background-color .2s ease}
+.quick:active,.feature:active,.primary:active,.secondary:active{transform:scale(.97)}
+@media(hover:hover){.quick:hover,.feature:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(0,0,0,.28)}}
+.send:not(:disabled):active{transform:scale(.86) rotate(-10deg)}
+.nav button.active .navicon{animation:orvPop .38s ease}
+/* Recording, voice call, toast, banners */
+.orv-rec-bar:not([hidden]){animation:orvSlideUp .28s cubic-bezier(.22,1,.36,1)}
+button.recording{animation:orvRing 1.4s ease-out infinite}
+.voice-screen.open{animation:orvFade .35s ease}
+.toast{animation:orvToast .28s ease}
+.orv-offline:not([hidden]){animation:orvSlideUp .3s ease}
+.orv-chip{animation:orvRise .3s ease backwards}
+.orv-item{animation:orvRise .3s ease backwards}
+.orv-shake{animation:orvShake .35s ease}
+/* Button ripple (added by script) */
+.primary,.secondary,.quick,.feature,.send{position:relative;overflow:hidden}
+.orv-ripple{position:absolute;border-radius:50%;width:40px;height:40px;margin:-20px 0 0 -20px;background:rgba(255,255,255,.35);pointer-events:none;transform:scale(0);animation:orvRipple .6s ease-out forwards}
+/* Switches: Animations Off, Low-data, and low-end phones (keeps short entrances, drops endless loops) */
+body.orv-motion-off *,body.orv-motion-off *::before,body.orv-motion-off *::after{animation:none!important;transition:none!important}
+body.orv-lite-motion .welcome-mark,body.orv-lite-motion .thinking{animation:none!important}
+@media(prefers-reduced-motion:reduce){.welcome-mark,.thinking,button.recording{animation:none!important}}
+</style>
+</head>
 <body>
 <div id="runtimeErrorNotice" role="alert" hidden style="position:fixed;z-index:99999;left:10px;right:10px;top:10px;padding:14px;border-radius:12px;background:#7f1d1d;color:white;font:14px system-ui;overflow-wrap:anywhere"></div>
 <div class="app" data-page="chat">
@@ -823,7 +941,7 @@ html,body,.app{margin-top:0!important;padding-top:0!important}
       <button type="button" role="menuitem" onclick="chooseAttachment('camera')"><span class="attach-icon camera-icon">◎</span><span><strong>Camera</strong><small>Take a new photo</small></span></button>
       <button type="button" role="menuitem" onclick="chooseAttachment('files')"><span class="attach-icon files-icon">▤</span><span><strong>Files</strong><small>PDF, text, CSV, JSON</small></span></button>
     </div>
-    <div class="composer"><button class="tool" aria-label="Attach files, photos, or use camera" aria-haspopup="menu" aria-expanded="false" id="attachButton" onclick="toggleAttachMenu()">＋</button><textarea id="prompt" class="input" rows="1" placeholder="Ask Orvexa anything…" aria-label="Message"></textarea><button class="tool" aria-label="Send a voice note" title="Speak a voice note and get a text reply" onclick="startVoiceNote()">🎙</button><button class="tool voice-launch" id="callButton" aria-label="Start voice conversation" title="Start a voice conversation" onclick="toggleVoiceCall()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
+    <div class="composer"><button class="tool" aria-label="Attach files, photos, or use camera" aria-haspopup="menu" aria-expanded="false" id="attachButton" onclick="toggleAttachMenu()">＋</button><textarea id="prompt" class="input" rows="1" placeholder="Ask Smart anything…" aria-label="Message"></textarea><button class="tool" aria-label="Send a voice note" title="Speak a voice note and get a text reply" onclick="startVoiceNote()">🎙</button><button class="tool voice-launch" id="callButton" aria-label="Start voice conversation" title="Start a voice conversation" onclick="toggleVoiceCall()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="send" aria-label="Send message" onclick="sendMessage()">↑</button></div>
     <div class="disclaimer">Orvexa AI prioritizes accuracy and checks reliable sources when available.</div>
   </div>
   <input type="file" id="imageInput" accept="image/*,video/*,.mp4,.mov,.webm,.m4v" hidden>
@@ -879,8 +997,7 @@ const supabaseReady = Boolean(window.supabase && SUPABASE_URL.startsWith('https:
 const sb = supabaseReady ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
 function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function appendLinkedText(container,content){const raw=String(content||'');const re=/(https?:\/\/[^\s<>"']+|www\.[^\s<>"']+|\b(?:youtube\.com|youtu\.be|google\.com|maps\.google\.com|facebook\.com|instagram\.com|tiktok\.com|whatsapp\.com|web\.whatsapp\.com|github\.com|x\.com|twitter\.com|gmail\.com)(?:\/[^\s<>"']*)?)/gi;let last=0,match;while((match=re.exec(raw))){let value=match[0],url=value;let trail='';while(/[.,!?;:)]$/.test(url)){trail=url.slice(-1)+trail;url=url.slice(0,-1);}if(match.index>last)container.appendChild(document.createTextNode(raw.slice(last,match.index)));const safeUrl=/^https?:\/\//i.test(url)?url:'https://'+url;if(/^https?:\/\//i.test(safeUrl)){const a=document.createElement('a');a.href=safeUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent=url;a.className='smart-link';container.appendChild(a);}else container.appendChild(document.createTextNode(url));if(trail)container.appendChild(document.createTextNode(trail));last=match.index+match[0].length;}if(last<raw.length)container.appendChild(document.createTextNode(raw.slice(last)));}
-function appendFormattedText(container,content){const raw=String(content||'');const fence=/```([^\n`]*)\n([\s\S]*?)```/g;let last=0,match;while((match=fence.exec(raw))){if(match.index>last)appendLinkedText(container,raw.slice(last,match.index));const block=document.createElement('div');block.className='code-block';const head=document.createElement('div');head.className='code-block-head';const lang=document.createElement('span');lang.className='code-language';lang.textContent=(match[1]||'code').trim()||'code';const button=document.createElement('button');button.type='button';button.className='copy-code-button';button.textContent='⧉ Copy code';button.setAttribute('aria-label','Copy code block');const code=match[2].replace(/\n$/,'');button.addEventListener('click',async()=>{await copyText(code);button.textContent='✓ Copied';setTimeout(()=>{button.textContent='⧉ Copy code';},1600);});const download=document.createElement('button');download.type='button';download.className='copy-code-button';download.textContent='↓ Download';download.setAttribute('aria-label','Download code as a file');download.addEventListener('click',()=>{const extensions={javascript:'js',js:'js',typescript:'ts',ts:'ts',html:'html',css:'css',json:'json',python:'py',py:'py',java:'java',kotlin:'kt',swift:'swift',sql:'sql',bash:'sh',sh:'sh',markdown:'md',md:'md',xml:'xml',yaml:'yml',yml:'yml',php:'php',c:'c',cpp:'cpp',rust:'rs',go:'go',ruby:'rb',text:'txt',txt:'txt'};const ext=extensions[(match[1]||'').trim().toLowerCase()]||'txt';const blob=new Blob([code],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='orvexa-code.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);});const buttons=document.createElement('div');buttons.style.cssText='display:flex;gap:8px;flex-wrap:wrap';buttons.append(button,download);head.append(lang,buttons);const pre=document.createElement('pre');const codeEl=document.createElement('code');codeEl.textContent=code;pre.appendChild(codeEl);block.append(head,pre);container.appendChild(block);last=match.index+match[0].length;}if(last<raw.length)appendLinkedText(container,raw.slice(last));}
-function renderMessage(m){const d=document.createElement('article');d.className='msg '+m.role;const role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'YOU':'✦ ORVEXA';d.appendChild(role);if(m.attachment&&m.attachment.type==='video'&&m.attachment.url){const wrap=document.createElement('div');wrap.className='message-attachment video-input-attachment';const vid=document.createElement('video');vid.controls=true;vid.playsInline=true;vid.preload='metadata';vid.src=m.attachment.url;vid.style.cssText='display:block;width:100%;max-width:520px;max-height:360px;border-radius:12px;background:#000';const label=document.createElement('div');label.className='attachment-filename';label.textContent=m.attachment.name||'Uploaded video';wrap.append(vid,label);d.appendChild(wrap);}else if(m.attachment&&m.attachment.type==='image'&&m.attachment.dataUrl){const wrap=document.createElement('div');wrap.className='message-attachment image-attachment';const img=document.createElement('img');img.src=m.attachment.dataUrl;img.alt=m.attachment.name||'Attached image';img.loading='lazy';img.addEventListener('click',()=>{const viewer=document.createElement('div');viewer.className='attachment-viewer';viewer.setAttribute('role','dialog');viewer.setAttribute('aria-label','Image preview');const large=document.createElement('img');large.src=m.attachment.dataUrl;large.alt=m.attachment.name||'Attached image';const close=document.createElement('button');close.type='button';close.className='attachment-viewer-close';close.textContent='✕';close.setAttribute('aria-label','Close image preview');close.onclick=()=>viewer.remove();viewer.onclick=e=>{if(e.target===viewer)viewer.remove();};viewer.append(close,large);document.body.appendChild(viewer);});wrap.appendChild(img);if(m.attachment.name){const label=document.createElement('div');label.className='attachment-filename';label.textContent=m.attachment.name;wrap.appendChild(label);}d.appendChild(wrap);}else if(m.attachment&&m.attachment.type==='video-result'){const wrap=document.createElement('div');wrap.className='message-attachment video-result-attachment';const vid=document.createElement('video');vid.controls=true;vid.playsInline=true;vid.preload='metadata';vid.src=m.attachment.url;vid.style.cssText='display:block;width:100%;max-width:520px;max-height:360px;border-radius:12px;background:#000';const dl=document.createElement('a');dl.href=m.attachment.url;dl.download=m.attachment.name||'orvexa-edited-video.mp4';dl.textContent='⬇ Download edited video';dl.className='text-action';dl.style.cssText='display:inline-block;margin-top:10px;padding:10px 14px;border-radius:10px;text-decoration:none';wrap.append(vid,dl);d.appendChild(wrap);}else if(m.attachment&&m.attachment.type==='file'){const fileCard=document.createElement('div');fileCard.className='message-attachment file-attachment';const icon=document.createElement('div');icon.className='file-attachment-icon';icon.textContent=(m.attachment.name||'').toLowerCase().endsWith('.pdf')?'PDF':'FILE';const info=document.createElement('div');info.className='file-attachment-info';const name=document.createElement('strong');name.textContent=m.attachment.name||'Attached file';const detail=document.createElement('small');detail.textContent='Attached file · ready for Orvexa to review';info.append(name,detail);fileCard.append(icon,info);d.appendChild(fileCard);}const text=document.createElement('div');text.className='msg-text';if(m.role==='assistant')appendFormattedText(text,m.content);else appendLinkedText(text,m.content);d.appendChild(text);if(m.role==='assistant'){const actions=document.createElement('div');actions.className='msg-actions';const makeAction=(label,aria,handler)=>{const b=document.createElement('button');b.type='button';b.className='text-action msg-icon-action';b.textContent=label;b.setAttribute('aria-label',aria);b.title=aria;b.addEventListener('click',handler);return b;};const up=makeAction('👍','Good response',()=>{m.feedback=m.feedback==='up'?'': 'up';saveCurrent();up.classList.toggle('selected',m.feedback==='up');down.classList.toggle('selected',m.feedback==='down');toast(m.feedback==='up'?'Thanks for your feedback.':'Feedback cleared.');});const down=makeAction('👎','Bad response',()=>{m.feedback=m.feedback==='down'?'':'down';saveCurrent();up.classList.toggle('selected',m.feedback==='up');down.classList.toggle('selected',m.feedback==='down');toast(m.feedback==='down'?'Thanks for your feedback.':'Feedback cleared.');});up.classList.toggle('selected',m.feedback==='up');down.classList.toggle('selected',m.feedback==='down');const listen=makeAction('🔈','Read answer aloud',()=>speak(String(m.content||''),null,listen));const share=makeAction('↗','Share answer',async()=>{const value=String(m.content||'');try{if(navigator.share){await navigator.share({title:'Orvexa AI answer',text:value});}else{await copyText(value);toast('Answer copied. You can share it in any app.');}}catch(e){if(e&&e.name!=='AbortError'){await copyText(value);}}});const copy=makeAction('⧉','Copy answer',()=>copyText(String(m.content||'')));actions.append(up,down,listen,share,copy);d.appendChild(actions);}$('messages').appendChild(d);}
+function appendFormattedText(container,content){const raw=String(content||'');const fence=/```([^\n`]*)\n([\s\S]*?)```/g;let last=0,match;while((match=fence.exec(raw))){if(match.index>last)appendLinkedText(container,raw.slice(last,match.index));const block=document.createElement('div');block.className='code-block';const head=document.createElement('div');head.className='code-block-head';const lang=document.createElement('span');lang.className='code-language';lang.textContent=(match[1]||'code').trim()||'code';const button=document.createElement('button');button.type='button';button.className='copy-code-button';button.textContent='⧉ Copy code';button.setAttribute('aria-label','Copy code block');const code=match[2].replace(/\n$/,'');button.addEventListener('click',async()=>{await copyText(code);button.textContent='✓ Copied';setTimeout(()=>{button.textContent='⧉ Copy code';},1600);});const download=document.createElement('button');download.type='button';download.className='copy-code-button';download.textContent='↓ Download';download.setAttribute('aria-label','Download code as a file');download.addEventListener('click',()=>{const extensions={javascript:'js',js:'js',typescript:'ts',ts:'ts',html:'html',css:'css',json:'json',python:'py',py:'py',java:'java',kotlin:'kt',swift:'swift',sql:'sql',bash:'sh',sh:'sh',markdown:'md',md:'md',xml:'xml',yaml:'yml',yml:'yml',php:'php',c:'c',cpp:'cpp',rust:'rs',go:'go',ruby:'rb',text:'txt',txt:'txt'};const ext=extensions[(match[1]||'').trim().toLowerCase()]||'txt';const blob=new Blob([code],{type:'text/plain;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='orvexa-code.'+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);});const buttons=document.createElement('div');buttons.style.cssText='display:flex;gap:8px;flex-wrap:wrap';buttons.append(button,download);head.append(lang,buttons);const pre=document.createElement('pre');const codeEl=document.createElement('code');codeEl.textContent=code;pre.appendChild(codeEl);block.append(head,pre);container.appendChild(block);last=match.index+match[0].length;}if(last<raw.length)appendLinkedText(container,raw.slice(last));}function renderMessage(m){const d=document.createElement('article');d.className='msg '+m.role;const role=document.createElement('div');role.className='role';role.textContent=m.role==='user'?'YOU':'✦ ORVEXA';d.appendChild(role);if(m.attachment&&m.attachment.type==='video'&&m.attachment.url){const wrap=document.createElement('div');wrap.className='message-attachment video-input-attachment';const vid=document.createElement('video');vid.controls=true;vid.playsInline=true;vid.preload='metadata';vid.src=m.attachment.url;vid.style.cssText='display:block;width:100%;max-width:520px;max-height:360px;border-radius:12px;background:#000';const label=document.createElement('div');label.className='attachment-filename';label.textContent=m.attachment.name||'Uploaded video';wrap.append(vid,label);d.appendChild(wrap);}else if(m.attachment&&m.attachment.type==='image'&&m.attachment.dataUrl){const wrap=document.createElement('div');wrap.className='message-attachment image-attachment';const img=document.createElement('img');img.src=m.attachment.dataUrl;img.alt=m.attachment.name||'Attached image';img.loading='lazy';img.addEventListener('click',()=>{const viewer=document.createElement('div');viewer.className='attachment-viewer';viewer.setAttribute('role','dialog');viewer.setAttribute('aria-label','Image preview');const large=document.createElement('img');large.src=m.attachment.dataUrl;large.alt=m.attachment.name||'Attached image';const close=document.createElement('button');close.type='button';close.className='attachment-viewer-close';close.textContent='✕';close.setAttribute('aria-label','Close image preview');close.onclick=()=>viewer.remove();viewer.onclick=e=>{if(e.target===viewer)viewer.remove();};viewer.append(close,large);document.body.appendChild(viewer);});wrap.appendChild(img);if(m.attachment.name){const label=document.createElement('div');label.className='attachment-filename';label.textContent=m.attachment.name;wrap.appendChild(label);}d.appendChild(wrap);}else if(m.attachment&&m.attachment.type==='video-result'){const wrap=document.createElement('div');wrap.className='message-attachment video-result-attachment';const vid=document.createElement('video');vid.controls=true;vid.playsInline=true;vid.preload='metadata';vid.src=m.attachment.url;vid.style.cssText='display:block;width:100%;max-width:520px;max-height:360px;border-radius:12px;background:#000';const dl=document.createElement('a');dl.href=m.attachment.url;dl.download=m.attachment.name||'orvexa-edited-video.mp4';dl.textContent='⬇ Download edited video';dl.className='text-action';dl.style.cssText='display:inline-block;margin-top:10px;padding:10px 14px;border-radius:10px;text-decoration:none';wrap.append(vid,dl);d.appendChild(wrap);}else if(m.attachment&&m.attachment.type==='file'){const fileCard=document.createElement('div');fileCard.className='message-attachment file-attachment';const icon=document.createElement('div');icon.className='file-attachment-icon';icon.textContent=(m.attachment.name||'').toLowerCase().endsWith('.pdf')?'PDF':'FILE';const info=document.createElement('div');info.className='file-attachment-info';const name=document.createElement('strong');name.textContent=m.attachment.name||'Attached file';const detail=document.createElement('small');detail.textContent='Attached file · ready for Orvexa to review';info.append(name,detail);fileCard.append(icon,info);d.appendChild(fileCard);}const text=document.createElement('div');text.className='msg-text';if(m.role==='assistant')appendFormattedText(text,m.content);else appendLinkedText(text,m.content);d.appendChild(text);if(m.role==='assistant'){const actions=document.createElement('div');actions.className='msg-actions';const makeAction=(label,aria,handler)=>{const b=document.createElement('button');b.type='button';b.className='text-action msg-icon-action';b.textContent=label;b.setAttribute('aria-label',aria);b.title=aria;b.addEventListener('click',handler);return b;};const up=makeAction('👍','Good response',()=>{m.feedback=m.feedback==='up'?'': 'up';saveCurrent();up.classList.toggle('selected',m.feedback==='up');down.classList.toggle('selected',m.feedback==='down');toast(m.feedback==='up'?'Thanks for your feedback.':'Feedback cleared.');});const down=makeAction('👎','Bad response',()=>{m.feedback=m.feedback==='down'?'':'down';saveCurrent();up.classList.toggle('selected',m.feedback==='up');down.classList.toggle('selected',m.feedback==='down');toast(m.feedback==='down'?'Thanks for your feedback.':'Feedback cleared.');});up.classList.toggle('selected',m.feedback==='up');down.classList.toggle('selected',m.feedback==='down');const listen=makeAction('🔈','Read answer aloud',()=>speak(String(m.content||''),null,listen));const share=makeAction('↗','Share answer',async()=>{const value=String(m.content||'');try{if(navigator.share){await navigator.share({title:'Orvexa AI answer',text:value});}else{await copyText(value);toast('Answer copied. You can share it in any app.');}}catch(e){if(e&&e.name!=='AbortError'){await copyText(value);}}});const copy=makeAction('⧉','Copy answer',()=>copyText(String(m.content||'')));actions.append(up,down,listen,share,copy);d.appendChild(actions);}$('messages').appendChild(d);}
 function updateChatLayout(){const page=$('chatPage');if(page)page.classList.toggle('has-conversation',currentMessages.some(m=>m.role==='user'));}
 const MAX_CHAT_PAGE_CHARS=14000; // Content-based page size, not a daily message quota.
 function chatContentLength(){return currentMessages.reduce((total,m)=>total+String(m.content||'').length,0);}
@@ -1045,7 +1162,7 @@ const attachedDocumentText=selectedDocumentText;const attachedDocumentName=selec
 try{
  if(!supabaseReady){throw new Error('Supabase is not configured.');}
  else{
-   const sessionResult = sb ? await sb.auth.getSession() : {data:{session:null}}; const token=sessionResult.data.session?.access_token; if(!token) throw new Error('Please configure Supabase and sign in first.'); const wantsImage=/\b(?:generate|create|draw|make|design|produce|show me|give me|make me)\b.{0,70}\b(?:an?\s+)?(?:image|picture|photo|illustration|drawing|artwork|wallpaper|logo|poster|thumbnail)\b|\b(?:image|picture|photo|illustration|drawing|artwork|wallpaper)\s+of\b/i.test(prompt);const conversationHistory=currentMessages.filter((m,index)=>index!==currentMessages.length-1||m.role!=='user').slice(-12).map(m=>({role:m.role,content:m.content}));const exportFormat=getRequestedExportFormat(typedPrompt);const exportInstruction=exportFormat?'\\n\\nFILE EXPORT TASK: The app can generate and download a '+exportFormat.toUpperCase()+' file from your response. Do NOT say you cannot create or send files. Perform the requested task now. If an image is attached, inspect it and transcribe its visible text accurately, preserving headings and paragraphs. Return the actual document content only, without refusal, instructions to copy it elsewhere, or claims that a file was created.': '';const requestBody=wantsImage?{action:'generate_image',prompt:prompt.replace(/^\\s*(?:please\\s+)?(?:generate|create|draw|make|design|produce|show me|give me|make me)\\s*/i,'').trim()||prompt,conversationId:currentConversationId,history:conversationHistory}:{message:prompt+exportInstruction,conversationId:currentConversationId,history:conversationHistory,image:selectedImage};const resp=await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify(requestBody)});
+   const sessionResult = sb ? await sb.auth.getSession() : {data:{session:null}}; const token=sessionResult.data.session?.access_token; if(!token) throw new Error('Please configure Supabase and sign in first.'); const wantsImage=/\b(?:generate|create|draw|make|design|produce|show me|give me|make me)\b.{0,70}\b(?:an?\s+)?(?:image|picture|photo|illustration|drawing|artwork|wallpaper|logo|poster|thumbnail)\b|\b(?:image|picture|photo|illustration|drawing|artwork|wallpaper)\s+of\b/i.test(prompt);const conversationHistory=currentMessages.filter((m,index)=>index!==currentMessages.length-1||m.role!=='user').slice(-orvHistoryLimit()).map(m=>({role:m.role,content:m.content}));const exportFormat=getRequestedExportFormat(typedPrompt);const exportInstruction=exportFormat?'\\n\\nFILE EXPORT TASK: The app can generate and download a '+exportFormat.toUpperCase()+' file from your response. Do NOT say you cannot create or send files. Perform the requested task now. If an image is attached, inspect it and transcribe its visible text accurately, preserving headings and paragraphs. Return the actual document content only, without refusal, instructions to copy it elsewhere, or claims that a file was created.': '';const requestBody=wantsImage?{action:'generate_image',prompt:prompt.replace(/^\\s*(?:please\\s+)?(?:generate|create|draw|make|design|produce|show me|give me|make me)\\s*/i,'').trim()||prompt,conversationId:currentConversationId,history:conversationHistory,...orvChatExtras()}:{message:prompt+exportInstruction,conversationId:currentConversationId,history:conversationHistory,image:selectedImage,...orvChatExtras()};const resp=await fetch(API_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify(requestBody)});
    const data=await resp.json();if(!resp.ok)throw new Error(data.error||'AI request failed');if(data.conversationId){currentConversationId=data.conversationId;saveCurrent();}if(data.image){addMessage('assistant','Your image was created.');const card=$('messages').lastElementChild;const img=document.createElement('img');img.src=data.image;img.alt='Image created by Orvexa AI';img.style.maxWidth='100%';img.style.borderRadius='16px';card.querySelector('.msg-text').appendChild(img);const save=document.createElement('a');save.href=data.image;save.download='orvexa-image.png';save.textContent='Save image';save.className='text-action';card.appendChild(save);}else{const reply=data.reply||'I could not create a response this time.';if(!await handleWebsiteProjectReply(reply)){addMessage('assistant',reply);const exportFormat=getRequestedExportFormat(typedPrompt);if(exportFormat)await exportOrvexaDocument(reply,exportFormat,typedPrompt);}}
  }
  selectedImage=null;selectedImagePreview='';selectedImageName='';selectedDocumentText='';selectedDocumentName='';updateAttachmentPreview();
@@ -1069,28 +1186,37 @@ function stopSpeaking(){if('speechSynthesis'in window)window.speechSynthesis.can
 function speak(text,onend,button){if(!('speechSynthesis'in window)||typeof SpeechSynthesisUtterance==='undefined'){toast('Your browser does not support spoken answers. Open Orvexa AI in Chrome and try again.');if(onend)onend();return;}const value=String(text||'').trim();if(!value){toast('There is no answer to speak yet.');if(onend)onend();return;}if(activeSpeechUtterance&&button===activeSpeechButton){stopSpeaking();return;}stopSpeaking();try{const utterance=new SpeechSynthesisUtterance(value);activeSpeechUtterance=utterance;activeSpeechButton=button||null;if(activeSpeechButton){activeSpeechButton.textContent='⏹';activeSpeechButton.setAttribute('aria-label','Stop speaking');activeSpeechButton.classList.add('speaking');}utterance.lang=detectSpeechLanguage(value);const availableVoices=window.speechSynthesis.getVoices();const matchingVoice=availableVoices.find(v=>v.lang.toLowerCase()===utterance.lang.toLowerCase())||availableVoices.find(v=>v.lang.toLowerCase().startsWith(utterance.lang.split('-')[0].toLowerCase()));if(matchingVoice)utterance.voice=matchingVoice;utterance.rate=1;utterance.onstart=()=>{if(callMode)setVoiceState('speaking','Orvexa is speaking… tap the orb to interrupt');};const finish=()=>{if(activeSpeechUtterance===utterance){activeSpeechUtterance=null;if(activeSpeechButton){activeSpeechButton.textContent='🔊 Speak';activeSpeechButton.setAttribute('aria-label','Speak this Orvexa AI answer');activeSpeechButton.classList.remove('speaking');activeSpeechButton=null;}}if(onend)onend();};utterance.onend=finish;utterance.onerror=finish;window.speechSynthesis.speak(utterance);if(window.speechSynthesis.paused)window.speechSynthesis.resume();}catch(e){stopSpeaking();toast('Could not speak this answer. Try opening Orvexa AI in Chrome.');if(onend)onend();}}
 function setVoiceState(state,text){const screen=$('voiceScreen');if(!screen)return;screen.classList.remove('listening','speaking');if(state)screen.classList.add(state);$('voiceState').textContent=text||'Ready';}
 function getVoiceRecognitionLanguage(){const selected=$('voiceLanguage')?.value||'device';return selected==='device'?(navigator.language||'en-NG'):selected;}
-function toggleVoiceCall(){if(callMode){callMode=false;if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}if('speechSynthesis'in window)speechSynthesis.cancel();const b=$('callButton');if(b)b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';if(b)b.setAttribute('aria-label','Start AI voice call');const screen=$('voiceScreen');if(screen){screen.classList.remove('open','listening','speaking');screen.setAttribute('aria-hidden','true');}toast('Voice call ended.');return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('Live voice calls need speech recognition in this browser. Try Chrome and allow microphone access.');return;}if(!('speechSynthesis'in window)){toast('This browser cannot speak replies aloud.');return;}callMode=true;const b=$('callButton');if(b)b.textContent='■';if(b)b.setAttribute('aria-label','End AI voice call');const screen=$('voiceScreen');screen.classList.add('open');screen.setAttribute('aria-hidden','false');setVoiceState('listening','Listening… speak naturally');$('voiceTranscript').textContent='Talk naturally. Smart will listen and reply aloud.';voiceCallListen();}
+function toggleVoiceCall(){if(callMode){callMode=false;orvCallCleanup();if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}if('speechSynthesis'in window)speechSynthesis.cancel();const b=$('callButton');if(b)b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10v4M7 6v12M11 3v18M15 7v10M19 10v4M23 9v6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';if(b)b.setAttribute('aria-label','Start AI voice call');const screen=$('voiceScreen');if(screen){screen.classList.remove('open','listening','speaking');screen.setAttribute('aria-hidden','true');}toast('Voice call ended.');return;}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR&&!orvCanRecord()){toast('Live voice calls need microphone recording or speech recognition in this browser. Try Chrome and allow microphone access.');return;}if(!('speechSynthesis'in window)){toast('This browser cannot speak replies aloud.');return;}callMode=true;const b=$('callButton');if(b)b.textContent='■';if(b)b.setAttribute('aria-label','End AI voice call');const screen=$('voiceScreen');screen.classList.add('open');screen.setAttribute('aria-hidden','false');setVoiceState('listening','Listening… speak naturally');$('voiceTranscript').textContent='Talk naturally. Smart will listen and reply aloud.';orvCallClockStart();voiceCallListen();}
 function toggleVoiceMute(){if(!callMode)return;callMuted=!callMuted;const b=$('voiceMuteButton');b.classList.toggle('active',callMuted);$('voiceMuteLabel').textContent=callMuted?'Unmute mic':'Mute mic';const circle=b.querySelector('.circle');circle.textContent=callMuted?'🔇':'🎙';if(callMuted){if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}setVoiceState('', 'Microphone muted');}else{setVoiceState('listening','Listening… speak naturally');voiceCallListen();}}
 function interruptVoiceReply(){if(!callMode)return;if('speechSynthesis'in window)speechSynthesis.cancel();if(callRecognition){callRecognition.onend=null;try{callRecognition.stop();}catch(e){}callRecognition=null;}if(!callMuted){setVoiceState('listening','Listening… speak now');setTimeout(voiceCallListen,180);}else setVoiceState('', 'Microphone muted');}
-function voiceCallListen(){if(!callMode||callMuted||busy)return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;const r=new SR();callRecognition=r;r.lang=getVoiceRecognitionLanguage();r.interimResults=false;r.maxAlternatives=1;r.onresult=async e=>{const said=(e.results&&e.results[0]&&e.results[0][0]&&e.results[0][0].transcript||'').trim();r.onend=null;try{r.stop();}catch(err){}callRecognition=null;if(!said){if(callMode&&!callMuted)setTimeout(voiceCallListen,400);return;}$('voiceTranscript').textContent='You: '+said;setVoiceState('', 'Thinking…');try{await sendMessage(said);const last=[...currentMessages].reverse().find(m=>m.role==='assistant');if(callMode&&last){$('voiceTranscript').textContent='Orvexa: '+last.content;setVoiceState('speaking','Orvexa is speaking… tap the orb to interrupt');speak(last.content,()=>{if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}});}else if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}}catch(err){if(callMode&&!callMuted)setTimeout(voiceCallListen,1000);}};r.onerror=e=>{callRecognition=null;if(callMode&&!callMuted){setVoiceState('listening','I could not hear you. Try again.');toast(e.error==='not-allowed'?'Allow microphone access to use AI voice call.':'I could not hear you. Please speak again.');setTimeout(voiceCallListen,1200);}};r.onend=()=>{if(callRecognition===r)callRecognition=null;};try{setVoiceState('listening','Listening… speak naturally');r.start();}catch(e){callRecognition=null;if(callMode&&!callMuted)setTimeout(voiceCallListen,900);}}
-let orvexaVoiceNoteRecognition=null,orvexaVoiceNoteText='',orvexaVoiceNoteActive=false,orvexaVoiceNoteAction='insert',orvexaVoiceNoteStarted=0,orvexaVoiceNoteClock=null;
-function ensureVoiceNoteDock(){let d=document.getElementById('orvexaVoiceNoteDock');if(d)return d;d=document.createElement('div');d.id='orvexaVoiceNoteDock';d.className='voice-note-dock';d.setAttribute('role','group');d.setAttribute('aria-label','Voice note recording controls');d.innerHTML='<button class="voice-note-action" type="button" aria-label="Cancel recording" title="Cancel" onclick="finishVoiceNote(\'cancel\')">×</button><div class="voice-note-live"><span class="voice-note-timer" id="orvexaVoiceTimer">0:00</span><div class="voice-note-wave" aria-hidden="true">'+Array.from({length:30},()=>'<i></i>').join('')+'</div></div><button class="voice-note-action stop" type="button" aria-label="Stop recording" title="Stop and insert transcript" onclick="finishVoiceNote(\'insert\')">■</button><button class="voice-note-action send" type="button" aria-label="Send voice note" title="Stop, transcribe and send" onclick="finishVoiceNote(\'send\')">↑</button><span class="voice-note-status">Recording</span>';document.body.appendChild(d);return d;}
-function setVoiceNoteButton(active){const b=document.querySelector('button[onclick="startVoiceNote()"]');if(!b)return;b.textContent=active?'●':'🎙';b.setAttribute('aria-label',active?'Voice note recording active':'Send a voice note');b.title=active?'Recording is active. Use the controls below.':'Record a voice note and get a text reply';}
-function updateVoiceNoteTimer(){const el=document.getElementById('orvexaVoiceTimer');if(!el)return;const sec=Math.floor((Date.now()-orvexaVoiceNoteStarted)/1000);el.textContent=Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0');}
-function finishVoiceNote(action){if(!orvexaVoiceNoteActive)return;orvexaVoiceNoteAction=action;if(action==='cancel')orvexaVoiceNoteText='';if(orvexaVoiceNoteRecognition){try{orvexaVoiceNoteRecognition.stop();}catch(e){completeVoiceNote(action);}}else completeVoiceNote(action);}
-async function completeVoiceNote(action){const said=orvexaVoiceNoteText.trim();orvexaVoiceNoteRecognition=null;orvexaVoiceNoteActive=false;if(orvexaVoiceNoteClock)clearInterval(orvexaVoiceNoteClock);orvexaVoiceNoteClock=null;const dock=document.getElementById('orvexaVoiceNoteDock');if(dock)dock.classList.remove('open');setVoiceNoteButton(false);if(action==='cancel'){orvexaVoiceNoteText='';toast('Recording cancelled.');return;}if(!said){toast('I could not hear a clear voice note. Please try again.');return;}if(action==='send'){await sendMessage(said);return;}if($('prompt')){$('prompt').value=said;$('prompt').focus();$('prompt').dispatchEvent(new Event('input',{bubbles:true}));}toast('Voice note transcribed. Review it or press send.');}
-async function startVoiceNote(){
+function legacyVoiceCallListen(){if(!callMode||callMuted||busy)return;const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return;const r=new SR();callRecognition=r;r.lang=getVoiceRecognitionLanguage();r.interimResults=false;r.maxAlternatives=1;r.onresult=async e=>{const said=(e.results&&e.results[0]&&e.results[0][0]&&e.results[0][0].transcript||'').trim();r.onend=null;try{r.stop();}catch(err){}callRecognition=null;if(!said){if(callMode&&!callMuted)setTimeout(voiceCallListen,400);return;}$('voiceTranscript').textContent='You: '+said;setVoiceState('', 'Thinking…');try{await sendMessage(said);const last=[...currentMessages].reverse().find(m=>m.role==='assistant');if(callMode&&last){$('voiceTranscript').textContent='Orvexa: '+last.content;setVoiceState('speaking','Orvexa is speaking… tap the orb to interrupt');speak(last.content,()=>{if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}});}else if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}}catch(err){if(callMode&&!callMuted)setTimeout(voiceCallListen,1000);}};r.onerror=e=>{callRecognition=null;if(callMode&&!callMuted){setVoiceState('listening','I could not hear you. Try again.');toast(e.error==='not-allowed'?'Allow microphone access to use AI voice call.':'I could not hear you. Please speak again.');setTimeout(voiceCallListen,1200);}};r.onend=()=>{if(callRecognition===r)callRecognition=null;};try{setVoiceState('listening','Listening… speak naturally');r.start();}catch(e){callRecognition=null;if(callMode&&!callMuted)setTimeout(voiceCallListen,900);}}
+let orvexaVoiceNoteRecognition=null,orvexaVoiceNoteText='',orvexaVoiceNoteActive=false;
+function setVoiceNoteButton(active){const b=document.querySelector('button[aria-label="Send a voice note"],button[aria-label="Stop voice note recording"]');if(!b)return;b.textContent=active?'■':'🎙';b.setAttribute('aria-label',active?'Stop voice note recording':'Send a voice note');b.title=active?'Stop recording and send the transcript':'Record a voice note and get a text reply';b.style.color=active?'#ff7777':'';}
+async function legacyStartVoiceNote(){
  if(busy){toast('Orvexa is still answering. Please wait a moment.');return;}
- if(orvexaVoiceNoteActive)return;
+ if(orvexaVoiceNoteActive&&orvexaVoiceNoteRecognition){try{orvexaVoiceNoteRecognition.stop();}catch(e){}return;}
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
- if(!SR){toast('Voice transcription needs Chrome speech recognition. Allow microphone access and try again.');$('prompt').focus();return;}
- const r=new SR();orvexaVoiceNoteRecognition=r;orvexaVoiceNoteText='';orvexaVoiceNoteActive=true;orvexaVoiceNoteAction='insert';orvexaVoiceNoteStarted=Date.now();
+ if(!SR){toast('Voice recording transcription needs Chrome speech recognition. Try Chrome and allow microphone access.');$('prompt').focus();return;}
+ const r=new SR();orvexaVoiceNoteRecognition=r;orvexaVoiceNoteText='';orvexaVoiceNoteActive=true;
  r.lang=getVoiceRecognitionLanguage();r.interimResults=true;r.continuous=true;r.maxAlternatives=1;
- ensureVoiceNoteDock().classList.add('open');updateVoiceNoteTimer();orvexaVoiceNoteClock=setInterval(updateVoiceNoteTimer,500);setVoiceNoteButton(true);
- r.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const item=e.results[i];const text=String(item[0]&&item[0].transcript||'');if(item.isFinal)orvexaVoiceNoteText+=' '+text;else interim+=' '+text;}const preview=(orvexaVoiceNoteText+' '+interim).trim();const timer=document.getElementById('orvexaVoiceTimer');if(timer)timer.title=preview;};
+ setVoiceNoteButton(true);toast('Recording… Speak now. Tap the microphone again when you finish.');
+ r.onresult=e=>{
+  let interim='';
+  for(let i=e.resultIndex;i<e.results.length;i++){const item=e.results[i];const text=String(item[0]&&item[0].transcript||'');if(item.isFinal)orvexaVoiceNoteText+=' '+text;else interim+=' '+text;}
+  const preview=(orvexaVoiceNoteText+' '+interim).trim();
+  if($('prompt'))$('prompt').value=preview;
+ };
  r.onerror=e=>{if(e.error==='not-allowed')toast('Allow microphone access to record a voice note.');else if(e.error!=='no-speech'&&e.error!=='aborted')toast('Voice recording stopped: '+e.error);};
- r.onend=()=>{if(orvexaVoiceNoteRecognition!==r)return;completeVoiceNote(orvexaVoiceNoteAction);};
- try{r.start();toast('Recording… speak naturally.');}catch(e){orvexaVoiceNoteRecognition=null;orvexaVoiceNoteActive=false;if(orvexaVoiceNoteClock)clearInterval(orvexaVoiceNoteClock);const d=document.getElementById('orvexaVoiceNoteDock');if(d)d.classList.remove('open');setVoiceNoteButton(false);toast('Could not start the microphone. Try again in Chrome.');}
+ r.onend=async()=>{
+  if(orvexaVoiceNoteRecognition!==r)return;
+  orvexaVoiceNoteRecognition=null;orvexaVoiceNoteActive=false;setVoiceNoteButton(false);
+  const said=orvexaVoiceNoteText.trim();
+  if(!said){if($('prompt'))$('prompt').value='';toast('I could not hear a clear voice note. Please try again.');return;}
+  if($('prompt'))$('prompt').value='';
+  await sendMessage(said);
+  // Voice notes are transcribed and receive text replies, just like ChatGPT dictation.
+ };
+ try{r.start();}catch(e){orvexaVoiceNoteRecognition=null;orvexaVoiceNoteActive=false;setVoiceNoteButton(false);toast('Could not start the microphone. Try again in Chrome.');}
 }
 function generateImage(){return runImageAction('generate_image');}
 function editImage(){if(!selectedImage){toast('Choose a photo first, then tap Edit chosen photo.');return;}return runImageAction('edit_image');}
@@ -1182,16 +1308,15 @@ async function processOrvexaVideo(){
      if(!coreResponse.ok)throw Error('FFmpeg core CDN returned HTTP '+coreResponse.status);
      const coreSource=await coreResponse.text();
      if(!coreSource||coreSource.length<1000)throw Error('The CDN returned an empty or incomplete FFmpeg core file.');
-     const candidateCoreURL=await withTimeout(u.toBlobURL(candidate.core,'text/javascript'),60000,'Preparing the FFmpeg core module');
-     const moduleCheck=await withTimeout(import(candidateCoreURL),60000,'Verifying the FFmpeg core module');
-     if(typeof moduleCheck.default!=='function'){URL.revokeObjectURL(candidateCoreURL);throw Error('The CDN file did not expose the FFmpeg core module factory.');}
+     coreURL=URL.createObjectURL(new Blob([coreSource],{type:'text/javascript'}));
+     const moduleCheck=await withTimeout(import(coreURL),60000,'Verifying the FFmpeg core module');
+     if(typeof moduleCheck.default!=='function')throw Error('The CDN file did not expose the FFmpeg core module factory.');
      const wasmResponse=await withTimeout(fetch(candidate.wasm,{cache:'no-store'}),90000,'Downloading the FFmpeg WebAssembly engine');
      if(!wasmResponse.ok)throw Error('FFmpeg WASM CDN returned HTTP '+wasmResponse.status);
      const wasmBytes=new Uint8Array(await wasmResponse.arrayBuffer());
      // A real WebAssembly binary MUST begin 00 61 73 6d. This prevents HTML
      // CDN error pages from reaching WebAssembly.instantiate() as if they were WASM.
      if(wasmBytes.length<8||wasmBytes[0]!==0||wasmBytes[1]!==97||wasmBytes[2]!==115||wasmBytes[3]!==109)throw Error('The CDN returned an invalid WebAssembly file, not the FFmpeg engine.');
-     coreURL=candidateCoreURL;
      wasmURL=URL.createObjectURL(new Blob([wasmBytes],{type:'application/wasm'}));
      break;
     }catch(e){assetError=e;}
@@ -1200,10 +1325,10 @@ async function processOrvexaVideo(){
    updateStatus('Step 2 of 3: Starting the video processor…');
    try{
     await withTimeout(ff.load({classWorkerURL:workerURL,coreURL,wasmURL}),120000,'Starting the video processor');
-    URL.revokeObjectURL(workerURL);if(wasmURL.startsWith('blob:'))URL.revokeObjectURL(wasmURL);
+    URL.revokeObjectURL(workerURL);if(coreURL.startsWith('blob:'))URL.revokeObjectURL(coreURL);if(wasmURL.startsWith('blob:'))URL.revokeObjectURL(wasmURL);
    }catch(loadError){
     try{ff.terminate();}catch(e){}
-    URL.revokeObjectURL(workerURL);if(wasmURL&&wasmURL.startsWith('blob:'))URL.revokeObjectURL(wasmURL);
+    URL.revokeObjectURL(workerURL);if(coreURL&&coreURL.startsWith('blob:'))URL.revokeObjectURL(coreURL);if(wasmURL&&wasmURL.startsWith('blob:'))URL.revokeObjectURL(wasmURL);
     throw loadError;
    }
    orvexaFFmpeg=ff;
@@ -1424,6 +1549,7 @@ function setOrvexaPlanPill(isPro){
 document.getElementById('orvexaPlanPill')?.addEventListener('click',()=>showPage('profile'));
 /* Orvexa Pro payments: checkout + server-verified activation */
 (function initOrvexaProPayments(){
+  const readJson=async r=>{try{return await r.json()}catch(e){return {error:'The payment service returned an unexpected response (HTTP '+r.status+'). Please try again.'}}};
   const profile=$('profilePage');
   if(!profile||!sb)return;
   const card=document.createElement('section');
@@ -1433,13 +1559,14 @@ document.getElementById('orvexaPlanPill')?.addEventListener('click',()=>showPage
   const github=profile.querySelector('#githubToolsCard');
   if(github)profile.insertBefore(card,github);else profile.appendChild(card);
   const status=$('orvexaProStatus'),note=$('orvexaPaymentNote'),upgrade=$('orvexaUpgradeButton'),check=$('orvexaCheckPayment');
+  if(!status||!note||!upgrade||!check)return;
   card.querySelectorAll('[data-orvexa-future-plan]').forEach(button=>button.addEventListener('click',()=>{note.textContent=button.dataset.orvexaFuturePlan+' checkout is not available yet. You can use Free Mode or upgrade to Pro for ₦5,000/month.';}));
   let checking=false;
   async function refreshEntitlement(){
     const {data:{session}}=await sb.auth.getSession();
     if(!session){setOrvexaPlanPill(false);status.textContent='Sign in first to upgrade or check your plan.';upgrade.disabled=false;return false;}
-    const {data,error}=await sb.from('profiles').select('is_premium').eq('id',session.user.id).maybeSingle();
-    if(!error&&data?.is_premium){setOrvexaPlanPill(true);status.textContent='✅ Orvexa Pro is active on this account.';upgrade.textContent='Pro is active';upgrade.disabled=true;check.style.display='none';return true;}
+    const {data,error}=await sb.from('profiles').select('is_premium,pro_until').eq('id',session.user.id).maybeSingle();
+    if(!error&&data?.is_premium&&(!data.pro_until||new Date(data.pro_until).getTime()>Date.now())){setOrvexaPlanPill(true);status.textContent='✅ Orvexa Pro is active'+(data.pro_until?' until '+new Date(data.pro_until).toLocaleDateString():'')+'.';upgrade.textContent='Pro is active';upgrade.disabled=true;check.style.display='none';return true;}
     setOrvexaPlanPill(false);status.textContent='Free Mode · Upgrade to unlock Pro benefits for ₦5,000/month.';
     upgrade.textContent='Upgrade to Pro · ₦5,000/month';upgrade.disabled=false;check.style.display='';return false;
   }
@@ -1448,7 +1575,7 @@ document.getElementById('orvexaPlanPill')?.addEventListener('click',()=>showPage
     try{
       const {data:{session}}=await sb.auth.getSession();if(!session)throw new Error('Please sign in to the same Orvexa account you used to pay.');
       const response=await fetch(SUPABASE_URL+'/functions/v1/paystack-verify',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({reference})});
-      const result=await response.json();
+      const result=await readJson(response);
       if(!response.ok||!result.verified)throw new Error(result.error||'Payment is not confirmed yet.');
       note.textContent='Payment verified successfully. Orvexa Pro is now active.';await refreshEntitlement();
     }catch(e){note.textContent=String(e.message||'Could not verify payment. Please try again.');}
@@ -1459,7 +1586,7 @@ document.getElementById('orvexaPlanPill')?.addEventListener('click',()=>showPage
     try{
       const {data:{session}}=await sb.auth.getSession();if(!session)throw new Error('Please sign in or create an Orvexa account first.');
       const response=await fetch(SUPABASE_URL+'/functions/v1/paystack-initialize',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify({})});
-      const result=await response.json();if(!response.ok||!result.authorization_url)throw new Error(result.error||'Could not start checkout.');
+      const result=await readJson(response);if(!response.ok||!result.authorization_url)throw new Error(result.error||'Could not start checkout.');
       try{sessionStorage.setItem('orvexa-pending-payment-reference',result.reference||'')}catch(e){}
       window.location.href=result.authorization_url;
     }catch(e){note.textContent=String(e.message||'Could not start checkout.');upgrade.disabled=false;}
@@ -1479,6 +1606,420 @@ document.getElementById('orvexaPlanPill')?.addEventListener('click',()=>showPage
   if(params.get('payment')==='callback'&&params.get('reference'))setTimeout(()=>verifyReference(params.get('reference')),500);
 })();
 try{const voiceLang=$('voiceLanguage');if(voiceLang){voiceLang.value=storage.getItem('orvexa-voice-language')||'device';voiceLang.addEventListener('change',()=>{try{storage.setItem('orvexa-voice-language',voiceLang.value)}catch(e){}if(callMode&&!callMuted){if(callRecognition){callRecognition.onend=null;try{callRecognition.stop()}catch(e){}callRecognition=null;}setTimeout(voiceCallListen,250);}});}}catch(e){}
+/* Voice activity detector: adapts to room noise, detects start/end of a spoken phrase. Pure logic (unit-tested). */
+class OrvexaVAD{
+ constructor(o={}){this.minSpeechMs=o.minSpeechMs||350;this.silenceMs=o.silenceMs||1200;this.maxMs=o.maxMs||30000;this.calibMs=o.calibMs||400;this.minThreshold=o.minThreshold||0.025;
+  this.t0=null;this.calib=[];this.threshold=this.minThreshold;this.state='wait';this.speechStart=0;this.lastVoice=0;}
+ update(level,now){
+  if(this.t0===null)this.t0=now;
+  if(now-this.t0<this.calibMs){this.calib.push(level);if(this.calib.length){const avg=this.calib.reduce((a,b)=>a+b,0)/this.calib.length;this.threshold=Math.max(this.minThreshold,avg*3);}return null;}
+  if(this.state==='wait'){if(level>this.threshold){this.state='speech';this.speechStart=now;this.lastVoice=now;return 'start';}return null;}
+  if(this.state==='speech'){
+   if(level>this.threshold)this.lastVoice=now;
+   if(now-this.speechStart>this.maxMs){this.state='done';return 'end';}
+   if(now-this.lastVoice>this.silenceMs){this.state='done';return (this.lastVoice-this.speechStart>=this.minSpeechMs)?'end':'discard';}
+  }
+  return null;
+ }
+}
+
+/* ======================================================================================
+   Orvexa Voice v2 — real audio recording + server-side transcription
+   • Voice notes: ChatGPT/Claude-style recording bar (cancel ✕, live waveform, timer, ✓ to text, ↑ to send).
+     Audio is uploaded to the private "voice-notes" bucket and transcribed by the transcribe-audio Edge Function.
+   • Voice call: records each phrase with silence detection, transcribes on the server, speaks the reply.
+   • If the transcribe-audio function is not deployed/configured, both fall back to the old browser speech recognition.
+   ====================================================================================== */
+const ORV_STT={mode:'server'};
+function orvLangCode(){const v=($('voiceLanguage')&&$('voiceLanguage').value)||'device';const c=String(v==='device'?(navigator.language||'en'):v).toLowerCase().split('-')[0];return /^[a-z]{2,3}$/.test(c)?c:'';}
+function orvPickMime(){if(!window.MediaRecorder)return '';const list=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/ogg;codecs=opus','audio/ogg'];return list.find(t=>{try{return MediaRecorder.isTypeSupported(t)}catch(e){return false}})||'';}
+const orvExt=m=>String(m).includes('mp4')?'m4a':String(m).includes('ogg')?'ogg':'webm';
+const orvBase=m=>String(m||'audio/webm').split(';')[0];
+const orvCanRecord=()=>Boolean(window.MediaRecorder&&navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+function orvOpenMic(){return navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,channelCount:1}});}
+function orvMakeRecorder(stream){const mime=orvPickMime();let mr;try{mr=new MediaRecorder(stream,mime?{mimeType:mime,audioBitsPerSecond:32000}:{audioBitsPerSecond:32000});}catch(e){mr=new MediaRecorder(stream);}return {mr,mime:mr.mimeType||mime||'audio/webm'};}
+function orvMakeMeter(stream){const AC=window.AudioContext||window.webkitAudioContext;const ctx=new AC();const src=ctx.createMediaStreamSource(stream);const an=ctx.createAnalyser();an.fftSize=1024;an.smoothingTimeConstant=.5;src.connect(an);const buf=new Uint8Array(an.fftSize);if(ctx.state==='suspended')ctx.resume().catch(()=>{});
+ return {level(){an.getByteTimeDomainData(buf);let s=0;for(let i=0;i<buf.length;i++){const v=(buf[i]-128)/128;s+=v*v;}return Math.sqrt(s/buf.length);},close(){try{src.disconnect()}catch(e){}try{ctx.close()}catch(e){}}};}
+function orvBlobToBase64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]||'');r.onerror=()=>rej(new Error('Could not read the audio.'));r.readAsDataURL(blob);});}
+async function orvAuth(){const {data:{session}}=sb?await sb.auth.getSession():{data:{session:null}};return session;}
+async function orvCallFunction(session,payload){
+ let r;try{r=await fetch(SUPABASE_URL+'/functions/v1/transcribe-audio',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_ANON_KEY},body:JSON.stringify(payload)});}
+ catch(e){const err=new Error('Could not reach the transcription service.');err.fallback=true;throw err;}
+ let j;try{j=await r.json();}catch(e){j={error:'Unexpected response (HTTP '+r.status+').'};}
+ if(!r.ok){const err=new Error(j.error||'Transcription failed.');err.status=r.status;err.fallback=(r.status===404||r.status===503);throw err;}
+ return String(j.text||'').trim();
+}
+const ORV_HALLUCINATIONS=/^(thank you|thanks|thanks for watching|you|bye)?[.!\s]*$/i;
+
+/* ---------- Voice note recorder (recording bar) ---------- */
+const orvRec={active:false,stream:null,mr:null,mime:'',chunks:[],meter:null,levels:[],t0:0,clock:0,draw:0,mode:'insert',blob:null,cancelled:false};
+function orvBuildRecBar(){
+ if($('orvRecBar'))return $('orvRecBar');const composer=document.querySelector('.composer');if(!composer)return null;
+ const bar=document.createElement('div');bar.id='orvRecBar';bar.className='orv-rec-bar';bar.hidden=true;bar.setAttribute('role','group');bar.setAttribute('aria-label','Voice recording');
+ bar.innerHTML='<button type="button" class="orv-rec-x" id="orvRecCancel" aria-label="Cancel recording">✕</button><div class="orv-rec-mid"><span class="orv-rec-dot" aria-hidden="true"></span><canvas id="orvRecWave" aria-hidden="true"></canvas><span class="orv-rec-time" id="orvRecTime" aria-live="off">0:00</span></div><button type="button" class="orv-rec-ok" id="orvRecInsert" aria-label="Finish and turn into text" title="Turn into text">✓</button><button type="button" class="orv-rec-send" id="orvRecSend" aria-label="Finish, transcribe and send" title="Transcribe and send">↑</button><div class="orv-rec-busy" id="orvRecBusy" hidden><span class="orv-spin" aria-hidden="true"></span><span id="orvRecBusyText" role="status">Transcribing…</span><button type="button" id="orvRecRetry" hidden>Retry</button><button type="button" id="orvRecDiscard" hidden>Discard</button></div>';
+ composer.parentNode.insertBefore(bar,composer);
+ $('orvRecCancel').addEventListener('click',()=>orvRecStop('cancel'));
+ $('orvRecInsert').addEventListener('click',()=>orvRecStop('insert'));
+ $('orvRecSend').addEventListener('click',()=>orvRecStop('send'));
+ $('orvRecRetry').addEventListener('click',()=>orvRecProcess());
+ $('orvRecDiscard').addEventListener('click',()=>orvRecClose());
+ return bar;
+}
+function orvRecShowBusy(text,failed){const busy=$('orvRecBusy');['orvRecCancel','orvRecInsert','orvRecSend'].forEach(id=>{$(id).hidden=true;});document.querySelector('#orvRecBar .orv-rec-mid').hidden=true;busy.hidden=false;$('orvRecBusyText').textContent=text;$('orvRecRetry').hidden=!failed;$('orvRecDiscard').hidden=!failed;busy.querySelector('.orv-spin').style.display=failed?'none':'';}
+function orvRecClose(){
+ const bar=$('orvRecBar'),composer=document.querySelector('.composer');
+ clearInterval(orvRec.clock);cancelAnimationFrame(orvRec.draw);
+ if(orvRec.meter){orvRec.meter.close();orvRec.meter=null;}
+ if(orvRec.stream){orvRec.stream.getTracks().forEach(t=>t.stop());orvRec.stream=null;}
+ orvRec.active=false;orvRec.chunks=[];orvRec.blob=null;orvRec.mr=null;
+ if(bar){bar.hidden=true;['orvRecCancel','orvRecInsert','orvRecSend'].forEach(id=>{$(id).hidden=false;});document.querySelector('#orvRecBar .orv-rec-mid').hidden=false;$('orvRecBusy').hidden=true;}
+ if(composer)composer.style.display='';
+ const b=document.querySelector('button[aria-label="Send a voice note"]');if(b)b.classList.remove('recording');
+}
+function orvRecDraw(){
+ const canvas=$('orvRecWave');if(!canvas||!orvRec.active)return;
+ const dpr=window.devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h){orvRec.draw=requestAnimationFrame(orvRecDraw);return;}
+ if(canvas.width!==Math.round(w*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+ const g=canvas.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+ const now=performance.now();if(!orvRec.lastPush||now-orvRec.lastPush>55){orvRec.lastPush=now;orvRec.levels.push(orvRec.meter?orvRec.meter.level():0);if(orvRec.levels.length>400)orvRec.levels.shift();}
+ const barW=3,gap=3,n=Math.floor(w/(barW+gap)),start=Math.max(0,orvRec.levels.length-n);
+ g.fillStyle=getComputedStyle(document.body).getPropertyValue('--purple').trim()||'#b3a0ff';
+ for(let i=0;i<n;i++){const idx=start+i-(n-(orvRec.levels.length-start));const lv=orvRec.levels[orvRec.levels.length-n+i];const v=lv===undefined?0:Math.min(1,lv*5);const bh=Math.max(3,v*h);const x=i*(barW+gap),y=(h-bh)/2;g.beginPath();if(g.roundRect)g.roundRect(x,y,barW,bh,2);else g.rect(x,y,barW,bh);g.globalAlpha=lv===undefined?.15:.95;g.fill();}
+ g.globalAlpha=1;orvRec.draw=requestAnimationFrame(orvRecDraw);
+}
+async function startVoiceNote(){
+ if(busy){toast('Orvexa is still answering. Please wait a moment.');return;}
+ if(orvRec.active)return;
+ if(ORV_STT.mode==='browser'||!orvCanRecord()){return legacyStartVoiceNote();}
+ const session=await orvAuth();if(!session){toast('Please sign in first to record a voice note.');return;}
+ let stream;try{stream=await orvOpenMic();}catch(e){toast(e&&e.name==='NotAllowedError'?'Allow microphone access to record a voice note.':'Could not open the microphone.');return;}
+ const bar=orvBuildRecBar();if(!bar){stream.getTracks().forEach(t=>t.stop());return legacyStartVoiceNote();}
+ const {mr,mime}=orvMakeRecorder(stream);
+ orvRec.stream=stream;orvRec.mr=mr;orvRec.mime=mime;orvRec.chunks=[];orvRec.levels=[];orvRec.lastPush=0;orvRec.cancelled=false;orvRec.blob=null;orvRec.active=true;
+ mr.ondataavailable=e=>{if(e.data&&e.data.size)orvRec.chunks.push(e.data);};
+ try{orvRec.meter=orvMakeMeter(stream);}catch(e){orvRec.meter=null;}
+ mr.start(250);orvRec.t0=Date.now();
+ const composer=document.querySelector('.composer');if(composer)composer.style.display='none';bar.hidden=false;
+ const btn=document.querySelector('button[aria-label="Send a voice note"]');if(btn)btn.classList.add('recording');
+ $('orvRecTime').textContent='0:00';
+ orvRec.clock=setInterval(()=>{const s=Math.floor((Date.now()-orvRec.t0)/1000);$('orvRecTime').textContent=Math.floor(s/60)+':'+String(s%60).padStart(2,'0');if(s>=300){orvRecStop('insert');toast('Recording stopped at the 5 minute limit.');}},250);
+ orvRec.draw=requestAnimationFrame(orvRecDraw);
+ if(navigator.vibrate)try{navigator.vibrate(15)}catch(e){}
+}
+function orvRecStop(mode){
+ if(!orvRec.active||!orvRec.mr)return;
+ if(mode==='cancel'){orvRec.cancelled=true;try{if(orvRec.mr.state!=='inactive')orvRec.mr.stop();}catch(e){}orvRecClose();return;}
+ orvRec.mode=mode;clearInterval(orvRec.clock);cancelAnimationFrame(orvRec.draw);
+ orvRecShowBusy('Finishing…',false);
+ orvRec.mr.onstop=()=>{orvRec.blob=new Blob(orvRec.chunks,{type:orvBase(orvRec.mime)});if(orvRec.stream){orvRec.stream.getTracks().forEach(t=>t.stop());}if(orvRec.meter){orvRec.meter.close();orvRec.meter=null;}orvRecProcess();};
+ try{orvRec.mr.stop();}catch(e){orvRecClose();}
+}
+async function orvRecProcess(){
+ const blob=orvRec.blob;if(!blob||blob.size<800){toast('That recording was too short.');orvRecClose();return;}
+ orvRecShowBusy('Uploading and transcribing…',false);
+ try{
+  const session=await orvAuth();if(!session)throw new Error('Please sign in again.');
+  const path=session.user.id+'/'+Date.now()+'.'+orvExt(orvRec.mime);
+  const up=await sb.storage.from('voice-notes').upload(path,blob,{contentType:orvBase(orvRec.mime),upsert:false});
+  if(up.error){const err=new Error('Could not upload the audio: '+up.error.message);err.fallback=/bucket|not found|policy/i.test(up.error.message);throw err;}
+  const text=await orvCallFunction(session,{path,language:orvLangCode()});
+  if(!text){toast('I could not hear any speech in that recording.');orvRecClose();return;}
+  const mode=orvRec.mode,field=$('prompt'),existing=(field&&field.value||'').trim();
+  orvRecClose();
+  if(mode==='send'){if(field)field.value='';await sendMessage((existing?existing+' ':'')+text);}
+  else if(field){field.value=(existing?existing+' ':'')+text;field.dispatchEvent(new Event('input',{bubbles:true}));field.focus();}
+ }catch(e){
+  if(e&&e.fallback){ORV_STT.mode='browser';orvRecClose();toast('Server transcription is not set up yet, so I switched to browser dictation. Tap the mic again.');return;}
+  orvRecShowBusy(String(e&&e.message||'Transcription failed.'),true);
+ }
+}
+
+/* ---------- Voice call v2 ---------- */
+const orvCall={stream:null,meter:null,active:false,clock:0,startedAt:0,barge:0,tick:0};
+function orvCallViz(level){
+ const screen=$('voiceScreen');if(!screen)return;screen.style.setProperty('--lvl',Math.min(1,level*6).toFixed(2));
+ const bars=screen.querySelectorAll('.voice-bars i');bars.forEach((el,i)=>{const wave=.35+.65*Math.abs(Math.sin(performance.now()/160+i*.7));const h=6+Math.min(1,level*7)*wave*26;el.style.animation='none';el.style.height=h.toFixed(1)+'px';});
+}
+function orvCallVizReset(){const bars=document.querySelectorAll('#voiceScreen .voice-bars i');bars.forEach(el=>{el.style.animation='';el.style.height='';});}
+function orvCallClockStart(){orvCall.startedAt=Date.now();clearInterval(orvCall.clock);const t=document.querySelector('#voiceScreen .voice-title');orvCall.clock=setInterval(()=>{if(!t)return;const s=Math.floor((Date.now()-orvCall.startedAt)/1000);t.textContent='ORVEXA AI · VOICE · '+Math.floor(s/60)+':'+String(s%60).padStart(2,'0');},1000);}
+function orvCallCleanup(){
+ clearInterval(orvCall.clock);clearInterval(orvCall.tick);clearInterval(orvCall.barge);orvCall.active=false;
+ if(orvCall.meter){orvCall.meter.close();orvCall.meter=null;}
+ if(orvCall.stream){orvCall.stream.getTracks().forEach(t=>t.stop());orvCall.stream=null;}
+ orvCallVizReset();const t=document.querySelector('#voiceScreen .voice-title');if(t)t.textContent='ORVEXA AI · VOICE';
+}
+function voiceCallListen(){
+ if(!callMode||callMuted||busy)return;
+ if(ORV_STT.mode==='browser'||!orvCanRecord())return legacyVoiceCallListen();
+ orvCallCapture();
+}
+async function orvCallCapture(){
+ if(orvCall.active)return;orvCall.active=true;
+ try{if(!orvCall.stream||!orvCall.stream.active){orvCall.stream=await orvOpenMic();if(orvCall.meter)orvCall.meter.close();orvCall.meter=orvMakeMeter(orvCall.stream);}}
+ catch(e){orvCall.active=false;toast(e&&e.name==='NotAllowedError'?'Allow microphone access to use AI voice call.':'Could not open the microphone.');return;}
+ if(!callMode||callMuted){orvCall.active=false;return;}
+ const handle={stopped:false,onend:null,stop(){this.stopped=true;}};callRecognition=handle;
+ const {mr,mime}=orvMakeRecorder(orvCall.stream);const chunks=[];mr.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data);};
+ const vad=new OrvexaVAD();let segStart=performance.now(),finished=false;
+ const finish=(kind)=>{
+  if(finished)return;finished=true;clearInterval(orvCall.tick);orvCallVizReset();
+  mr.onstop=async()=>{orvCall.active=false;if(callRecognition===handle)callRecognition=null;if(kind==='send')await orvCallProcess(new Blob(chunks,{type:orvBase(mime)}),mime);else if(kind==='restart'&&callMode&&!callMuted&&!busy)setTimeout(voiceCallListen,60);};
+  try{if(mr.state!=='inactive')mr.stop();else mr.onstop();}catch(e){orvCall.active=false;}
+ };
+ setVoiceState('listening','Listening… speak naturally');
+ try{mr.start(200);}catch(e){orvCall.active=false;finish('cancel');return;}
+ orvCall.tick=setInterval(()=>{
+  if(handle.stopped||!callMode||callMuted){finish('cancel');return;}
+  const lvl=orvCall.meter?orvCall.meter.level():0;orvCallViz(lvl);
+  const ev=vad.update(lvl,performance.now());
+  if(ev==='end')finish('send');
+  else if(ev==='discard')finish('restart');
+  else if(vad.state==='wait'&&performance.now()-segStart>8000)finish('restart');   // keep silence short; start a fresh clip
+ },50);
+}
+async function orvCallProcess(blob,mime){
+ if(!callMode)return;
+ if(blob.size<800){setTimeout(voiceCallListen,200);return;}
+ setVoiceState('','Transcribing…');
+ let said='';
+ try{const session=await orvAuth();if(!session)throw new Error('Please sign in again.');said=await orvCallFunction(session,{audio_base64:await orvBlobToBase64(blob),mime:orvBase(mime),language:orvLangCode()});}
+ catch(e){
+  if(e&&e.fallback){ORV_STT.mode='browser';toast('Server transcription is not set up yet, so the call now uses browser speech recognition.');orvCallCleanup();if(callMode&&!callMuted)legacyVoiceCallListen();return;}
+  toast(String(e&&e.message||'Could not understand that.'));if(callMode&&!callMuted)setTimeout(voiceCallListen,1000);return;
+ }
+ if(!callMode)return;
+ if(!said||ORV_HALLUCINATIONS.test(said)){setVoiceState('listening','I did not catch that. Go ahead…');setTimeout(voiceCallListen,200);return;}
+ await orvCallRespond(said);
+}
+async function orvCallRespond(said){
+ $('voiceTranscript').textContent='You: '+said;setVoiceState('','Thinking…');
+ try{
+  await sendMessage(said);
+  const last=[...currentMessages].reverse().find(m=>m.role==='assistant');
+  if(callMode&&last){
+   $('voiceTranscript').textContent='Orvexa: '+last.content;setVoiceState('speaking','Orvexa is speaking… tap the orb to interrupt');orvBargeStart();
+   speak(last.content,()=>{orvBargeStop();if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}});
+  }else if(callMode&&!callMuted){setVoiceState('listening','Listening… speak naturally');setTimeout(voiceCallListen,500);}
+ }catch(err){if(callMode&&!callMuted)setTimeout(voiceCallListen,1000);}
+}
+/* Optional: interrupt Orvexa by speaking (off by default; works best with headphones because the phone's speaker can be heard by its own mic). */
+function orvBargeStart(){
+ orvBargeStop();if(storage.getItem('orvexa-call-bargein')!=='1'||!orvCall.meter)return;let loud=0;
+ orvCall.barge=setInterval(()=>{const lvl=orvCall.meter?orvCall.meter.level():0;orvCallViz(lvl*.5);loud=lvl>.09?loud+50:0;if(loud>=600){loud=0;interruptVoiceReply();}},50);
+}
+function orvBargeStop(){clearInterval(orvCall.barge);orvCallVizReset();}
+(function orvInitVoiceExtras(){
+ const sel=$('voiceLanguage');if(sel&&!$('orvBarge')){
+  const label=document.createElement('label');label.className='voice-language-label orv-barge';label.innerHTML='<input type="checkbox" id="orvBarge"> Let me interrupt by speaking (best with headphones)';sel.insertAdjacentElement('afterend',label);
+  const cb=$('orvBarge');cb.checked=storage.getItem('orvexa-call-bargein')==='1';cb.addEventListener('change',()=>{try{storage.setItem('orvexa-call-bargein',cb.checked?'1':'0')}catch(e){}});
+ }
+ orvBuildRecBar();
+})();
+
+/* ---------- Usage dashboard (reads your own usage_events rows; RLS keeps them private) ---------- */
+(function initOrvexaUsageCard(){
+ const profile=$('profilePage');if(!profile||!sb||$('orvexaUsageCard'))return;
+ const card=document.createElement('section');card.className='card';card.id='orvexaUsageCard';
+ card.innerHTML='<h3>📊 Your usage</h3><p class="muted" id="orvexaUsageBody">Sign in to see your usage.</p><div class="btn-row"><button class="secondary" type="button" id="orvexaUsageRefresh">Refresh</button></div>';
+ const anchor=profile.querySelector('#githubToolsCard');if(anchor)profile.insertBefore(card,anchor);else profile.appendChild(card);
+ const body=$('orvexaUsageBody');
+ async function refresh(){
+  try{
+   const session=await orvAuth();if(!session){body.textContent='Sign in to see your usage.';return;}
+   const since=new Date(Date.now()-30*86400000).toISOString();
+   const {data,error}=await sb.from('usage_events').select('kind,created_at').gte('created_at',since).order('created_at',{ascending:false}).limit(2000);
+   if(error){body.textContent='Usage tracking is not set up yet (run the latest SQL migration).';return;}
+   const day=Date.now()-86400000,t={chat:[0,0],image:[0,0],transcribe:[0,0]};
+   (data||[]).forEach(r=>{const k=t[r.kind];if(!k)return;k[1]++;if(new Date(r.created_at).getTime()>day)k[0]++;});
+   body.innerHTML='💬 Chats: <b>'+t.chat[0]+'</b> today · '+t.chat[1]+' in 30 days<br>🎨 Images: <b>'+t.image[0]+'</b> today · '+t.image[1]+' in 30 days<br>🎙 Voice transcriptions: <b>'+t.transcribe[0]+'</b> today · '+t.transcribe[1]+' in 30 days';
+  }catch(e){body.textContent='Could not load usage right now.';}
+ }
+ $('orvexaUsageRefresh').addEventListener('click',refresh);
+ sb.auth.onAuthStateChange(()=>{setTimeout(()=>refresh().catch(()=>{}),0)});refresh();
+})();
+
+/* ======================================================================================
+   Orvexa Personalization v1 — settings, memory manager, projects, low-data mode, offline drafts, accent themes
+   Server-side pieces need SQL migration 002; the app keeps working without it (cards explain what is missing).
+   ====================================================================================== */
+const ORV_LANGS=[['auto','Auto (match me)'],['pcm','Nigerian Pidgin'],['yo','Yorùbá'],['ha','Hausa'],['ig','Igbo'],['en','English'],['fr','Français'],['es','Español'],['ar','العربية'],['pt','Português'],['sw','Kiswahili']];
+const ORV_ACCENTS=[['violet','Violet'],['ocean','Ocean'],['emerald','Emerald'],['sunset','Sunset']];
+const orvLS={get:k=>{try{return storage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{storage.setItem(k,v)}catch(e){}}};
+function orvEl(tag,props,kids){const e=document.createElement(tag);Object.entries(props||{}).forEach(([k,v])=>{if(k==='text')e.textContent=v;else if(k==='class')e.className=v;else if(k.startsWith('on'))e.addEventListener(k.slice(2),v);else e.setAttribute(k,v);});(kids||[]).forEach(c=>e.append(c));return e;}
+const orvMissing=e=>/relation|does not exist|schema cache|42P01|PGRST/i.test(String(e&&(e.message||e.code)||e));
+
+/* ----- Local preferences: accent theme + low-data mode (applied immediately, work offline) ----- */
+function orvApplyLocalPrefs(){
+ document.body.dataset.accent=orvLS.get('orvexa-accent')||'violet';
+ document.body.classList.toggle('orv-low-data',orvLS.get('orvexa-low-data')==='1');
+}
+const orvHistoryLimit=()=>orvLS.get('orvexa-low-data')==='1'?4:12;
+function orvChatExtras(){const p=orvLS.get('orvexa-active-project');return p?{projectId:p}:{};}
+
+/* ----- Offline banner + draft saving ----- */
+(function orvInitOffline(){
+ const banner=orvEl('div',{id:'orvOffline',class:'orv-offline',role:'status','aria-live':'polite',text:'📡 You are offline. Your draft is saved and will be here when you reconnect.'});banner.hidden=navigator.onLine;document.body.appendChild(banner);
+ const upd=()=>{banner.hidden=navigator.onLine;};window.addEventListener('online',()=>{upd();toast('Back online.');});window.addEventListener('offline',upd);
+ const field=$('prompt');if(!field)return;
+ const saved=orvLS.get('orvexa-draft');if(saved&&!field.value){field.value=saved;try{field.dispatchEvent(new Event('input',{bubbles:true}))}catch(e){}}
+ let t;field.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>{const v=field.value;if(v.trim())orvLS.set('orvexa-draft',v);else orvLS.set('orvexa-draft','');},400);});
+})();
+const orvOriginalSend=sendMessage;
+sendMessage=async function(text){
+ const field=$('prompt');
+ if(!navigator.onLine){const v=String(text||(field&&field.value)||'').trim();if(v){if(field&&text)field.value=v;orvLS.set('orvexa-draft',v);}toast('You are offline. Your message is saved as a draft — send it when you reconnect.');return;}
+ const result=await orvOriginalSend.call(this,text);
+ if(field&&!field.value.trim())orvLS.set('orvexa-draft','');
+ return result;
+};
+
+/* ----- Personalize card ----- */
+(function initPersonalizeCard(){
+ const profile=$('profilePage');if(!profile||$('orvexaPersonalizeCard'))return;
+ const card=orvEl('section',{class:'card',id:'orvexaPersonalizeCard'});
+ const mkSelect=(id,opts,label)=>{const s=orvEl('select',{id,class:'orv-field','aria-label':label});opts.forEach(([v,t])=>s.append(orvEl('option',{value:v,text:t})));return s;};
+ const lang=mkSelect('orvLang',ORV_LANGS,'Reply language'),style=mkSelect('orvStyle',[['short','Short answers'],['balanced','Balanced'],['detailed','Detailed']],'Answer length'),mode=mkSelect('orvMode',[['auto','Auto — best model for each question'],['fast','Fast — quickest replies'],['smart','Smart — strongest reasoning']],'AI model mode'),accent=mkSelect('orvAccent',ORV_ACCENTS,'Accent colour');
+ const instr=orvEl('textarea',{id:'orvInstr',class:'orv-field',rows:'4',maxlength:'1500',placeholder:'Anything Orvexa should always know or do. e.g. "I run a shoe shop in Lagos. Keep replies short and friendly."','aria-label':'Custom instructions'});
+ const low=orvEl('input',{type:'checkbox',id:'orvLowData'});const lowLabel=orvEl('label',{class:'orv-check'},[low,orvEl('span',{text:' Low-data mode — shorter history, no animations, saves bandwidth'})]);
+ const status=orvEl('p',{class:'muted',id:'orvPersStatus','aria-live':'polite'});
+ const save=orvEl('button',{class:'primary',type:'button',text:'Save preferences'});
+ card.append(orvEl('h3',{text:'🎛 Personalize Orvexa'}),orvEl('p',{class:'muted',text:'Choose how Orvexa talks to you. These settings follow your account.'}),
+  orvEl('label',{class:'orv-label',text:'Reply language'}),lang,orvEl('label',{class:'orv-label',text:'Answer length'}),style,orvEl('label',{class:'orv-label',text:'AI model mode'}),mode,
+  orvEl('label',{class:'orv-label',text:'Custom instructions'}),instr,orvEl('label',{class:'orv-label',text:'Accent colour (this device)'}),accent,lowLabel,orvEl('div',{class:'btn-row'},[save]),status);
+ const anchor=profile.querySelector('#orvexaProCard')||profile.querySelector('#githubToolsCard');if(anchor)profile.insertBefore(card,anchor);else profile.appendChild(card);
+ accent.value=orvLS.get('orvexa-accent')||'violet';low.checked=orvLS.get('orvexa-low-data')==='1';
+ accent.addEventListener('change',()=>{orvLS.set('orvexa-accent',accent.value);orvApplyLocalPrefs();});
+ low.addEventListener('change',()=>{orvLS.set('orvexa-low-data',low.checked?'1':'0');orvApplyLocalPrefs();toast(low.checked?'Low-data mode on.':'Low-data mode off.');});
+ async function load(){
+  const session=await orvAuth();if(!session){status.textContent='Sign in to sync language, style and instructions to your account.';return;}
+  const {data,error}=await sb.from('user_settings').select('reply_language,response_style,model_mode,custom_instructions').eq('user_id',session.user.id).maybeSingle();
+  if(error){status.textContent=orvMissing(error)?'Account personalization is not set up yet (run SQL migration 002). Accent and low-data still work.':'Could not load your preferences.';return;}
+  if(data){lang.value=data.reply_language;style.value=data.response_style;mode.value=data.model_mode;instr.value=data.custom_instructions||'';}
+  status.textContent='';
+ }
+ save.addEventListener('click',async()=>{
+  const session=await orvAuth();if(!session){toast('Please sign in to save preferences.');return;}
+  save.disabled=true;
+  const {error}=await sb.from('user_settings').upsert({user_id:session.user.id,reply_language:lang.value,response_style:style.value,model_mode:mode.value,custom_instructions:instr.value.trim().slice(0,1500),updated_at:new Date().toISOString()},{onConflict:'user_id'});
+  save.disabled=false;
+  if(error){status.textContent=orvMissing(error)?'Run SQL migration 002 first, then try again.':'Could not save: '+String(error.message||error);return;}
+  status.textContent='✅ Saved. New answers will follow these preferences.';toast('Preferences saved.');
+ });
+ sb.auth.onAuthStateChange(()=>{setTimeout(()=>load().catch(()=>{}),0)});load().catch(()=>{});
+})();
+
+/* ----- Memory manager (list, add, edit, delete) ----- */
+(function initMemoryManager(){
+ const profile=$('profilePage');if(!profile||$('orvexaMemoryCard'))return;
+ const card=orvEl('section',{class:'card',id:'orvexaMemoryCard'});
+ const toggle=orvEl('input',{type:'checkbox',id:'orvMemOn'});const toggleLabel=orvEl('label',{class:'orv-check'},[toggle,orvEl('span',{text:' Let Orvexa use these memories'})]);
+ const list=orvEl('div',{class:'orv-list',id:'orvMemList'});
+ const input=orvEl('input',{type:'text',class:'orv-field',id:'orvMemInput',maxlength:'300',placeholder:'Add a memory, e.g. "I am a Yoruba teacher in Ibadan"','aria-label':'New memory'});
+ const add=orvEl('button',{class:'primary',type:'button',text:'Add'});
+ const clear=orvEl('button',{class:'secondary',type:'button',text:'Delete all'});
+ const status=orvEl('p',{class:'muted',id:'orvMemStatus','aria-live':'polite'});
+ card.append(orvEl('h3',{text:'🧠 Memory manager'}),orvEl('p',{class:'muted',text:'See exactly what Orvexa remembers about you. You can add, edit or delete any item. Avoid passwords and sensitive data.'}),toggleLabel,list,orvEl('div',{class:'orv-row'},[input,add]),orvEl('div',{class:'btn-row'},[clear]),status);
+ const anchor=profile.querySelector('#orvexaProCard')||profile.querySelector('#githubToolsCard');if(anchor)profile.insertBefore(card,anchor);else profile.appendChild(card);
+ let items=[];
+ function render(){
+  list.replaceChildren();
+  if(!items.length){list.append(orvEl('p',{class:'muted',text:'Nothing saved yet.'}));return;}
+  items.forEach(it=>{
+   const row=orvEl('div',{class:'orv-item'},[orvEl('span',{class:'orv-item-text',text:it.content}),
+    orvEl('button',{class:'orv-mini',type:'button','aria-label':'Edit memory',text:'✎',onclick:async()=>{const v=prompt('Edit memory',it.content);if(v===null)return;const t=v.trim().slice(0,300);if(!t)return;const {error}=await sb.from('user_memories').update({content:t,updated_at:new Date().toISOString()}).eq('id',it.id);if(error){toast('Could not edit.');return;}it.content=t;render();}}),
+    orvEl('button',{class:'orv-mini',type:'button','aria-label':'Delete memory',text:'🗑',onclick:async()=>{const {error}=await sb.from('user_memories').delete().eq('id',it.id);if(error){toast('Could not delete.');return;}items=items.filter(x=>x.id!==it.id);render();}})]);
+   list.append(row);
+  });
+ }
+ async function load(){
+  const session=await orvAuth();if(!session){status.textContent='Sign in to manage memory.';return;}
+  const pref=await sb.from('user_preferences').select('memory_enabled').eq('user_id',session.user.id).maybeSingle();toggle.checked=Boolean(pref.data&&pref.data.memory_enabled);
+  const {data,error}=await sb.from('user_memories').select('id,content').order('created_at',{ascending:false}).limit(100);
+  if(error){status.textContent=orvMissing(error)?'Memory manager is not set up yet (run SQL migration 002).':'Could not load memory.';return;}
+  items=data||[];render();status.textContent=toggle.checked?'Memory is ON.':'Memory is OFF — saved items are kept but not used.';
+ }
+ toggle.addEventListener('change',async()=>{const session=await orvAuth();if(!session){toggle.checked=false;toast('Please sign in first.');return;}const {error}=await sb.from('user_preferences').upsert({user_id:session.user.id,memory_enabled:toggle.checked,updated_at:new Date().toISOString()},{onConflict:'user_id'});if(error){toast('Could not change memory setting.');toggle.checked=!toggle.checked;return;}status.textContent=toggle.checked?'Memory is ON.':'Memory is OFF — saved items are kept but not used.';});
+ add.addEventListener('click',async()=>{
+  const t=input.value.trim().slice(0,300);if(!t)return;const session=await orvAuth();if(!session){toast('Please sign in first.');return;}
+  const {data,error}=await sb.from('user_memories').insert({user_id:session.user.id,content:t}).select('id,content').single();
+  if(error){toast(/limit/i.test(error.message||'')?'Memory limit reached (100).':orvMissing(error)?'Run SQL migration 002 first.':'Could not save memory.');return;}
+  items.unshift(data);input.value='';render();if(!toggle.checked)status.textContent='Saved. Turn on "Let Orvexa use these memories" for it to take effect.';
+ });
+ input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();add.click();}});
+ clear.addEventListener('click',async()=>{if(!items.length||!confirm('Delete ALL saved memory items? This cannot be undone.'))return;const session=await orvAuth();if(!session)return;const {error}=await sb.from('user_memories').delete().eq('user_id',session.user.id);if(error){toast('Could not delete.');return;}items=[];render();toast('All memory deleted.');});
+ sb.auth.onAuthStateChange(()=>{setTimeout(()=>load().catch(()=>{}),0)});load().catch(()=>{});
+})();
+
+/* ----- Projects (named workspaces with their own instructions) ----- */
+(function initProjects(){
+ const profile=$('profilePage');if(!profile||$('orvexaProjectsCard'))return;
+ const card=orvEl('section',{class:'card',id:'orvexaProjectsCard'});
+ const pick=orvEl('select',{id:'orvProjPick',class:'orv-field','aria-label':'Active project'});
+ const name=orvEl('input',{type:'text',id:'orvProjName',class:'orv-field',maxlength:'80',placeholder:'Project name, e.g. "Shoe shop marketing"','aria-label':'Project name'});
+ const instr=orvEl('textarea',{id:'orvProjInstr',class:'orv-field',rows:'4',maxlength:'2000',placeholder:'Instructions for this project. e.g. "Act as my marketing coach. Prices are in naira."','aria-label':'Project instructions'});
+ const create=orvEl('button',{class:'primary',type:'button',text:'Create new'}),update=orvEl('button',{class:'secondary',type:'button',text:'Update'}),del=orvEl('button',{class:'secondary',type:'button',text:'Delete'});
+ const status=orvEl('p',{class:'muted',id:'orvProjStatus','aria-live':'polite'});
+ card.append(orvEl('h3',{text:'📁 Projects'}),orvEl('p',{class:'muted',text:'Pick a project and Orvexa follows its instructions in new chats until you switch it off.'}),pick,name,instr,orvEl('div',{class:'btn-row'},[create,update,del]),status);
+ const anchor=profile.querySelector('#orvexaProCard')||profile.querySelector('#githubToolsCard');if(anchor)profile.insertBefore(card,anchor);else profile.appendChild(card);
+ let projects=[];
+ const active=()=>orvLS.get('orvexa-active-project')||'';
+ function chip(){
+  let c=$('orvProjectChip');const p=projects.find(x=>x.id===active());
+  if(!p){if(c)c.remove();return;}
+  if(!c){const area=document.querySelector('.composer-area');if(!area)return;c=orvEl('div',{id:'orvProjectChip',class:'orv-chip'});area.insertBefore(c,area.firstChild);}
+  c.replaceChildren(orvEl('span',{text:'📁 '+p.name}),orvEl('button',{type:'button','aria-label':'Stop using this project',text:'✕',onclick:()=>{orvLS.set('orvexa-active-project','');pick.value='';fill();chip();}}));
+ }
+ function fill(){const p=projects.find(x=>x.id===pick.value);name.value=p?p.name:'';instr.value=p?p.instructions:'';update.disabled=del.disabled=!p;}
+ function render(){pick.replaceChildren(orvEl('option',{value:'',text:'No project (normal chat)'}));projects.forEach(p=>pick.append(orvEl('option',{value:p.id,text:p.name})));pick.value=projects.some(p=>p.id===active())?active():'';fill();chip();}
+ async function load(){
+  const session=await orvAuth();if(!session){status.textContent='Sign in to use projects.';return;}
+  const {data,error}=await sb.from('projects').select('id,name,instructions').order('created_at',{ascending:false});
+  if(error){status.textContent=orvMissing(error)?'Projects are not set up yet (run SQL migration 002).':'Could not load projects.';return;}
+  projects=data||[];render();status.textContent='';
+ }
+ pick.addEventListener('change',()=>{orvLS.set('orvexa-active-project',pick.value);fill();chip();if(pick.value)toast('Project selected. Start a new chat to use it.');});
+ create.addEventListener('click',async()=>{const n=name.value.trim();if(!n){toast('Give the project a name.');return;}const session=await orvAuth();if(!session){toast('Please sign in first.');return;}
+  const {data,error}=await sb.from('projects').insert({user_id:session.user.id,name:n.slice(0,80),instructions:instr.value.trim().slice(0,2000)}).select('id,name,instructions').single();
+  if(error){toast(/limit/i.test(error.message||'')?'Project limit reached (30).':orvMissing(error)?'Run SQL migration 002 first.':'Could not create project.');return;}
+  projects.unshift(data);orvLS.set('orvexa-active-project',data.id);render();toast('Project created and selected.');});
+ update.addEventListener('click',async()=>{const p=projects.find(x=>x.id===pick.value);if(!p)return;const n=name.value.trim();if(!n)return;const {error}=await sb.from('projects').update({name:n.slice(0,80),instructions:instr.value.trim().slice(0,2000),updated_at:new Date().toISOString()}).eq('id',p.id);if(error){toast('Could not update.');return;}p.name=n.slice(0,80);p.instructions=instr.value.trim().slice(0,2000);render();toast('Project updated.');});
+ del.addEventListener('click',async()=>{const p=projects.find(x=>x.id===pick.value);if(!p||!confirm('Delete project "'+p.name+'"? Chats stay, but lose the project link.'))return;const {error}=await sb.from('projects').delete().eq('id',p.id);if(error){toast('Could not delete.');return;}projects=projects.filter(x=>x.id!==p.id);orvLS.set('orvexa-active-project','');render();toast('Project deleted.');});
+ sb.auth.onAuthStateChange(()=>{setTimeout(()=>load().catch(()=>{}),0)});load().catch(()=>{});
+})();
+orvApplyLocalPrefs();
+
+/* ======================================================================================
+   Orvexa Motion v1 — button ripples, shake-on-error, and the Animations switch (On / Off).
+   Low-end phones (<=2 GB RAM or <=4 CPU cores) automatically get "lite" motion: short entrances only, no endless loops.
+   ====================================================================================== */
+function orvMotionMode(){const v=orvLS.get('orvexa-motion');return v==='off'||v==='on'?v:'auto';}
+function orvIsLowEnd(){const mem=navigator.deviceMemory,cores=navigator.hardwareConcurrency;return (typeof mem==='number'&&mem<=2)||(typeof cores==='number'&&cores<=4);}
+function orvApplyMotion(){
+ const mode=orvMotionMode();
+ document.body.classList.toggle('orv-motion-off',mode==='off'); document.body.classList.toggle('orv-lite-motion',mode==='auto'&&orvIsLowEnd());
+}
+(function orvInitMotion(){
+ orvApplyMotion();
+ // Ripple on tap (delegated, one listener for the whole app)
+ document.addEventListener('pointerdown',e=>{
+  if(document.body.classList.contains('orv-motion-off')||document.body.classList.contains('orv-low-data'))return;
+  const t=e.target.closest&&e.target.closest('.primary,.secondary,.quick,.feature,.send');if(!t||t.disabled)return;
+  const r=t.getBoundingClientRect(),dot=document.createElement('span');dot.className='orv-ripple';dot.style.left=(e.clientX-r.left)+'px';dot.style.top=(e.clientY-r.top)+'px';
+  t.appendChild(dot);setTimeout(()=>dot.remove(),650);
+ },{passive:true});
+ // Animations switch inside the Personalize card (the card is built just before this script runs)
+ const accent=$('orvAccent');
+ if(accent&&!$('orvMotion')){
+  const sel=orvEl('select',{id:'orvMotion',class:'orv-field','aria-label':'Animations'});
+  [['auto','Automatic (smooth, lighter on slow phones)'],['on','Always on'],['off','Off']].forEach(([v,t])=>sel.append(orvEl('option',{value:v,text:t})));
+  sel.value=orvMotionMode();
+  sel.addEventListener('change',()=>{orvLS.set('orvexa-motion',sel.value);orvApplyMotion();toast(sel.value==='off'?'Animations off.':'Animations updated.');});
+  accent.insertAdjacentElement('afterend',orvEl('label',{class:'orv-label',text:'Animations'}));
+  accent.nextElementSibling.insertAdjacentElement('afterend',sel);
+ }
+})();
+// Gentle shake on the message box when sending an empty message
+(function(){const prev=sendMessage;sendMessage=async function(text){const f=$('prompt');if(f&&!text&&!f.value.trim()&&!selectedImage){f.classList.remove('orv-shake');void f.offsetWidth;f.classList.add('orv-shake');}return prev.call(this,text);};})();
 </script>
 </body>
 </html>
