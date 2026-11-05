@@ -1136,6 +1136,7 @@ function getRequestedExportFormat(prompt){
  if(/\b(html|\.html)\b/.test(p))return 'html';
  if(/\b(markdown|\.md)\b/.test(p))return 'md';
  if(/\b(txt|text file|\.txt)\b/.test(p))return 'txt';
+ if(/\b(?:create|make|write|prepare|generate|build|draft)\b.{0,55}\b(?:cv|resume|résumé|cover letter|application letter|report|proposal|invoice|receipt|business plan|lesson plan|assignment|essay|contract|notice|certificate|brochure|portfolio|meeting minutes|formal letter)\b/i.test(p))return 'pdf';
  return '';
 }
 function downloadOrvexaBlob(blob,filename){
@@ -1147,7 +1148,7 @@ function downloadOrvexaBlob(blob,filename){
 }
 async function exportOrvexaDocument(content,format,prompt){
  const contentText=String(content||'').trim();if(!contentText){toast('There is no content to export yet.');return;}if(/\\b(i(?:’|')?m sorry|i cannot|i can(?:not|'t)|i don(?:not|'t) have the ability|i don(?:not|'t) have access|copy it into|copy it into a word|export or save as pdf|i can only provide the text)\\b/i.test(contentText)){toast('Orvexa did not produce the document content, so no empty/refusal PDF was created. Please retry after checking the AI provider and image attachment.');return;}
- const base='orvexa-document';
+ const requestedName=String(prompt||'').toLowerCase();const base=/\b(?:cv|resume|résumé)\b/.test(requestedName)?'orvexa-cv':/\b(?:cover letter|application letter)\b/.test(requestedName)?'orvexa-cover-letter':/\breport\b/.test(requestedName)?'orvexa-report':'orvexa-document';
  try{
   if(format==='pdf'){
    if(!window.jspdf||!window.jspdf.jsPDF){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';s.onload=resolve;s.onerror=()=>reject(new Error('PDF library failed to load'));document.head.appendChild(s);});}
